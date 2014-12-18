@@ -6,6 +6,8 @@
 package org.mifosplatform.commands.service;
 
 import org.mifosplatform.commands.domain.CommandWrapper;
+import org.mifosplatform.infrastructure.accountnumberformat.service.AccountNumberFormatConstants;
+import org.mifosplatform.portfolio.savings.DepositsApiConstants;
 
 public class CommandWrapperBuilder {
 
@@ -185,7 +187,16 @@ public class CommandWrapperBuilder {
         this.entityName = "GUARANTOR";
         this.entityId = null;
         this.loanId = loanId;
-        this.href = "/loans/" + loanId + "/guarantors/template";
+        this.href = "/loans/" + loanId + "/guarantors";
+        return this;
+    }
+
+    public CommandWrapperBuilder recoverFromGuarantor(final Long loanId) {
+        this.actionName = "RECOVERGUARANTEES";
+        this.entityName = "LOAN";
+        this.entityId = loanId;
+        this.loanId = loanId;
+        this.href = "/loans/" + loanId + "?command=recoverGuarantees";
         return this;
     }
 
@@ -198,10 +209,11 @@ public class CommandWrapperBuilder {
         return this;
     }
 
-    public CommandWrapperBuilder deleteGuarantor(final Long loanId, final Long guarantorId) {
+    public CommandWrapperBuilder deleteGuarantor(final Long loanId, final Long guarantorId, final Long guarantorFundingId) {
         this.actionName = "DELETE";
         this.entityName = "GUARANTOR";
         this.entityId = guarantorId;
+        this.subentityId = guarantorFundingId;
         this.loanId = loanId;
         this.href = "/loans/" + loanId + "/guarantors/" + guarantorId;
         return this;
@@ -415,6 +427,33 @@ public class CommandWrapperBuilder {
         this.entityId = clientId;
         this.clientId = clientId;
         this.href = "/clients/" + clientId + "?command=close&template=true";
+        return this;
+    }
+
+    public CommandWrapperBuilder rejectClient(final Long clientId) {
+        this.actionName = "REJECT";
+        this.entityName = "CLIENT";
+        this.entityId = clientId;
+        this.clientId = clientId;
+        this.href = "/clients/" + clientId + "?command=reject&template=true";
+        return this;
+    }
+
+    public CommandWrapperBuilder withdrawClient(final Long clientId) {
+        this.actionName = "WITHDRAW";
+        this.entityName = "CLIENT";
+        this.entityId = clientId;
+        this.clientId = clientId;
+        this.href = "/clients/" + clientId + "?command=withdraw&template=true";
+        return this;
+    }
+
+    public CommandWrapperBuilder reActivateClient(final Long clientId) {
+        this.actionName = "REACTIVATE";
+        this.entityName = "CLIENT";
+        this.entityId = clientId;
+        this.clientId = clientId;
+        this.href = "/clients/" + clientId + "?command=reactivate&template=true";
         return this;
     }
 
@@ -658,6 +697,15 @@ public class CommandWrapperBuilder {
         this.href = "/loans/" + loanId + "/transactions/" + transactionId;
         return this;
     }
+    
+    public CommandWrapperBuilder refundLoanTransactionByCash(final Long loanId) {
+        this.actionName = "REFUNDBYCASH";
+        this.entityName = "LOAN";
+        this.entityId = null;
+        this.loanId = loanId;
+        this.href = "/loans/" + loanId + "/transactions/template?command=refundbycash";
+        return this;
+    }
 
     public CommandWrapperBuilder createLoanApplication() {
         this.actionName = "CREATE";
@@ -832,7 +880,7 @@ public class CommandWrapperBuilder {
         this.href = "/glclosures/" + glClosureId;
         return this;
     }
-    
+
     public CommandWrapperBuilder excuteAccrualAccounting() {
         this.actionName = "EXECUTE";
         this.entityName = "PERIODICACCRUALACCOUNTING";
@@ -1503,7 +1551,7 @@ public class CommandWrapperBuilder {
         this.href = "/centers/" + centerId + "?command=close";
         return this;
     }
-    
+
     public CommandWrapperBuilder associateGroupsToCenter(final Long centerId) {
         this.actionName = "ASSOCIATEGROUPS";
         this.entityName = "CENTER";
@@ -1991,6 +2039,15 @@ public class CommandWrapperBuilder {
         return this;
     }
 
+    public CommandWrapperBuilder updateDepositAmountForRecurringDepositAccount(final Long accountId) {
+        this.actionName = DepositsApiConstants.UPDATE_DEPOSIT_AMOUNT.toUpperCase();
+        this.entityName = "RECURRINGDEPOSITACCOUNT";
+        this.entityId = accountId;
+        this.savingsId = accountId;
+        this.href = "/recurringdepositaccounts/" + accountId + "?command=" + DepositsApiConstants.UPDATE_DEPOSIT_AMOUNT;
+        return this;
+    }
+
     public CommandWrapperBuilder prematureCloseRecurringDepositAccount(final Long accountId) {
         this.actionName = "PREMATURECLOSE";
         this.entityName = "RECURRINGDEPOSITACCOUNT";
@@ -2073,8 +2130,9 @@ public class CommandWrapperBuilder {
         this.entityId = entityId;
         return this;
     }
+
     public CommandWrapperBuilder assignSavingsOfficer(final Long accountId) {
-    	this.actionName = "UPDATESAVINGSOFFICER";
+        this.actionName = "UPDATESAVINGSOFFICER";
         this.entityName = "SAVINGSACCOUNT";
         this.entityId = accountId;
         this.href = "/savingsaccounts/" + accountId + "?command=assignSavingsOfficer";
@@ -2096,20 +2154,52 @@ public class CommandWrapperBuilder {
         this.href = "/rescheduleloans";
         return this;
     }
-    
+
     public CommandWrapperBuilder approveLoanRescheduleRequest(final String entityName, final Long requestId) {
-    	this.actionName = "APPROVE";
-    	this.entityName = entityName;
-    	this.entityId = requestId;
-    	this.href = "/rescheduleloans/" + requestId + "?command=approve";
-    	return this;
+        this.actionName = "APPROVE";
+        this.entityName = entityName;
+        this.entityId = requestId;
+        this.href = "/rescheduleloans/" + requestId + "?command=approve";
+        return this;
+    }
+
+    public CommandWrapperBuilder rejectLoanRescheduleRequest(final String entityName, final Long requestId) {
+        this.actionName = "REJECT";
+        this.entityName = entityName;
+        this.entityId = requestId;
+        this.href = "/rescheduleloans/" + requestId + "?command=reject";
+        return this;
+    }
+
+    public CommandWrapperBuilder createAccountNumberFormat() {
+        this.actionName = "CREATE";
+        this.entityName = AccountNumberFormatConstants.ENTITY_NAME.toUpperCase();
+        this.href = AccountNumberFormatConstants.resourceRelativeURL;
+        return this;
+    }
+
+    public CommandWrapperBuilder updateAccountNumberFormat(final Long accountNumberFormatId) {
+        this.actionName = "UPDATE";
+        this.entityName = AccountNumberFormatConstants.ENTITY_NAME.toUpperCase();
+        this.entityId = accountNumberFormatId;
+        this.href = AccountNumberFormatConstants.resourceRelativeURL + "/" + accountNumberFormatId;
+        return this;
+    }
+
+    public CommandWrapperBuilder deleteAccountNumberFormat(final Long accountNumberFormatId) {
+        this.actionName = "DELETE";
+        this.entityName = AccountNumberFormatConstants.ENTITY_NAME.toUpperCase();
+        this.entityId = accountNumberFormatId;
+        this.href = "AccountNumberFormatConstants.resourceRelativeURL" + "/" + accountNumberFormatId;
+        this.json = "{}";
+        return this;
     }
     
-    public CommandWrapperBuilder rejectLoanRescheduleRequest(final String entityName, final Long requestId) {
-    	this.actionName = "REJECT";
-    	this.entityName = entityName;
-    	this.entityId = requestId;
-    	this.href = "/rescheduleloans/" + requestId + "?command=reject";
-    	return this;
+    public CommandWrapperBuilder refundByTransfer() {
+        this.actionName = "REFUNDBYTRANSFER";
+        this.entityName = "ACCOUNTTRANSFER";
+        this.entityId = null;
+        this.href = "/refundByTransfer";
+        return this;
     }
 }

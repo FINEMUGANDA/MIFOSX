@@ -43,8 +43,7 @@ public class SynchronousCommandProcessingService implements CommandProcessingSer
     public SynchronousCommandProcessingService(final PlatformSecurityContext context, final ApplicationContext applicationContext,
             final ToApiJsonSerializer<Map<String, Object>> toApiJsonSerializer,
             final ToApiJsonSerializer<CommandProcessingResult> toApiResultJsonSerializer,
-            final CommandSourceRepository commandSourceRepository,
-            final ConfigurationDomainService configurationDomainService) {
+            final CommandSourceRepository commandSourceRepository, final ConfigurationDomainService configurationDomainService) {
         this.context = context;
         this.context = context;
         this.applicationContext = applicationContext;
@@ -59,7 +58,7 @@ public class SynchronousCommandProcessingService implements CommandProcessingSer
     @Override
     public CommandProcessingResult processAndLogCommand(final CommandWrapper wrapper, final JsonCommand command,
             final boolean isApprovedByChecker) {
-    	
+
         final boolean rollbackTransaction = this.configurationDomainService.isMakerCheckerEnabledForTask(wrapper.taskPermissionName());
 
         final NewCommandSourceHandler handler = findCommandHandler(wrapper);
@@ -108,9 +107,9 @@ public class SynchronousCommandProcessingService implements CommandProcessingSer
             throw new RollbackTransactionAsCommandIsNotApprovedByCheckerException(commandSourceResult);
         }
         result.setRollbackTransaction(null);
-        
+
         publishEvent(wrapper.entityName(), wrapper.actionName(), result);
-        
+
         return result;
     }
 
@@ -131,6 +130,8 @@ public class SynchronousCommandProcessingService implements CommandProcessingSer
         if (wrapper.isAccountTransferResource()) {
             if (wrapper.isCreate()) {
                 handler = this.applicationContext.getBean("createAccountTransferCommandHandler", NewCommandSourceHandler.class);
+            } else if (wrapper.isRefundByTransfer()) {
+                handler = this.applicationContext.getBean("refundByTransferCommandHandler", NewCommandSourceHandler.class);
             } else {
                 throw new UnsupportedCommandException(wrapper.commandName());
             }
@@ -205,6 +206,12 @@ public class SynchronousCommandProcessingService implements CommandProcessingSer
                 handler = this.applicationContext.getBean("rejectClientTransferCommandHandler", NewCommandSourceHandler.class);
             } else if (wrapper.isUpdateClientSavingsAccount()) {
                 handler = this.applicationContext.getBean("updateClientSavingsAccountCommandHandler", NewCommandSourceHandler.class);
+            } else if (wrapper.isReject()) {
+                handler = this.applicationContext.getBean("rejectClientCommandHandler", NewCommandSourceHandler.class);
+            } else if (wrapper.isWithdrawn()) {
+                handler = this.applicationContext.getBean("withdrawClientCommandHandler", NewCommandSourceHandler.class);
+            } else if (wrapper.isReactivated()) {
+                handler = this.applicationContext.getBean("reActivateClientCommandHandler", NewCommandSourceHandler.class);
             } else {
                 throw new UnsupportedCommandException(wrapper.commandName());
             }
@@ -389,6 +396,12 @@ public class SynchronousCommandProcessingService implements CommandProcessingSer
                 handler = this.applicationContext.getBean("loanApplicationDeletionCommandHandler", NewCommandSourceHandler.class);
             } else if (wrapper.isUndoLoanWriteOff()) {
                 handler = this.applicationContext.getBean("undoWriteOffLoanCommandHandler", NewCommandSourceHandler.class);
+            } else if (wrapper.isGuaranteeRecovery()) {
+                handler = this.applicationContext.getBean("recoverFromGuarantorCommandHandler", NewCommandSourceHandler.class);
+            } else if (wrapper.isLoanRefundByCash()) {
+                handler = this.applicationContext.getBean("loanRefundByCashCommandHandler", NewCommandSourceHandler.class);
+            } else if (wrapper.isUndoLoanRefund()) {
+                handler = this.applicationContext.getBean("loanRefundAdjustmentCommandHandler", NewCommandSourceHandler.class);
             } else {
                 throw new UnsupportedCommandException(wrapper.commandName());
             }
@@ -512,12 +525,11 @@ public class SynchronousCommandProcessingService implements CommandProcessingSer
                 handler = this.applicationContext.getBean("savingsTransactionAdjustmentCommandHandler", NewCommandSourceHandler.class);
             } else if (wrapper.isSavingsAccountClose()) {
                 handler = this.applicationContext.getBean("closeSavingsAccountCommandHandler", NewCommandSourceHandler.class);
-            }else if(wrapper.isUpdateSavingsOfficer()) {
-            	handler = this.applicationContext.getBean("updateSavingsOfficerCommandHandler", NewCommandSourceHandler.class);
-            }else if(wrapper.isRemoveSavingsOfficer()) {
-            	handler = this.applicationContext.getBean("removeSavingsOfficerCommandHandler", NewCommandSourceHandler.class);
-            }
-            else {
+            } else if (wrapper.isUpdateSavingsOfficer()) {
+                handler = this.applicationContext.getBean("updateSavingsOfficerCommandHandler", NewCommandSourceHandler.class);
+            } else if (wrapper.isRemoveSavingsOfficer()) {
+                handler = this.applicationContext.getBean("removeSavingsOfficerCommandHandler", NewCommandSourceHandler.class);
+            } else {
                 throw new UnsupportedCommandException(wrapper.commandName());
             }
         } else if (wrapper.isSavingsAccountChargeResource()) {
@@ -602,6 +614,9 @@ public class SynchronousCommandProcessingService implements CommandProcessingSer
                         NewCommandSourceHandler.class);
             } else if (wrapper.isUndoApprovalOfRecurringDepositAccountApplication()) {
                 handler = this.applicationContext.getBean("recurringDepositAccountApplicationApprovalUndoCommandHandler",
+                        NewCommandSourceHandler.class);
+            } else if (wrapper.isDepositAmountUpdateForRecurringDepositAccount()) {
+                handler = this.applicationContext.getBean("recurringDepositAccountUpdateDepositAmountCommandHandler",
                         NewCommandSourceHandler.class);
             } else if (wrapper.isDeposit()) {
                 handler = this.applicationContext.getBean("recurringDepositAccountDepositCommandHandler", NewCommandSourceHandler.class);
@@ -847,16 +862,26 @@ public class SynchronousCommandProcessingService implements CommandProcessingSer
             } else {
                 throw new UnsupportedCommandException(wrapper.commandName());
             }
-        } else if (wrapper.isLoanRescheduleResource()) { 
-        	if (wrapper.isCreate()) {
-        		handler = this.applicationContext.getBean("createLoanRescheduleRequestCommandHandler", NewCommandSourceHandler.class);
-        	} else if(wrapper.isApprove()) {
-        		handler = this.applicationContext.getBean("approveLoanRescheduleRequestCommandHandler", NewCommandSourceHandler.class);
-        	} else if(wrapper.isReject()) {
-        		handler = this.applicationContext.getBean("rejectLoanRescheduleRequestCommandHandler", NewCommandSourceHandler.class);
-        	} else {
-        		throw new UnsupportedCommandException(wrapper.commandName());
-        	}
+        } else if (wrapper.isLoanRescheduleResource()) {
+            if (wrapper.isCreate()) {
+                handler = this.applicationContext.getBean("createLoanRescheduleRequestCommandHandler", NewCommandSourceHandler.class);
+            } else if (wrapper.isApprove()) {
+                handler = this.applicationContext.getBean("approveLoanRescheduleRequestCommandHandler", NewCommandSourceHandler.class);
+            } else if (wrapper.isReject()) {
+                handler = this.applicationContext.getBean("rejectLoanRescheduleRequestCommandHandler", NewCommandSourceHandler.class);
+            } else {
+                throw new UnsupportedCommandException(wrapper.commandName());
+            }
+        } else if (wrapper.isAccountNumberFormatResource()) {
+            if (wrapper.isCreate()) {
+                handler = this.applicationContext.getBean("createAccountNumberFormatCommandHandler", NewCommandSourceHandler.class);
+            } else if (wrapper.isUpdate()) {
+                handler = this.applicationContext.getBean("updateAccountNumberFormatCommandHandler", NewCommandSourceHandler.class);
+            } else if (wrapper.isDelete()) {
+                handler = this.applicationContext.getBean("deleteAccountNumberFormatCommandHandler", NewCommandSourceHandler.class);
+            } else {
+                throw new UnsupportedCommandException(wrapper.commandName());
+            }
         } else {
 
             throw new UnsupportedCommandException(wrapper.commandName());
@@ -871,20 +896,19 @@ public class SynchronousCommandProcessingService implements CommandProcessingSer
         user.validateHasPermissionTo(commandWrapper.getTaskPermissionName());
         return rollbackTransaction;
     }
-    
+
     private void publishEvent(final String entityName, final String actionName, final CommandProcessingResult result) {
-    	
-    	final String authToken = ThreadLocalContextUtil.getAuthToken();
-    	final String tenantIdentifier = ThreadLocalContextUtil.getTenant().getTenantIdentifier();
-    	final AppUser appUser = this.context.authenticatedUser();
-    	
-    	final HookEventSource hookEventSource = new HookEventSource(entityName, actionName);
-    	
-    	final String serializedResult = this.toApiResultJsonSerializer.serialize(result);
-    	
-    	final HookEvent applicationEvent = 
-    			new HookEvent(hookEventSource, serializedResult, tenantIdentifier, appUser, authToken);
-    			
-    	applicationContext.publishEvent(applicationEvent); 
+
+        final String authToken = ThreadLocalContextUtil.getAuthToken();
+        final String tenantIdentifier = ThreadLocalContextUtil.getTenant().getTenantIdentifier();
+        final AppUser appUser = this.context.authenticatedUser();
+
+        final HookEventSource hookEventSource = new HookEventSource(entityName, actionName);
+
+        final String serializedResult = this.toApiResultJsonSerializer.serialize(result);
+
+        final HookEvent applicationEvent = new HookEvent(hookEventSource, serializedResult, tenantIdentifier, appUser, authToken);
+
+        applicationContext.publishEvent(applicationEvent);
     }
 }

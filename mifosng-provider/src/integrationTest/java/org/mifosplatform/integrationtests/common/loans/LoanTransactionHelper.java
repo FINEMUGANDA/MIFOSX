@@ -35,6 +35,8 @@ public class LoanTransactionHelper {
     private static final String WAIVE_INTEREST_COMMAND = "waiveinterest";
     private static final String MAKE_REPAYMENT_COMMAND = "repayment";
     private static final String WITHDRAW_LOAN_APPLICATION_COMMAND = "withdrawnByApplicant";
+    private static final String RECOVER_FROM_GUARANTORS_COMMAND = "recoverGuarantees";
+    private static final String MAKE_REFUND_BY_CASH_COMMAND = "refundByCash";
 
     public LoanTransactionHelper(final RequestSpecification requestSpec, final ResponseSpecification responseSpec) {
         this.requestSpec = requestSpec;
@@ -49,9 +51,18 @@ public class LoanTransactionHelper {
         return Utils.performServerPost(this.requestSpec, this.responseSpec, APPLY_LOAN_URL, loanApplicationJSON, "loanId");
     }
 
+    public Integer getLoanOfficerId(final String loanId) {
+        final String GET_LOAN_URL = "/mifosng-provider/api/v1/loans/" + loanId + "?" + Utils.TENANT_IDENTIFIER;
+        return Utils.performServerGet(this.requestSpec, this.responseSpec, GET_LOAN_URL, "loanOfficerId");
+    }
+
+    public Object createLoanAccount(final String loanApplicationJSON, final String responseAttribute) {
+        return Utils.performServerPost(this.requestSpec, this.responseSpec, APPLY_LOAN_URL, loanApplicationJSON, responseAttribute);
+    }
+
     public Integer updateLoan(final Integer id, final String loanApplicationJSON) {
-        return Utils.performServerPut(this.requestSpec, this.responseSpec, "/mifosng-provider/api/v1/loans/" + id
-                + "?" + Utils.TENANT_IDENTIFIER, loanApplicationJSON, "loanId");
+        return Utils.performServerPut(this.requestSpec, this.responseSpec, "/mifosng-provider/api/v1/loans/" + id + "?"
+                + Utils.TENANT_IDENTIFIER, loanApplicationJSON, "loanId");
     }
 
     public ArrayList getLoanRepaymentSchedule(final RequestSpecification requestSpec, final ResponseSpecification responseSpec,
@@ -60,10 +71,11 @@ public class LoanTransactionHelper {
         final HashMap response = Utils.performServerGet(requestSpec, responseSpec, URL, "repaymentSchedule");
         return (ArrayList) response.get("periods");
     }
-    
+
     public ArrayList getLoanFutureRepaymentSchedule(final RequestSpecification requestSpec, final ResponseSpecification responseSpec,
             final Integer loanID) {
-        final String URL = "/mifosng-provider/api/v1/loans/" + loanID + "?associations=repaymentSchedule,futureSchedule&" + Utils.TENANT_IDENTIFIER;
+        final String URL = "/mifosng-provider/api/v1/loans/" + loanID + "?associations=repaymentSchedule,futureSchedule&"
+                + Utils.TENANT_IDENTIFIER;
         final HashMap response = Utils.performServerGet(requestSpec, responseSpec, URL, "repaymentSchedule");
         return (ArrayList) response.get("futurePeriods");
     }
@@ -80,6 +92,12 @@ public class LoanTransactionHelper {
         return Utils.performServerGet(requestSpec, responseSpec, URL, param);
     }
 
+    public Object getLoanProductDetail(final RequestSpecification requestSpec, final ResponseSpecification responseSpec,
+            final Integer loanProductId, final String jsonAttributeToGetBack) {
+        final String URL = "/mifosng-provider/api/v1/loanproducts/" + loanProductId + "?associations=all&" + Utils.TENANT_IDENTIFIER;
+        return Utils.performServerGet(requestSpec, responseSpec, URL, jsonAttributeToGetBack);
+    }
+
     public ArrayList getLoanCharges(final Integer loanId) {
         final String GET_LOAN_CHARGES_URL = "/mifosng-provider/api/v1/loans/" + loanId + "/charges?" + Utils.TENANT_IDENTIFIER;
         return Utils.performServerGet(requestSpec, responseSpec, GET_LOAN_CHARGES_URL, "");
@@ -87,6 +105,19 @@ public class LoanTransactionHelper {
 
     public HashMap approveLoan(final String approvalDate, final Integer loanID) {
         return performLoanTransaction(createLoanOperationURL(APPROVE_LOAN_COMMAND, loanID), getApproveLoanAsJSON(approvalDate));
+    }
+
+    public HashMap approveLoanWithApproveAmount(final String approvalDate, final String approvalAmount, final Integer loanID) {
+        return performLoanTransaction(createLoanOperationURL(APPROVE_LOAN_COMMAND, loanID),
+                getApproveLoanAsJSON(approvalDate, approvalAmount));
+    }
+
+    public Object approveLoan(final String approvalDate, final String approvalAmount, final Integer loanID, final String responseAttribute) {
+
+        final String approvalURL = createLoanOperationURL(APPROVE_LOAN_COMMAND, loanID);
+        final String approvalJSONData = getApproveLoanAsJSON(approvalDate, approvalAmount);
+
+        return performLoanTransaction(approvalURL, approvalJSONData, responseAttribute);
     }
 
     public HashMap undoApproval(final Integer loanID) {
@@ -114,6 +145,10 @@ public class LoanTransactionHelper {
         return performLoanTransaction(createLoanOperationURL(UNDO_DISBURSE_LOAN_COMMAND, loanID), undoDisburseJson);
     }
 
+    public void recoverFromGuarantor(final Integer loanID) {
+        performLoanTransaction(createLoanOperationURL(RECOVER_FROM_GUARANTORS_COMMAND, loanID), "", "");
+    }
+
     public HashMap writeOffLoan(final String date, final Integer loanID) {
         return performLoanTransaction(createLoanTransactionURL(WRITE_OFF_LOAN_COMMAND, loanID), getWriteOffBodyAsJSON(date));
     }
@@ -129,8 +164,8 @@ public class LoanTransactionHelper {
     }
 
     public HashMap makeRepayment(final String date, final Float amountToBePaid, final Integer loanID) {
-        return performLoanTransaction(createLoanTransactionURL(MAKE_REPAYMENT_COMMAND, loanID),
-                getRepaymentBodyAsJSON(date, amountToBePaid));
+        return (HashMap) performLoanTransaction(createLoanTransactionURL(MAKE_REPAYMENT_COMMAND, loanID),
+                getRepaymentBodyAsJSON(date, amountToBePaid), "");
     }
 
     public HashMap withdrawLoanApplicationByClient(final String date, final Integer loanID) {
@@ -147,32 +182,32 @@ public class LoanTransactionHelper {
 
     public Integer updateChargesForLoan(final Integer loanId, final Integer loanchargeId, final String request) {
         System.out.println("--------------------------------- ADD CHARGES FOR LOAN --------------------------------");
-        final String UPDATE_CHARGES_URL = "/mifosng-provider/api/v1/loans/" + loanId + "/charges/" + loanchargeId
-                + "?" + Utils.TENANT_IDENTIFIER;
+        final String UPDATE_CHARGES_URL = "/mifosng-provider/api/v1/loans/" + loanId + "/charges/" + loanchargeId + "?"
+                + Utils.TENANT_IDENTIFIER;
         final HashMap response = Utils.performServerPut(requestSpec, responseSpec, UPDATE_CHARGES_URL, request, "");
         return (Integer) response.get("resourceId");
     }
 
     public Integer deleteChargesForLoan(final Integer loanId, final Integer loanchargeId) {
         System.out.println("--------------------------------- DELETE CHARGES FOR LOAN --------------------------------");
-        final String DELETE_CHARGES_URL = "/mifosng-provider/api/v1/loans/" + loanId + "/charges/" + loanchargeId
-                + "?" + Utils.TENANT_IDENTIFIER;
+        final String DELETE_CHARGES_URL = "/mifosng-provider/api/v1/loans/" + loanId + "/charges/" + loanchargeId + "?"
+                + Utils.TENANT_IDENTIFIER;
         final HashMap response = Utils.performServerDelete(requestSpec, responseSpec, DELETE_CHARGES_URL, "");
         return (Integer) response.get("resourceId");
     }
 
     public Integer waiveChargesForLoan(final Integer loanId, final Integer loanchargeId, final String json) {
         System.out.println("--------------------------------- WAIVE CHARGES FOR LOAN --------------------------------");
-        final String CHARGES_URL = "/mifosng-provider/api/v1/loans/" + loanId + "/charges/" + loanchargeId
-                + "?command=waive&" + Utils.TENANT_IDENTIFIER;
+        final String CHARGES_URL = "/mifosng-provider/api/v1/loans/" + loanId + "/charges/" + loanchargeId + "?command=waive&"
+                + Utils.TENANT_IDENTIFIER;
         final HashMap response = Utils.performServerPost(requestSpec, responseSpec, CHARGES_URL, json, "");
         return (Integer) response.get("resourceId");
     }
 
     public Integer payChargesForLoan(final Integer loanId, final Integer loanchargeId, final String json) {
         System.out.println("--------------------------------- WAIVE CHARGES FOR LOAN --------------------------------");
-        final String CHARGES_URL = "/mifosng-provider/api/v1/loans/" + loanId + "/charges/" + loanchargeId
-                + "?command=pay&" + Utils.TENANT_IDENTIFIER;
+        final String CHARGES_URL = "/mifosng-provider/api/v1/loans/" + loanId + "/charges/" + loanchargeId + "?command=pay&"
+                + Utils.TENANT_IDENTIFIER;
         final HashMap response = Utils.performServerPost(requestSpec, responseSpec, CHARGES_URL, json, "");
         return (Integer) response.get("resourceId");
     }
@@ -190,9 +225,16 @@ public class LoanTransactionHelper {
     }
 
     private String getApproveLoanAsJSON(final String approvalDate) {
+        return getApproveLoanAsJSON(approvalDate, null);
+    }
+
+    private String getApproveLoanAsJSON(final String approvalDate, final String approvalAmount) {
         final HashMap<String, String> map = new HashMap<>();
         map.put("locale", "en");
         map.put("dateFormat", "dd MMMM yyyy");
+        if (approvalAmount != null) {
+            map.put("approvedLoanAmount", approvalAmount);
+        }
         map.put("approvedOnDate", approvalDate);
         map.put("note", "Approval NOTE");
         return new Gson().toJson(map);
@@ -346,11 +388,42 @@ public class LoanTransactionHelper {
                 "changes");
         return (HashMap) response.get("status");
     }
-    
+
+    private Object performLoanTransaction(final String postURLForLoanTransaction, final String jsonToBeSent, final String responseAttribute) {
+        return Utils.performServerPost(this.requestSpec, this.responseSpec, postURLForLoanTransaction, jsonToBeSent, responseAttribute);
+    }
+
+    public Object adjustLoanTransaction(final Integer loanId, final Integer transactionId, final String date,
+            final String transactionAmount, final String responseAttribute) {
+        return adjustLoanTransaction(loanId, transactionId, getAdjustTransactionJSON(date, transactionAmount), responseAttribute);
+    }
+
+    private Object adjustLoanTransaction(final Integer loanId, final Integer tansactionId, final String jsonToBeSent,
+            final String responseAttribute) {
+        final String URL = "/mifosng-provider/api/v1/loans/" + loanId + "/transactions/" + tansactionId + "?" + Utils.TENANT_IDENTIFIER;
+        return Utils.performServerPost(this.requestSpec, this.responseSpec, URL, jsonToBeSent, responseAttribute);
+    }
+
+    private String getAdjustTransactionJSON(final String date, final String transactionAmount) {
+        final HashMap<String, String> map = new HashMap<>();
+        map.put("locale", "en_GB");
+        map.put("dateFormat", "dd MMMM yyyy");
+        map.put("transactionDate", date);
+        map.put("transactionAmount", transactionAmount);
+        String json = new Gson().toJson(map);
+        System.out.println(json);
+        return json;
+    }
+
     public HashMap getPrepayAmount(final RequestSpecification requestSpec, final ResponseSpecification responseSpec, final Integer loanID) {
-        final String URL = "/mifosng-provider/api/v1/loans/" + loanID + "/transactions/template?command=prepayLoan&" + Utils.TENANT_IDENTIFIER;
+        final String URL = "/mifosng-provider/api/v1/loans/" + loanID + "/transactions/template?command=prepayLoan&"
+                + Utils.TENANT_IDENTIFIER;
         final HashMap response = Utils.performServerGet(requestSpec, responseSpec, URL, "");
         return response;
+    }
+
+    private String createLoanRefundTransferURL() {
+        return "/mifosng-provider/api/v1/accounttransfers/refundByTransfer?tenantIdentifier=default";
     }
 
     public void verifyRepaymentScheduleEntryFor(final int repaymentNumber, final float expectedPrincipalOutstanding, final Integer loanID) {
@@ -388,5 +461,45 @@ public class LoanTransactionHelper {
         }
         assertTrue("No Accrual entries are posted", isTransactionFound);
 
+    }
+
+    public HashMap makeRefundByCash(final String date, final Float amountToBeRefunded, final Integer loanID) {
+        return performLoanTransaction(createLoanTransactionURL(MAKE_REFUND_BY_CASH_COMMAND, loanID),
+                getRefundByCashBodyAsJSON(date, amountToBeRefunded));
+    }
+
+    public HashMap makeRefundByTransfer(final Integer fromAccountId, final Integer toClientId, final Integer toAccountId,
+            final Integer fromClientId, final String date, final Float amountToBeRefunded) {
+        return performLoanTransaction(createLoanRefundTransferURL(),
+                getRefundByTransferBodyAsJSON(fromAccountId, toClientId, toAccountId, fromClientId, date, amountToBeRefunded));
+    }
+
+    private String getRefundByCashBodyAsJSON(final String transactionDate, final Float transactionAmount) {
+        final HashMap<String, String> map = new HashMap<>();
+        map.put("locale", "en");
+        map.put("dateFormat", "dd MMMM yyyy");
+        map.put("transactionDate", transactionDate);
+        map.put("transactionAmount", transactionAmount.toString());
+        map.put("note", "Refund Made!!!");
+        return new Gson().toJson(map);
+    }
+
+    private String getRefundByTransferBodyAsJSON(final Integer fromAccountId, final Integer toClientId, final Integer toAccountId,
+            final Integer fromClientId, final String transactionDate, final Float transactionAmount) {
+        final HashMap<String, String> map = new HashMap<>();
+        map.put("fromAccountId", fromAccountId.toString());
+        map.put("fromAccountType", "1");
+        map.put("toOfficeId", "1");
+        map.put("toClientId", toClientId.toString());
+        map.put("toAccountType", "2");
+        map.put("toAccountId", toAccountId.toString());
+        map.put("dateFormat", "dd MMMM yyyy");
+        map.put("transferDate", transactionDate);
+        map.put("transferAmount", transactionAmount.toString());
+        map.put("transferDescription", "Refund Made!!!");
+        map.put("fromClientId", fromClientId.toString());
+        map.put("fromOfficeId", "1");
+        map.put("locale", "en");
+        return new Gson().toJson(map);
     }
 }

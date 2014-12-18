@@ -9,6 +9,9 @@ import javax.servlet.Filter;
 import javax.servlet.Servlet;
 
 import org.mifosplatform.infrastructure.core.filters.ResponseCorsFilter;
+import org.mifosplatform.infrastructure.security.filter.TenantAwareBasicAuthenticationFilter;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.embedded.FilterRegistrationBean;
 import org.springframework.boot.context.embedded.ServletRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -24,6 +27,9 @@ import com.sun.jersey.spi.spring.container.servlet.SpringServlet;
  */
 @Configuration
 public class WebXmlConfiguration {
+
+    @Autowired
+    private TenantAwareBasicAuthenticationFilter basicAuthenticationProcessingFilter;
 
     @Bean
     public Filter springSecurityFilterChain() {
@@ -41,10 +47,19 @@ public class WebXmlConfiguration {
         jerseyServletRegistration.addInitParameter("com.sun.jersey.api.json.POJOMappingFeature", "true");
         jerseyServletRegistration.addInitParameter("com.sun.jersey.spi.container.ContainerResponseFilters",
                 ResponseCorsFilter.class.getName());
+        jerseyServletRegistration.addInitParameter("com.sun.jersey.config.feature.DisableWADL", "true");
         // debugging for development:
         // jerseyServletRegistration.addInitParameter("com.sun.jersey.spi.container.ContainerRequestFilters",
         // LoggingFilter.class.getName());
         return jerseyServletRegistration;
+    }
+
+    @Bean
+    public FilterRegistrationBean filterRegistrationBean() {
+        FilterRegistrationBean filterRegistrationBean = new FilterRegistrationBean();
+        filterRegistrationBean.setFilter(basicAuthenticationProcessingFilter);
+        filterRegistrationBean.setEnabled(false);
+        return filterRegistrationBean;
     }
 
 }

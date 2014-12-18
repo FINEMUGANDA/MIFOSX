@@ -16,8 +16,12 @@ import org.joda.time.format.DateTimeFormatter;
 import org.mifosplatform.commands.domain.CommandWrapper;
 import org.mifosplatform.commands.service.CommandProcessingService;
 import org.mifosplatform.commands.service.CommandWrapperBuilder;
+import org.mifosplatform.infrastructure.accountnumberformat.domain.AccountNumberFormat;
+import org.mifosplatform.infrastructure.accountnumberformat.domain.AccountNumberFormatRepositoryWrapper;
+import org.mifosplatform.infrastructure.accountnumberformat.domain.EntityAccountType;
 import org.mifosplatform.infrastructure.codes.domain.CodeValue;
 import org.mifosplatform.infrastructure.codes.domain.CodeValueRepositoryWrapper;
+import org.mifosplatform.infrastructure.configuration.domain.ConfigurationDomainService;
 import org.mifosplatform.infrastructure.core.api.JsonCommand;
 import org.mifosplatform.infrastructure.core.data.CommandProcessingResult;
 import org.mifosplatform.infrastructure.core.data.CommandProcessingResultBuilder;
@@ -31,7 +35,6 @@ import org.mifosplatform.organisation.staff.domain.StaffRepositoryWrapper;
 import org.mifosplatform.portfolio.client.api.ClientApiConstants;
 import org.mifosplatform.portfolio.client.data.ClientDataValidator;
 import org.mifosplatform.portfolio.client.domain.AccountNumberGenerator;
-import org.mifosplatform.portfolio.client.domain.AccountNumberGeneratorFactory;
 import org.mifosplatform.portfolio.client.domain.Client;
 import org.mifosplatform.portfolio.client.domain.ClientRepositoryWrapper;
 import org.mifosplatform.portfolio.client.domain.ClientStatus;
@@ -42,6 +45,7 @@ import org.mifosplatform.portfolio.client.exception.InvalidClientSavingProductEx
 import org.mifosplatform.portfolio.client.exception.InvalidClientStateTransitionException;
 import org.mifosplatform.portfolio.group.domain.Group;
 import org.mifosplatform.portfolio.group.domain.GroupRepository;
+import org.mifosplatform.portfolio.group.exception.GroupMemberCountNotInPermissibleRangeException;
 import org.mifosplatform.portfolio.group.exception.GroupNotFoundException;
 import org.mifosplatform.portfolio.loanaccount.domain.Loan;
 import org.mifosplatform.portfolio.loanaccount.domain.LoanRepository;
@@ -74,7 +78,7 @@ public class ClientWritePlatformServiceJpaRepositoryImpl implements ClientWriteP
     private final NoteRepository noteRepository;
     private final GroupRepository groupRepository;
     private final ClientDataValidator fromApiJsonDeserializer;
-    private final AccountNumberGeneratorFactory accountIdentifierGeneratorFactory;
+    private final AccountNumberGenerator accountNumberGenerator;
     private final StaffRepositoryWrapper staffRepository;
     private final CodeValueRepositoryWrapper codeValueRepository;
     private final LoanRepository loanRepository;
@@ -82,22 +86,25 @@ public class ClientWritePlatformServiceJpaRepositoryImpl implements ClientWriteP
     private final SavingsProductRepository savingsProductRepository;
     private final SavingsApplicationProcessWritePlatformService savingsApplicationProcessWritePlatformService;
     private final CommandProcessingService commandProcessingService;
+    private final ConfigurationDomainService configurationDomainService;
+    private final AccountNumberFormatRepositoryWrapper accountNumberFormatRepository;
 
     @Autowired
     public ClientWritePlatformServiceJpaRepositoryImpl(final PlatformSecurityContext context,
             final ClientRepositoryWrapper clientRepository, final OfficeRepository officeRepository, final NoteRepository noteRepository,
-            final ClientDataValidator fromApiJsonDeserializer, final AccountNumberGeneratorFactory accountIdentifierGeneratorFactory,
+            final ClientDataValidator fromApiJsonDeserializer, final AccountNumberGenerator accountNumberGenerator,
             final GroupRepository groupRepository, final StaffRepositoryWrapper staffRepository,
             final CodeValueRepositoryWrapper codeValueRepository, final LoanRepository loanRepository,
             final SavingsAccountRepository savingsRepository, final SavingsProductRepository savingsProductRepository,
             final SavingsApplicationProcessWritePlatformService savingsApplicationProcessWritePlatformService,
-            final CommandProcessingService commandProcessingService) {
+            final CommandProcessingService commandProcessingService, final ConfigurationDomainService configurationDomainService,
+            final AccountNumberFormatRepositoryWrapper accountNumberFormatRepository) {
         this.context = context;
         this.clientRepository = clientRepository;
         this.officeRepository = officeRepository;
         this.noteRepository = noteRepository;
         this.fromApiJsonDeserializer = fromApiJsonDeserializer;
-        this.accountIdentifierGeneratorFactory = accountIdentifierGeneratorFactory;
+        this.accountNumberGenerator = accountNumberGenerator;
         this.groupRepository = groupRepository;
         this.staffRepository = staffRepository;
         this.codeValueRepository = codeValueRepository;
@@ -106,6 +113,8 @@ public class ClientWritePlatformServiceJpaRepositoryImpl implements ClientWriteP
         this.savingsProductRepository = savingsProductRepository;
         this.savingsApplicationProcessWritePlatformService = savingsApplicationProcessWritePlatformService;
         this.commandProcessingService = commandProcessingService;
+        this.configurationDomainService = configurationDomainService;
+        this.accountNumberFormatRepository = accountNumberFormatRepository;
     }
 
     @Transactional
@@ -215,6 +224,7 @@ public class ClientWritePlatformServiceJpaRepositoryImpl implements ClientWriteP
                     clientType, clientClassification, command);
             boolean rollbackTransaction = false;
             if (newClient.isActive()) {
+                validateParentGroupRulesBeforeClientActivation(newClient);
                 final CommandWrapper commandWrapper = new CommandWrapperBuilder().activateClient(null).build();
                 rollbackTransaction = this.commandProcessingService.validateCommand(commandWrapper, currentUser);
             }
@@ -222,9 +232,8 @@ public class ClientWritePlatformServiceJpaRepositoryImpl implements ClientWriteP
             this.clientRepository.save(newClient);
 
             if (newClient.isAccountNumberRequiresAutoGeneration()) {
-                final AccountNumberGenerator accountNoGenerator = this.accountIdentifierGeneratorFactory
-                        .determineClientAccountNoGenerator(newClient.getId());
-                newClient.updateAccountNo(accountNoGenerator.generate());
+                AccountNumberFormat accountNumberFormat = this.accountNumberFormatRepository.findByAccountType(EntityAccountType.CLIENT);
+                newClient.updateAccountNo(accountNumberGenerator.generate(newClient, accountNumberFormat));
                 this.clientRepository.save(newClient);
             }
 
@@ -275,7 +284,7 @@ public class ClientWritePlatformServiceJpaRepositoryImpl implements ClientWriteP
                 }
                 clientForUpdate.updateStaff(newStaff);
             }
-            
+
             if (changes.containsKey(ClientApiConstants.genderIdParamName)) {
 
                 final Long newValue = command.longValueOfParameterNamed(ClientApiConstants.genderIdParamName);
@@ -351,6 +360,7 @@ public class ClientWritePlatformServiceJpaRepositoryImpl implements ClientWriteP
             this.fromApiJsonDeserializer.validateActivation(command);
 
             final Client client = this.clientRepository.findOneWithNotFoundDetection(clientId);
+            validateParentGroupRulesBeforeClientActivation(client);
 
             final Locale locale = command.extractLocale();
             final DateTimeFormatter fmt = DateTimeFormat.forPattern(command.dateFormat()).withLocale(locale);
@@ -568,4 +578,111 @@ public class ClientWritePlatformServiceJpaRepositoryImpl implements ClientWriteP
                 .build();
     }
 
+    /*
+     * To become a part of a group, group may have set of criteria to be m et
+     * before client can become member of it.
+     */
+    private void validateParentGroupRulesBeforeClientActivation(Client client) {
+        Integer minNumberOfClients = configurationDomainService.retrieveMinAllowedClientsInGroup();
+        Integer maxNumberOfClients = configurationDomainService.retrieveMaxAllowedClientsInGroup();
+        if (client.getGroups() != null && maxNumberOfClients != null) {
+            for (Group group : client.getGroups()) {
+                /**
+                 * Since this Client has not yet been associated with the group,
+                 * reduce maxNumberOfClients by 1
+                 **/
+                final boolean validationsuccess = group.isGroupsClientCountWithinMaxRange(maxNumberOfClients - 1);
+                if (!validationsuccess) { throw new GroupMemberCountNotInPermissibleRangeException(group.getId(), minNumberOfClients,
+                        maxNumberOfClients); }
+            }
+        }
+    }
+
+    @Override
+    public CommandProcessingResult rejectClient(final Long entityId, final JsonCommand command) {
+        final AppUser currentUser = this.context.authenticatedUser();
+        this.fromApiJsonDeserializer.validateRejection(command);
+
+        final Client client = this.clientRepository.findOneWithNotFoundDetection(entityId);
+        final LocalDate rejectionDate = command.localDateValueOfParameterNamed(ClientApiConstants.rejectionDateParamName);
+        final Long rejectionReasonId = command.longValueOfParameterNamed(ClientApiConstants.rejectionReasonIdParamName);
+
+        final CodeValue rejectionReason = this.codeValueRepository.findOneByCodeNameAndIdWithNotFoundDetection(
+                ClientApiConstants.CLIENT_REJECT_REASON, rejectionReasonId);
+
+        if (client.isNotPending()) {
+            final String errorMessage = "Only clients pending activation may be withdrawn.";
+            throw new InvalidClientStateTransitionException("rejection", "on.account.not.in.pending.activation.status", errorMessage,
+                    rejectionDate, client.getSubmittedOnDate());
+        } else if (client.getSubmittedOnDate().isAfter(rejectionDate)) {
+            final String errorMessage = "The client rejection date cannot be before the client submitted date.";
+            throw new InvalidClientStateTransitionException("rejection", "date.cannot.before.client.submitted.date", errorMessage,
+                    rejectionDate, client.getSubmittedOnDate());
+        }
+        client.reject(currentUser, rejectionReason, rejectionDate.toDate());
+        this.clientRepository.saveAndFlush(client);
+
+        return new CommandProcessingResultBuilder() //
+                .withCommandId(command.commandId()) //
+                .withClientId(entityId) //
+                .withEntityId(entityId) //
+                .build();
+    }
+
+    @Override
+    public CommandProcessingResult withdrawClient(Long entityId, JsonCommand command) {
+        final AppUser currentUser = this.context.authenticatedUser();
+        this.fromApiJsonDeserializer.validateWithdrawn(command);
+
+        final Client client = this.clientRepository.findOneWithNotFoundDetection(entityId);
+        final LocalDate withdrawalDate = command.localDateValueOfParameterNamed(ClientApiConstants.withdrawalDateParamName);
+        final Long withdrawalReasonId = command.longValueOfParameterNamed(ClientApiConstants.withdrawalReasonIdParamName);
+
+        final CodeValue withdrawalReason = this.codeValueRepository.findOneByCodeNameAndIdWithNotFoundDetection(
+                ClientApiConstants.CLIENT_WITHDRAW_REASON, withdrawalReasonId);
+
+        if (client.isNotPending()) {
+            final String errorMessage = "Only clients pending activation may be withdrawn.";
+            throw new InvalidClientStateTransitionException("withdrawal", "on.account.not.in.pending.activation.status", errorMessage,
+                    withdrawalDate, client.getSubmittedOnDate());
+        } else if (client.getSubmittedOnDate().isAfter(withdrawalDate)) {
+            final String errorMessage = "The client withdrawal date cannot be before the client submitted date.";
+            throw new InvalidClientStateTransitionException("withdrawal", "date.cannot.before.client.submitted.date", errorMessage,
+                    withdrawalDate, client.getSubmittedOnDate());
+        }
+        client.withdraw(currentUser, withdrawalReason, withdrawalDate.toDate());
+        this.clientRepository.saveAndFlush(client);
+
+        return new CommandProcessingResultBuilder() //
+                .withCommandId(command.commandId()) //
+                .withClientId(entityId) //
+                .withEntityId(entityId) //
+                .build();
+    }
+
+    @Override
+    public CommandProcessingResult reActivateClient(Long entityId, JsonCommand command) {
+        final AppUser currentUser = this.context.authenticatedUser();
+        this.fromApiJsonDeserializer.validateReactivate(command);
+
+        final Client client = this.clientRepository.findOneWithNotFoundDetection(entityId);
+        final LocalDate reactivateDate = command.localDateValueOfParameterNamed(ClientApiConstants.reactivationDateParamName);
+
+        if (!client.isClosed()) {
+            final String errorMessage = "only closed clients may be reactivated.";
+            throw new InvalidClientStateTransitionException("reactivation", "on.nonclosed.account", errorMessage);
+        } else if (client.getClosureDate().isAfter(reactivateDate)) {
+            final String errorMessage = "The client reactivation date cannot be before the client closed date.";
+            throw new InvalidClientStateTransitionException("reactivation", "date.cannot.before.client.closed.date", errorMessage,
+                    reactivateDate, client.getClosureDate());
+        }
+        client.reActivate(currentUser, reactivateDate.toDate());
+        this.clientRepository.saveAndFlush(client);
+
+        return new CommandProcessingResultBuilder() //
+                .withCommandId(command.commandId()) //
+                .withClientId(entityId) //
+                .withEntityId(entityId) //
+                .build();
+    }
 }

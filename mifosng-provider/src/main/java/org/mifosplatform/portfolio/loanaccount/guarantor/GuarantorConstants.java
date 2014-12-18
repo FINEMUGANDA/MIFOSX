@@ -19,7 +19,7 @@ public class GuarantorConstants {
         LOAN_ID("loanId"), CLIENT_RELATIONSHIP_TYPE_ID("clientRelationshipTypeId"), GUARANTOR_TYPE_ID("guarantorTypeId"), ENTITY_ID(
                 "entityId"), FIRSTNAME("firstname"), LASTNAME("lastname"), ADDRESS_LINE_1("addressLine1"), ADDRESS_LINE_2("addressLine2"), CITY(
                 "city"), STATE("state"), ZIP("zip"), COUNTRY("country"), MOBILE_NUMBER("mobileNumber"), PHONE_NUMBER("housePhoneNumber"), COMMENT(
-                "comment"), DATE_OF_BIRTH("dob");
+                "comment"), DATE_OF_BIRTH("dob"), AMOUNT("amount"), SAVINGS_ID("savingsId");
 
         private final String value;
 
@@ -47,4 +47,11 @@ public class GuarantorConstants {
             return this.value;
         }
     }
+    
+    public static final String GUARANTOR_SELF_GUARANTEE_ERROR = "min.self.guarantee.required";
+    public static final String GUARANTOR_EXTERNAL_GUARANTEE_ERROR = "min.external.guarantee.required";
+    public static final String GUARANTOR_MANDATORY_GUARANTEE_ERROR = "mandated.guarantee.required";
+    public static final String GUARANTOR_INSUFFICIENT_BALANCE_ERROR = "insufficient.balance";
+    public static final String GUARANTOR_NOT_ACTIVE_ERROR = "not.active";
+    
 }

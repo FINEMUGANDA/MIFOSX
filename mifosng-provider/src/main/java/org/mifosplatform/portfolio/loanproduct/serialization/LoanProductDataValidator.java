@@ -70,7 +70,10 @@ public final class LoanProductDataValidator {
             LoanProductConstants.interestRecalculationCompoundingMethodParameterName,
             LoanProductConstants.recalculationRestFrequencyDateParamName,
             LoanProductConstants.recalculationRestFrequencyIntervalParameterName,
-            LoanProductConstants.recalculationRestFrequencyTypeParameterName));
+            LoanProductConstants.recalculationRestFrequencyTypeParameterName,
+            LoanProductConstants.minimumDaysBetweenDisbursalAndFirstRepayment, LoanProductConstants.mandatoryGuaranteeParamName,
+            LoanProductConstants.holdGuaranteeFundsParamName, LoanProductConstants.minimumGuaranteeFromGuarantorParamName,
+            LoanProductConstants.minimumGuaranteeFromOwnFundsParamName));
 
     private final FromJsonHelper fromApiJsonHelper;
 
@@ -102,6 +105,13 @@ public final class LoanProductDataValidator {
         if (this.fromApiJsonHelper.parameterExists("fundId", element)) {
             final Long fundId = this.fromApiJsonHelper.extractLongNamed("fundId", element);
             baseDataValidator.reset().parameter("fundId").value(fundId).ignoreIfNull().integerGreaterThanZero();
+        }
+
+        if (this.fromApiJsonHelper.parameterExists(LoanProductConstants.minimumDaysBetweenDisbursalAndFirstRepayment, element)) {
+            final Long minimumDaysBetweenDisbursalAndFirstRepayment = this.fromApiJsonHelper.extractLongNamed(
+                    LoanProductConstants.minimumDaysBetweenDisbursalAndFirstRepayment, element);
+            baseDataValidator.reset().parameter(LoanProductConstants.minimumDaysBetweenDisbursalAndFirstRepayment)
+                    .value(minimumDaysBetweenDisbursalAndFirstRepayment).ignoreIfNull().integerGreaterThanZero();
         }
 
         final Boolean includeInBorrowerCycle = this.fromApiJsonHelper.extractBooleanNamed("includeInBorrowerCycle", element);
@@ -298,6 +308,20 @@ public final class LoanProductDataValidator {
         if (isInterestRecalculationEnabled != null) {
             if (isInterestRecalculationEnabled.booleanValue()) {
                 validateInterestRecalculationParams(element, baseDataValidator, null);
+            }
+        }
+
+        // Guarantee Funds
+        Boolean holdGuaranteeFunds = false;
+        if (this.fromApiJsonHelper.parameterExists(LoanProductConstants.holdGuaranteeFundsParamName, element)) {
+            holdGuaranteeFunds = this.fromApiJsonHelper.extractBooleanNamed(LoanProductConstants.holdGuaranteeFundsParamName, element);
+            baseDataValidator.reset().parameter(LoanProductConstants.holdGuaranteeFundsParamName).value(holdGuaranteeFunds).notNull()
+                    .isOneOfTheseValues(true, false);
+        }
+
+        if (holdGuaranteeFunds != null) {
+            if (holdGuaranteeFunds) {
+                validateGuaranteeParams(element, baseDataValidator, null);
             }
         }
 
@@ -696,16 +720,31 @@ public final class LoanProductDataValidator {
         }
 
         // Interest recalculation settings
+        Boolean isInterestRecalculationEnabled = loanProduct.isInterestRecalculationEnabled();
         if (this.fromApiJsonHelper.parameterExists(LoanProductConstants.isInterestRecalculationEnabledParameterName, element)) {
-            final Boolean isInterestRecalculationEnabled = this.fromApiJsonHelper.extractBooleanNamed(
+            isInterestRecalculationEnabled = this.fromApiJsonHelper.extractBooleanNamed(
                     LoanProductConstants.isInterestRecalculationEnabledParameterName, element);
             baseDataValidator.reset().parameter(LoanProductConstants.isInterestRecalculationEnabledParameterName)
                     .value(isInterestRecalculationEnabled).notNull().isOneOfTheseValues(true, false);
+        }
 
-            if (isInterestRecalculationEnabled != null) {
-                if (isInterestRecalculationEnabled.booleanValue()) {
-                    validateInterestRecalculationParams(element, baseDataValidator, loanProduct);
-                }
+        if (isInterestRecalculationEnabled != null) {
+            if (isInterestRecalculationEnabled) {
+                validateInterestRecalculationParams(element, baseDataValidator, loanProduct);
+            }
+        }
+
+        // Guarantee Funds
+        Boolean holdGuaranteeFunds = loanProduct.isHoldGuaranteeFundsEnabled();
+        if (this.fromApiJsonHelper.parameterExists(LoanProductConstants.holdGuaranteeFundsParamName, element)) {
+            holdGuaranteeFunds = this.fromApiJsonHelper.extractBooleanNamed(LoanProductConstants.holdGuaranteeFundsParamName, element);
+            baseDataValidator.reset().parameter(LoanProductConstants.holdGuaranteeFundsParamName).value(holdGuaranteeFunds).notNull()
+                    .isOneOfTheseValues(true, false);
+        }
+
+        if (holdGuaranteeFunds != null) {
+            if (holdGuaranteeFunds) {
+                validateGuaranteeParams(element, baseDataValidator, null);
             }
         }
 
@@ -1236,9 +1275,9 @@ public final class LoanProductDataValidator {
                             .value(valueUsageCondition)
                             .notNull()
                             .inMinMaxRange(LoanProductValueConditionType.EQUAL.getValue(),
-                                    LoanProductValueConditionType.GRETERTHAN.getValue());
+                                    LoanProductValueConditionType.GREATERTHAN.getValue());
                     if (lastConditionType.equals(LoanProductValueConditionType.EQUAL)
-                            && conditionType.equals(LoanProductValueConditionType.GRETERTHAN)) {
+                            && conditionType.equals(LoanProductValueConditionType.GREATERTHAN)) {
                         if (lastCycleNumber == 0) {
                             baseDataValidator.reset().parameter(cycleNumbersParamName)
                                     .failWithCode(LoanProductConstants.VALUE_CONDITION_START_WITH_ERROR);
@@ -1249,7 +1288,7 @@ public final class LoanProductDataValidator {
                     } else if (lastConditionType.equals(LoanProductValueConditionType.EQUAL)) {
                         baseDataValidator.reset().parameter(cycleNumbersParamName).value(cycleNumber).notNull()
                                 .integerSameAsNumber(lastCycleNumber + 1);
-                    } else if (lastConditionType.equals(LoanProductValueConditionType.GRETERTHAN)) {
+                    } else if (lastConditionType.equals(LoanProductValueConditionType.GREATERTHAN)) {
                         baseDataValidator.reset().parameter(cycleNumbersParamName).value(cycleNumber).notNull()
                                 .integerGreaterThanNumber(lastCycleNumber);
                     }
@@ -1261,12 +1300,57 @@ public final class LoanProductDataValidator {
                     }
                     i++;
                 } while (i < variationArray.size());
-                if (!lastConditionType.equals(LoanProductValueConditionType.GRETERTHAN)) {
+                if (!lastConditionType.equals(LoanProductValueConditionType.GREATERTHAN)) {
                     baseDataValidator.reset().parameter(cycleNumbersParamName)
                             .failWithCode(LoanProductConstants.VALUE_CONDITION_END_WITH_ERROR);
                 }
             }
 
+        }
+
+    }
+
+    private void validateGuaranteeParams(final JsonElement element, final DataValidatorBuilder baseDataValidator,
+            final LoanProduct loanProduct) {
+        BigDecimal mandatoryGuarantee = BigDecimal.ZERO;
+        BigDecimal minimumGuaranteeFromOwnFunds = BigDecimal.ZERO;
+        BigDecimal minimumGuaranteeFromGuarantor = BigDecimal.ZERO;
+        if (loanProduct != null) {
+            mandatoryGuarantee = loanProduct.getLoanProductGuaranteeDetails().getMandatoryGuarantee();
+            minimumGuaranteeFromOwnFunds = loanProduct.getLoanProductGuaranteeDetails().getMinimumGuaranteeFromOwnFunds();
+            minimumGuaranteeFromGuarantor = loanProduct.getLoanProductGuaranteeDetails().getMinimumGuaranteeFromGuarantor();
+        }
+
+        if (loanProduct == null || this.fromApiJsonHelper.parameterExists(LoanProductConstants.mandatoryGuaranteeParamName, element)) {
+            mandatoryGuarantee = this.fromApiJsonHelper.extractBigDecimalWithLocaleNamed(LoanProductConstants.mandatoryGuaranteeParamName,
+                    element);
+            baseDataValidator.reset().parameter(LoanProductConstants.mandatoryGuaranteeParamName).value(mandatoryGuarantee).notNull();
+            if (mandatoryGuarantee == null) {
+                mandatoryGuarantee = BigDecimal.ZERO;
+            }
+        }
+
+        if (loanProduct == null
+                || this.fromApiJsonHelper.parameterExists(LoanProductConstants.minimumGuaranteeFromGuarantorParamName, element)) {
+            minimumGuaranteeFromGuarantor = this.fromApiJsonHelper.extractBigDecimalWithLocaleNamed(
+                    LoanProductConstants.minimumGuaranteeFromGuarantorParamName, element);
+            if (minimumGuaranteeFromGuarantor == null) {
+                minimumGuaranteeFromGuarantor = BigDecimal.ZERO;
+            }
+        }
+
+        if (loanProduct == null
+                || this.fromApiJsonHelper.parameterExists(LoanProductConstants.minimumGuaranteeFromOwnFundsParamName, element)) {
+            minimumGuaranteeFromOwnFunds = this.fromApiJsonHelper.extractBigDecimalWithLocaleNamed(
+                    LoanProductConstants.minimumGuaranteeFromOwnFundsParamName, element);
+            if (minimumGuaranteeFromOwnFunds == null) {
+                minimumGuaranteeFromOwnFunds = BigDecimal.ZERO;
+            }
+        }
+
+        if (mandatoryGuarantee.compareTo(minimumGuaranteeFromOwnFunds.add(minimumGuaranteeFromGuarantor)) == -1) {
+            baseDataValidator.parameter(LoanProductConstants.mandatoryGuaranteeParamName).failWithCode(
+                    "must.be.greter.than.sum.of.min.funds");
         }
 
     }
