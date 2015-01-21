@@ -76,6 +76,10 @@ public final class Client extends AbstractPersistable<Long> {
     @Column(name = "status_enum", nullable = false)
     private Integer status;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "sub_status", nullable = true)
+    private CodeValue subStatus;
+    
     @Column(name = "activation_date", nullable = true)
     @Temporal(TemporalType.DATE)
     private Date activationDate;
@@ -133,9 +137,41 @@ public final class Client extends AbstractPersistable<Long> {
     @Temporal(TemporalType.DATE)
     private Date closureDate;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "reject_reason_cv_id", nullable = true)
+    private CodeValue rejectionReason;
+
+    @Column(name = "rejectedon_date", nullable = true)
+    @Temporal(TemporalType.DATE)
+    private Date rejectionDate;
+
+    @ManyToOne(optional = true)
+    @JoinColumn(name = "rejectedon_userid", nullable = true)
+    private AppUser rejectedBy;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "withdraw_reason_cv_id", nullable = true)
+    private CodeValue withdrawalReason;
+
+    @Column(name = "withdrawn_on_date", nullable = true)
+    @Temporal(TemporalType.DATE)
+    private Date withdrawalDate;
+
+    @ManyToOne(optional = true)
+    @JoinColumn(name = "withdraw_on_userid", nullable = true)
+    private AppUser withdrawnBy;
+
+    @Column(name = "reactivated_on_date", nullable = true)
+    @Temporal(TemporalType.DATE)
+    private Date reactivateDate;
+
+    @ManyToOne(optional = true)
+    @JoinColumn(name = "reactivated_on_userid", nullable = true)
+    private AppUser reactivatedBy;
+
     @ManyToOne(optional = true)
     @JoinColumn(name = "closedon_userid", nullable = true)
-    private AppUser closeddBy;
+    private AppUser closedBy;
 
     @Column(name = "submittedon_date", nullable = true)
     @Temporal(TemporalType.DATE)
@@ -144,6 +180,14 @@ public final class Client extends AbstractPersistable<Long> {
     @ManyToOne(optional = true)
     @JoinColumn(name = "submittedon_userid", nullable = true)
     private AppUser submittedBy;
+
+    @Column(name = "updated_on", nullable = true)
+    @Temporal(TemporalType.DATE)
+    private Date updatedOnDate;
+
+    @ManyToOne(optional = true)
+    @JoinColumn(name = "updated_by", nullable = true)
+    private AppUser updatedBy;
 
     @ManyToOne(optional = true)
     @JoinColumn(name = "activatedon_userid", nullable = true)
@@ -298,7 +342,9 @@ public final class Client extends AbstractPersistable<Long> {
         final List<ApiParameterError> dataValidationErrors = new ArrayList<>();
         validateNameParts(dataValidationErrors);
         validateActivationDate(dataValidationErrors);
+
         if (!dataValidationErrors.isEmpty()) { throw new PlatformApiDataValidationException(dataValidationErrors); }
+
     }
 
     public boolean isAccountNumberRequiresAutoGeneration() {
@@ -446,7 +492,6 @@ public final class Client extends AbstractPersistable<Long> {
             actualChanges.put(ClientApiConstants.savingsProductIdParamName, newValue);
         }
 
-
         if (command.isChangeInLongParameterNamed(ClientApiConstants.genderIdParamName, genderId())) {
             final Long newValue = command.longValueOfParameterNamed(ClientApiConstants.genderIdParamName);
             actualChanges.put(ClientApiConstants.genderIdParamName, newValue);
@@ -461,7 +506,6 @@ public final class Client extends AbstractPersistable<Long> {
             final Long newValue = command.longValueOfParameterNamed(ClientApiConstants.clientClassificationIdParamName);
             actualChanges.put(ClientApiConstants.clientClassificationIdParamName, newValue);
         }
-
 
         final String dateFormatAsInput = command.dateFormat();
         final String localeAsInput = command.locale();
@@ -487,7 +531,7 @@ public final class Client extends AbstractPersistable<Long> {
             this.dateOfBirth = newValue.toDate();
         }
 
-        if (command.isChangeInLocalDateParameterNamed(ClientApiConstants.submittedOnDateParamName,getSubmittedOnDate())) {
+        if (command.isChangeInLocalDateParameterNamed(ClientApiConstants.submittedOnDateParamName, getSubmittedOnDate())) {
             final String valueAsInput = command.stringValueOfParameterNamed(ClientApiConstants.submittedOnDateParamName);
             actualChanges.put(ClientApiConstants.submittedOnDateParamName, valueAsInput);
             actualChanges.put(ClientApiConstants.dateFormatParamName, dateFormatAsInput);
@@ -504,7 +548,6 @@ public final class Client extends AbstractPersistable<Long> {
         return actualChanges;
     }
 
-   
     private void validateNameParts(final List<ApiParameterError> dataValidationErrors) {
         final DataValidatorBuilder baseDataValidator = new DataValidatorBuilder(dataValidationErrors).resource("client");
 
@@ -694,12 +737,24 @@ public final class Client extends AbstractPersistable<Long> {
     public void close(final AppUser currentUser, final CodeValue closureReason, final Date closureDate) {
         this.closureReason = closureReason;
         this.closureDate = closureDate;
-        this.closeddBy = currentUser;
+        this.closedBy = currentUser;
         this.status = ClientStatus.CLOSED.getValue();
     }
 
     public Integer getStatus() {
         return this.status;
+    }
+    
+    public CodeValue subStatus() {
+        return this.subStatus;
+    }
+    
+    public Long subStatusId() {
+        Long subStatusId = null;
+        if (this.subStatus != null) {
+            subStatusId = this.subStatus.getId();
+        }
+        return subStatusId;
     }
 
     public void setStatus(final Integer status) {
@@ -771,6 +826,10 @@ public final class Client extends AbstractPersistable<Long> {
         return clientClassificationId;
     }
 
+    public LocalDate getClosureDate() {
+        return (LocalDate) ObjectUtils.defaultIfNull(new LocalDate(this.closureDate), null);
+    }
+
     public CodeValue gender() {
         return this.gender;
     }
@@ -805,5 +864,34 @@ public final class Client extends AbstractPersistable<Long> {
             dateOfBirth = LocalDate.fromDateFields(this.dateOfBirth);
         }
         return dateOfBirth;
+    }
+
+    public void reject(AppUser currentUser, CodeValue rejectionReason, Date rejectionDate) {
+        this.rejectionReason = rejectionReason;
+        this.rejectionDate = rejectionDate;
+        this.rejectedBy = currentUser;
+        this.updatedBy = currentUser;
+        this.updatedOnDate = rejectionDate;
+        this.status = ClientStatus.REJECTED.getValue();
+
+    }
+
+    public void withdraw(AppUser currentUser, CodeValue withdrawalReason, Date withdrawalDate) {
+        this.withdrawalReason = withdrawalReason;
+        this.withdrawalDate = withdrawalDate;
+        this.withdrawnBy = currentUser;
+        this.updatedBy = currentUser;
+        this.updatedOnDate = withdrawalDate;
+        this.status = ClientStatus.WITHDRAWN.getValue();
+
+    }
+
+    public void reActivate(AppUser currentUser, Date reactivateDate) {
+        this.reactivateDate = reactivateDate;
+        this.reactivatedBy = currentUser;
+        this.updatedBy = currentUser;
+        this.updatedOnDate = reactivateDate;
+        this.status = ClientStatus.PENDING.getValue();
+
     }
 }

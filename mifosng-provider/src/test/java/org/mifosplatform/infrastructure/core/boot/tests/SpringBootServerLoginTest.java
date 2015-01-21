@@ -26,7 +26,7 @@ public class SpringBootServerLoginTest extends AbstractSpringBootWithMariaDB4jIn
     protected RestAssuredFixture util;
 
     @Test
-    @Ignore("functionality currently broken on Windows and Integration Testing environment")
+    @Ignore("Failing on Cloubees")
     public void hasMifosPlatformStarted() {
         util = new RestAssuredFixture(8443);
         List<Map<String, String>> response = util.httpGet("/users");

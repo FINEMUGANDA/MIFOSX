@@ -10,6 +10,7 @@ import java.math.BigDecimal;
 import org.joda.time.LocalDate;
 import org.mifosplatform.infrastructure.core.data.CommandProcessingResultBuilder;
 import org.mifosplatform.portfolio.calendar.domain.CalendarInstance;
+import org.mifosplatform.portfolio.loanaccount.data.ScheduleGeneratorDTO;
 import org.mifosplatform.portfolio.paymentdetail.domain.PaymentDetail;
 
 public interface LoanAccountDomainService {
@@ -30,6 +31,10 @@ public interface LoanAccountDomainService {
             PaymentDetail paymentDetail, String noteText, String txnExternalId);
 
     LocalDate getCalculatedRepaymentsStartingFromDate(LocalDate actualDisbursementDate, Loan loan, CalendarInstance calendarInstance);
+    
+    LoanTransaction makeRefundForActiveLoan(Long accountId, CommandProcessingResultBuilder builderResult,
+			LocalDate transactionDate, BigDecimal transactionAmount,
+			PaymentDetail paymentDetail, String noteText, String txnExternalId);
 
     /**
      * This method is to recalculate and accrue the income till the last accrued
@@ -39,4 +44,16 @@ public interface LoanAccountDomainService {
      * @param loan
      */
     void recalculateAccruals(Loan loan);
+
+    /**
+     * This method is used for building ScheduleGeneratorDTO from loan, usages
+     * are as, if have loan and some of the terms are modified which may impact
+     * the schedule, in that case need to recompute the schedule, so this method
+     * helps to build the ScheduleGeneratorDTO from modified loan.
+     * 
+     * @param loan
+     */
+
+    public ScheduleGeneratorDTO buildScheduleGeneratorDTO(final Loan loan);
+
 }

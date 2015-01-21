@@ -48,7 +48,6 @@ public class GroupLevel extends AbstractPersistable<Long> {
         this.levelName = levelName;
         this.recursable = recursable;
         this.canHaveClients = canHaveClients;
-
     }
 
     public Long getParentId() {
@@ -78,4 +77,9 @@ public class GroupLevel extends AbstractPersistable<Long> {
     public boolean isCenter() {
         return this.levelName.equalsIgnoreCase("Center");
     }
+
+    public boolean isGroup() {
+        return this.levelName.equalsIgnoreCase("Group");
+    }
+
 }

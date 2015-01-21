@@ -59,8 +59,8 @@ public interface LoanProductConstants {
     public static final String outstandingLoanBalanceParameterName = "outstandingLoanBalance";
 
     public static final String graceOnArrearsAgeingParameterName = "graceOnArrearsAgeing";
-
     public static final String overdueDaysForNPAParameterName = "overdueDaysForNPA";
+    public static final String minimumDaysBetweenDisbursalAndFirstRepayment = "minimumDaysBetweenDisbursalAndFirstRepayment";
 
     // Interest recalculation related
     public static final String isInterestRecalculationEnabledParameterName = "isInterestRecalculationEnabled";
@@ -71,5 +71,11 @@ public interface LoanProductConstants {
     public static final String recalculationRestFrequencyTypeParameterName = "recalculationRestFrequencyType";
     public static final String recalculationRestFrequencyIntervalParameterName = "recalculationRestFrequencyInterval";
     public static final String recalculationRestFrequencyDateParamName = "recalculationRestFrequencyDate";
+
+    // Guarantee related
+    public static final String holdGuaranteeFundsParamName = "holdGuaranteeFunds";
+    public static final String mandatoryGuaranteeParamName = "mandatoryGuarantee";
+    public static final String minimumGuaranteeFromOwnFundsParamName = "minimumGuaranteeFromOwnFunds";
+    public static final String minimumGuaranteeFromGuarantorParamName = "minimumGuaranteeFromGuarantor";
 
 }

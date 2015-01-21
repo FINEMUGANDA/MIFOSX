@@ -17,6 +17,8 @@ import org.mifosplatform.infrastructure.core.data.EnumOptionData;
 import org.mifosplatform.infrastructure.core.domain.JdbcSupport;
 import org.mifosplatform.infrastructure.core.service.DateUtils;
 import org.mifosplatform.infrastructure.core.service.RoutingDataSource;
+import org.mifosplatform.infrastructure.entityaccess.domain.MifosEntityType;
+import org.mifosplatform.infrastructure.entityaccess.service.MifosEntityAccessUtil;
 import org.mifosplatform.infrastructure.security.service.PlatformSecurityContext;
 import org.mifosplatform.organisation.monetary.data.CurrencyData;
 import org.mifosplatform.portfolio.charge.data.ChargeData;
@@ -24,6 +26,7 @@ import org.mifosplatform.portfolio.charge.service.ChargeReadPlatformService;
 import org.mifosplatform.portfolio.common.service.CommonEnumerations;
 import org.mifosplatform.portfolio.loanproduct.data.LoanProductBorrowerCycleVariationData;
 import org.mifosplatform.portfolio.loanproduct.data.LoanProductData;
+import org.mifosplatform.portfolio.loanproduct.data.LoanProductGuaranteeData;
 import org.mifosplatform.portfolio.loanproduct.data.LoanProductInterestRecalculationData;
 import org.mifosplatform.portfolio.loanproduct.domain.LoanProductParamType;
 import org.mifosplatform.portfolio.loanproduct.exception.LoanProductNotFoundException;
@@ -39,13 +42,16 @@ public class LoanProductReadPlatformServiceImpl implements LoanProductReadPlatfo
     private final PlatformSecurityContext context;
     private final JdbcTemplate jdbcTemplate;
     private final ChargeReadPlatformService chargeReadPlatformService;
+    private final MifosEntityAccessUtil mifosEntityAccessUtil;
 
     @Autowired
     public LoanProductReadPlatformServiceImpl(final PlatformSecurityContext context,
-            final ChargeReadPlatformService chargeReadPlatformService, final RoutingDataSource dataSource) {
+            final ChargeReadPlatformService chargeReadPlatformService, final RoutingDataSource dataSource,
+            final MifosEntityAccessUtil mifosEntityAccessUtil) {
         this.context = context;
         this.chargeReadPlatformService = chargeReadPlatformService;
         this.jdbcTemplate = new JdbcTemplate(dataSource);
+        this.mifosEntityAccessUtil = mifosEntityAccessUtil;
     }
 
     @Override
@@ -78,7 +84,15 @@ public class LoanProductReadPlatformServiceImpl implements LoanProductReadPlatfo
 
         final LoanProductMapper rm = new LoanProductMapper(null, null);
 
-        final String sql = "select " + rm.loanProductSchema();
+        String sql = "select " + rm.loanProductSchema();
+        
+        // Check if branch specific products are enabled. If yes, fetch only products mapped to current user's office
+        String inClause = mifosEntityAccessUtil.
+  				getSQLWhereClauseForProductIDsForUserOffice_ifGlobalConfigEnabled(
+						MifosEntityType.LOAN_PRODUCT);
+    	if ( (inClause != null) && (!(inClause.trim().isEmpty())) ) {
+    		sql += " where lp.id in ( " + inClause + " ) ";
+    	}
 
         return this.jdbcTemplate.query(sql, rm, new Object[] {});
     }
@@ -90,7 +104,15 @@ public class LoanProductReadPlatformServiceImpl implements LoanProductReadPlatfo
 
         final LoanProductLookupMapper rm = new LoanProductLookupMapper();
 
-        final String sql = "select " + rm.schema();
+        String sql = "select " + rm.schema();
+        
+        // Check if branch specific products are enabled. If yes, fetch only products mapped to current user's office
+        String inClause = mifosEntityAccessUtil.
+  				getSQLWhereClauseForProductIDsForUserOffice_ifGlobalConfigEnabled(
+						MifosEntityType.LOAN_PRODUCT);
+    	if ( (inClause != null) && (!(inClause.trim().isEmpty())) ) {
+    		sql += " where id in ( " + inClause + " ) ";
+    	}
 
         return this.jdbcTemplate.query(sql, rm, new Object[] {});
     }
@@ -120,6 +142,7 @@ public class LoanProductReadPlatformServiceImpl implements LoanProductReadPlatfo
                     + "lp.annual_nominal_interest_rate as annualInterestRate, lp.interest_method_enum as interestMethod, lp.interest_calculated_in_period_enum as interestCalculationInPeriodMethod,"
                     + "lp.repay_every as repaidEvery, lp.repayment_period_frequency_enum as repaymentPeriodFrequency, lp.number_of_repayments as numberOfRepayments, lp.min_number_of_repayments as minNumberOfRepayments, lp.max_number_of_repayments as maxNumberOfRepayments, "
                     + "lp.grace_on_principal_periods as graceOnPrincipalPayment, lp.grace_on_interest_periods as graceOnInterestPayment, lp.grace_interest_free_periods as graceOnInterestCharged,lp.grace_on_arrears_ageing as graceOnArrearsAgeing,lp.overdue_days_for_npa as overdueDaysForNPA, "
+                    + "lp.min_days_between_disbursal_and_first_repayment As minimumDaysBetweenDisbursalAndFirstRepayment, "
                     + "lp.amortization_method_enum as amortizationMethod, lp.arrearstolerance_amount as tolerance, "
                     + "lp.accounting_type as accountingType, lp.include_in_borrower_cycle as includeInBorrowerCycle,lp.use_borrower_cycle as useBorrowerCycle, lp.start_date as startDate, lp.close_date as closeDate,  "
                     + "lp.allow_multiple_disbursals as multiDisburseLoan, lp.max_disbursals as maxTrancheCount, lp.max_outstanding_loan_balance as outstandingLoanBalance, "
@@ -127,10 +150,14 @@ public class LoanProductReadPlatformServiceImpl implements LoanProductReadPlatfo
                     + "lpr.id as lprId, lpr.product_id as productId, lpr.compound_type_enum as compoundType, lpr.reschedule_strategy_enum as rescheduleStrategy, "
                     + "lpr.rest_frequency_type_enum as restFrequencyEnum, lpr.rest_frequency_interval as restFrequencyInterval, "
                     + "lpr.rest_freqency_date as restFrequencyDate, "
+                    + "lp.hold_guarantee_funds as holdGuaranteeFunds, "
+                    + "lpg.id as lpgId, lpg.mandatory_guarantee as mandatoryGuarantee, "
+                    + "lpg.minimum_guarantee_from_own_funds as minimumGuaranteeFromOwnFunds, lpg.minimum_guarantee_from_guarantor_funds as minimumGuaranteeFromGuarantor, "
                     + "curr.name as currencyName, curr.internationalized_name_code as currencyNameCode, curr.display_symbol as currencyDisplaySymbol, lp.external_id as externalId "
                     + " from m_product_loan lp "
                     + " left join m_fund f on f.id = lp.fund_id "
                     + " left join m_product_loan_recalculation_details lpr on lpr.product_id=lp.id "
+                    + " left join m_product_loan_guarantee_details lpg on lpg.loan_product_id=lp.id "
                     + " left join ref_loan_transaction_processing_strategy ltps on ltps.id = lp.loan_transaction_strategy_id"
                     + " join m_currency curr on curr.code = lp.currency_code";
         }
@@ -172,6 +199,8 @@ public class LoanProductReadPlatformServiceImpl implements LoanProductReadPlatfo
             final Integer graceOnInterestCharged = JdbcSupport.getIntegerDefaultToNullIfZero(rs, "graceOnInterestCharged");
             final Integer graceOnArrearsAgeing = JdbcSupport.getIntegerDefaultToNullIfZero(rs, "graceOnArrearsAgeing");
             final Integer overdueDaysForNPA = JdbcSupport.getIntegerDefaultToNullIfZero(rs, "overdueDaysForNPA");
+            final Integer minimumDaysBetweenDisbursalAndFirstRepayment = JdbcSupport.getInteger(rs,
+                    "minimumDaysBetweenDisbursalAndFirstRepayment");
 
             final Integer accountingRuleId = JdbcSupport.getInteger(rs, "accountingType");
             final EnumOptionData accountingRuleType = AccountingEnumerations.accountingRuleType(accountingRuleId);
@@ -254,6 +283,17 @@ public class LoanProductReadPlatformServiceImpl implements LoanProductReadPlatfo
                         restFrequencyDate);
             }
 
+            final boolean holdGuaranteeFunds = rs.getBoolean("holdGuaranteeFunds");
+            LoanProductGuaranteeData loanProductGuaranteeData = null;
+            if (holdGuaranteeFunds) {
+                final Long lpgId = JdbcSupport.getLong(rs, "lpgId");
+                final BigDecimal mandatoryGuarantee = rs.getBigDecimal("mandatoryGuarantee");
+                final BigDecimal minimumGuaranteeFromOwnFunds = rs.getBigDecimal("minimumGuaranteeFromOwnFunds");
+                final BigDecimal minimumGuaranteeFromGuarantor = rs.getBigDecimal("minimumGuaranteeFromGuarantor");
+                loanProductGuaranteeData = LoanProductGuaranteeData.instance(lpgId, id, mandatoryGuarantee, minimumGuaranteeFromOwnFunds,
+                        minimumGuaranteeFromGuarantor);
+            }
+
             return new LoanProductData(id, name, shortName, description, currency, principal, minPrincipal, maxPrincipal, tolerance,
                     numberOfRepayments, minNumberOfRepayments, maxNumberOfRepayments, repaymentEvery, interestRatePerPeriod,
                     minInterestRatePerPeriod, maxInterestRatePerPeriod, annualInterestRate, repaymentFrequencyType,
@@ -263,7 +303,7 @@ public class LoanProductReadPlatformServiceImpl implements LoanProductReadPlatfo
                     closeDate, status, externalId, principalVariationsForBorrowerCycle, interestRateVariationsForBorrowerCycle,
                     numberOfRepaymentVariationsForBorrowerCycle, multiDisburseLoan, maxTrancheCount, outstandingLoanBalance,
                     graceOnArrearsAgeing, overdueDaysForNPA, daysInMonthType, daysInYearType, isInterestRecalculationEnabled,
-                    interestRecalculationData);
+                    interestRecalculationData, minimumDaysBetweenDisbursalAndFirstRepayment, holdGuaranteeFunds, loanProductGuaranteeData);
         }
 
     }
@@ -331,7 +371,15 @@ public class LoanProductReadPlatformServiceImpl implements LoanProductReadPlatfo
 
         final LoanProductMapper rm = new LoanProductMapper(null, null);
 
-        final String sql = "select " + rm.loanProductSchema() + " where lp.currency_code='" + currencyCode + "'";
+        String sql = "select " + rm.loanProductSchema() + " where lp.currency_code='" + currencyCode + "'";
+        
+        // Check if branch specific products are enabled. If yes, fetch only products mapped to current user's office
+        String inClause = mifosEntityAccessUtil.
+  				getSQLWhereClauseForProductIDsForUserOffice_ifGlobalConfigEnabled(
+						MifosEntityType.LOAN_PRODUCT);
+    	if ( (inClause != null) && (!(inClause.trim().isEmpty())) ) {
+    		sql += " and id in ( " + inClause + " ) ";
+    	}
 
         return this.jdbcTemplate.query(sql, rm, new Object[] {});
     }
@@ -343,7 +391,15 @@ public class LoanProductReadPlatformServiceImpl implements LoanProductReadPlatfo
 
         final LoanProductLookupMapper rm = new LoanProductLookupMapper();
 
-        final String sql = "Select " + rm.productMixSchema();
+        String sql = "Select " + rm.productMixSchema();
+        
+        // Check if branch specific products are enabled. If yes, fetch only products mapped to current user's office
+        String inClause = mifosEntityAccessUtil.
+  				getSQLWhereClauseForProductIDsForUserOffice_ifGlobalConfigEnabled(
+						MifosEntityType.LOAN_PRODUCT);
+    	if ( (inClause != null) && (!(inClause.trim().isEmpty())) ) {
+    		sql += " and lp.id in ( " + inClause + " ) ";
+    	}
 
         return this.jdbcTemplate.query(sql, rm, new Object[] {});
     }
@@ -355,8 +411,25 @@ public class LoanProductReadPlatformServiceImpl implements LoanProductReadPlatfo
 
         final LoanProductLookupMapper rm = new LoanProductLookupMapper();
 
-        final String sql = "Select " + rm.restrictedProductsSchema() + " where pm.product_id=? UNION Select "
+        String sql = "Select " + rm.restrictedProductsSchema() + " where pm.product_id=? ";
+        // Check if branch specific products are enabled. If yes, fetch only products mapped to current user's office
+        String inClause1 = mifosEntityAccessUtil.
+  				getSQLWhereClauseForProductIDsForUserOffice_ifGlobalConfigEnabled(
+						MifosEntityType.LOAN_PRODUCT);
+    	if ( (inClause1 != null) && (!(inClause1.trim().isEmpty())) ) {
+    		sql += " and rp.id in ( " + inClause1 + " ) ";
+    	}
+    	
+        sql += " UNION Select "
                 + rm.derivedRestrictedProductsSchema() + " where pm.restricted_product_id=?";
+        
+        // Check if branch specific products are enabled. If yes, fetch only products mapped to current user's office
+        String inClause2 = mifosEntityAccessUtil.
+  				getSQLWhereClauseForProductIDsForUserOffice_ifGlobalConfigEnabled(
+						MifosEntityType.LOAN_PRODUCT);
+    	if ( (inClause2 != null) && (!(inClause2.trim().isEmpty())) ) {
+    		sql += " and lp.id in ( " + inClause2 + " ) ";
+    	}
 
         return this.jdbcTemplate.query(sql, rm, new Object[] { productId, productId });
     }
@@ -368,7 +441,17 @@ public class LoanProductReadPlatformServiceImpl implements LoanProductReadPlatfo
 
         final LoanProductLookupMapper rm = new LoanProductLookupMapper();
 
-        final String sql = "Select " + rm.schema() + " where lp.id not in ("
+        String sql = "Select " + rm.schema() + " where ";
+        
+        // Check if branch specific products are enabled. If yes, fetch only products mapped to current user's office
+        String inClause = mifosEntityAccessUtil.
+  				getSQLWhereClauseForProductIDsForUserOffice_ifGlobalConfigEnabled(
+						MifosEntityType.LOAN_PRODUCT);
+    	if ( (inClause != null) && (!(inClause.trim().isEmpty())) ) {
+    		sql += " lp.id in ( " + inClause + " ) and ";
+    	}
+    	
+		sql += "lp.id not in ("
                 + "Select pm.restricted_product_id from m_product_mix pm where pm.product_id=? " + "UNION "
                 + "Select pm.product_id from m_product_mix pm where pm.restricted_product_id=?)";
 

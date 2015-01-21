@@ -25,6 +25,7 @@ import org.mifosplatform.portfolio.calendar.domain.CalendarEntityType;
 import org.mifosplatform.portfolio.calendar.domain.CalendarFrequencyType;
 import org.mifosplatform.portfolio.calendar.domain.CalendarRemindBy;
 import org.mifosplatform.portfolio.calendar.domain.CalendarWeekDaysType;
+import org.mifosplatform.portfolio.calendar.exception.CalendarParameterUpdateNotSupportedException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -200,6 +201,26 @@ public class CalendarCommandFromApiJsonDeserializer extends AbstractFromApiJsonD
 
         final DataValidatorBuilder baseDataValidator = new DataValidatorBuilder(dataValidationErrors).resource("calendar");
 
+        if (this.fromApiJsonHelper.parameterExists(CALENDAR_SUPPORTED_PARAMETERS.RESCHEDULE_BASED_ON_MEETING_DATES.getValue(), element)) {
+            final Boolean rescheduleBasedOnMeetingDates = this.fromApiJsonHelper.extractBooleanNamed(
+                    CALENDAR_SUPPORTED_PARAMETERS.RESCHEDULE_BASED_ON_MEETING_DATES.getValue(), element);
+            baseDataValidator.reset().parameter(CALENDAR_SUPPORTED_PARAMETERS.RESCHEDULE_BASED_ON_MEETING_DATES.getValue())
+                    .value(rescheduleBasedOnMeetingDates).validateForBooleanValue();
+        }
+
+        if (this.fromApiJsonHelper.parameterExists(CALENDAR_SUPPORTED_PARAMETERS.PRESENT_MEETING_DATE.getValue(), element)) {
+            final String presentMeetingDate = this.fromApiJsonHelper.extractStringNamed(
+                    CALENDAR_SUPPORTED_PARAMETERS.PRESENT_MEETING_DATE.getValue(), element);
+            baseDataValidator.reset().parameter(CALENDAR_SUPPORTED_PARAMETERS.PRESENT_MEETING_DATE.getValue()).value(presentMeetingDate)
+                    .notNull();
+        }
+
+        if (this.fromApiJsonHelper.parameterExists(CALENDAR_SUPPORTED_PARAMETERS.NEW_MEETING_DATE.getValue(), element)) {
+            final String newMeetingDate = this.fromApiJsonHelper.extractStringNamed(
+                    CALENDAR_SUPPORTED_PARAMETERS.NEW_MEETING_DATE.getValue(), element);
+            baseDataValidator.reset().parameter(CALENDAR_SUPPORTED_PARAMETERS.NEW_MEETING_DATE.getValue()).value(newMeetingDate).notNull();
+        }
+
         if (this.fromApiJsonHelper.parameterExists(CALENDAR_SUPPORTED_PARAMETERS.TITLE.getValue(), element)) {
             final String title = this.fromApiJsonHelper.extractStringNamed(CALENDAR_SUPPORTED_PARAMETERS.TITLE.getValue(), element);
             baseDataValidator.reset().parameter(CALENDAR_SUPPORTED_PARAMETERS.TITLE.getValue()).value(title).notBlank()
@@ -298,5 +319,5 @@ public class CalendarCommandFromApiJsonDeserializer extends AbstractFromApiJsonD
         if (!dataValidationErrors.isEmpty()) { throw new PlatformApiDataValidationException("validation.msg.validation.errors.exist",
                 "Validation errors exist.", dataValidationErrors); }
     }
-
+        
 }

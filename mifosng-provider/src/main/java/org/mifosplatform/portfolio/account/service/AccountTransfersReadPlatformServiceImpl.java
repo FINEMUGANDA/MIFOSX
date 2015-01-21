@@ -20,17 +20,18 @@ import org.mifosplatform.infrastructure.core.service.DateUtils;
 import org.mifosplatform.infrastructure.core.service.Page;
 import org.mifosplatform.infrastructure.core.service.PaginationHelper;
 import org.mifosplatform.infrastructure.core.service.RoutingDataSource;
+import org.mifosplatform.infrastructure.core.service.SearchParameters;
 import org.mifosplatform.organisation.monetary.data.CurrencyData;
 import org.mifosplatform.organisation.office.data.OfficeData;
 import org.mifosplatform.organisation.office.service.OfficeReadPlatformService;
 import org.mifosplatform.portfolio.account.PortfolioAccountType;
 import org.mifosplatform.portfolio.account.data.AccountTransferData;
+import org.mifosplatform.portfolio.account.data.PortfolioAccountDTO;
 import org.mifosplatform.portfolio.account.data.PortfolioAccountData;
 import org.mifosplatform.portfolio.account.domain.AccountTransferType;
 import org.mifosplatform.portfolio.account.exception.AccountTransferNotFoundException;
 import org.mifosplatform.portfolio.client.data.ClientData;
 import org.mifosplatform.portfolio.client.service.ClientReadPlatformService;
-import org.mifosplatform.portfolio.group.service.SearchParameters;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -124,8 +125,9 @@ public class AccountTransfersReadPlatformServiceImpl implements AccountTransfers
             if (mostRelevantFromAccountType == 1) {
                 loanStatus = new long[] { 300, 700 };
             }
-            fromAccountOptions = this.portfolioAccountReadPlatformService.retrieveAllForLookup(mostRelevantFromAccountType,
-                    mostRelevantFromClientId, loanStatus);
+            PortfolioAccountDTO portfolioAccountDTO = new PortfolioAccountDTO(mostRelevantFromAccountType, mostRelevantFromClientId,
+                    loanStatus);
+            fromAccountOptions = this.portfolioAccountReadPlatformService.retrieveAllForLookup(portfolioAccountDTO);
         }
 
         Collection<OfficeData> fromOfficeOptions = null;
@@ -178,8 +180,9 @@ public class AccountTransfersReadPlatformServiceImpl implements AccountTransfers
 
         final String currencyCode = excludeThisAccountFromOptions != null ? excludeThisAccountFromOptions.currencyCode() : null;
 
-        Collection<PortfolioAccountData> accountOptions = this.portfolioAccountReadPlatformService.retrieveAllForLookup(toAccountType,
-                toClientId, currencyCode, null, null);
+        PortfolioAccountDTO portfolioAccountDTO = new PortfolioAccountDTO(toAccountType, toClientId, currencyCode, null, null);
+        Collection<PortfolioAccountData> accountOptions = this.portfolioAccountReadPlatformService
+                .retrieveAllForLookup(portfolioAccountDTO);
         if (!CollectionUtils.isEmpty(accountOptions)) {
             accountOptions.remove(excludeThisAccountFromOptions);
         } else {
@@ -370,6 +373,7 @@ public class AccountTransfersReadPlatformServiceImpl implements AccountTransfers
                     .append(transactionId);
         }
 
+        @SuppressWarnings("deprecation")
         final int count = this.jdbcTemplate.queryForInt(sql.toString());
         return count > 0;
     }
@@ -405,6 +409,116 @@ public class AccountTransfersReadPlatformServiceImpl implements AccountTransfers
         final String sqlCountRows = "SELECT FOUND_ROWS()";
         return this.paginationHelper.fetchPage(this.jdbcTemplate, sqlCountRows, sqlBuilder.toString(), finalObjectArray,
                 this.accountTransfersMapper);
+    }
+
+    @Override
+    public AccountTransferData retrieveRefundByTransferTemplate(final Long fromOfficeId, final Long fromClientId, final Long fromAccountId,
+            final Integer fromAccountType, final Long toOfficeId, final Long toClientId, final Long toAccountId, final Integer toAccountType) {
+        // TODO Auto-generated method stub
+        final EnumOptionData loanAccountType = AccountTransferEnumerations.accountType(PortfolioAccountType.LOAN);
+        final EnumOptionData savingsAccountType = AccountTransferEnumerations.accountType(PortfolioAccountType.SAVINGS);
+
+        final Integer mostRelevantFromAccountType = fromAccountType;
+        final Collection<EnumOptionData> fromAccountTypeOptions = Arrays.asList(savingsAccountType, loanAccountType);
+        final Collection<EnumOptionData> toAccountTypeOptions;
+        if (mostRelevantFromAccountType == 1) {
+            // overpaid loan amt transfer to savings account
+            toAccountTypeOptions = Arrays.asList(savingsAccountType);
+        } else {
+            toAccountTypeOptions = Arrays.asList(loanAccountType, savingsAccountType);
+        }
+        final Integer mostRelevantToAccountType = toAccountType;
+
+        final EnumOptionData fromAccountTypeData = AccountTransferEnumerations.accountType(mostRelevantFromAccountType);
+        final EnumOptionData toAccountTypeData = AccountTransferEnumerations.accountType(mostRelevantToAccountType);
+
+        // from settings
+        OfficeData fromOffice = null;
+        ClientData fromClient = null;
+        PortfolioAccountData fromAccount = null;
+
+        OfficeData toOffice = null;
+        ClientData toClient = null;
+        PortfolioAccountData toAccount = null;
+
+        // template
+        Collection<PortfolioAccountData> fromAccountOptions = null;
+        Collection<PortfolioAccountData> toAccountOptions = null;
+
+        Long mostRelevantFromOfficeId = fromOfficeId;
+        Long mostRelevantFromClientId = fromClientId;
+
+        Long mostRelevantToOfficeId = toOfficeId;
+        Long mostRelevantToClientId = toClientId;
+
+        if (fromAccountId != null) {
+            Integer accountType;
+            if (mostRelevantFromAccountType == 1) {
+                accountType = PortfolioAccountType.LOAN.getValue();
+            } else {
+                accountType = PortfolioAccountType.SAVINGS.getValue();
+            }
+            fromAccount = this.portfolioAccountReadPlatformService.retrieveOneByPaidInAdvance(fromAccountId, accountType);
+
+            // override provided fromClient with client of account
+            mostRelevantFromClientId = fromAccount.clientId();
+        }
+
+        if (mostRelevantFromClientId != null) {
+            fromClient = this.clientReadPlatformService.retrieveOne(mostRelevantFromClientId);
+            mostRelevantFromOfficeId = fromClient.officeId();
+            long[] loanStatus = null;
+            if (mostRelevantFromAccountType == 1) {
+                loanStatus = new long[] { 300, 700 };
+            }
+            PortfolioAccountDTO portfolioAccountDTO = new PortfolioAccountDTO(mostRelevantFromAccountType, mostRelevantFromClientId,
+                    loanStatus);
+            fromAccountOptions = this.portfolioAccountReadPlatformService.retrieveAllForLookup(portfolioAccountDTO);
+        }
+
+        Collection<OfficeData> fromOfficeOptions = null;
+        Collection<ClientData> fromClientOptions = null;
+        if (mostRelevantFromOfficeId != null) {
+            fromOffice = this.officeReadPlatformService.retrieveOffice(mostRelevantFromOfficeId);
+            fromOfficeOptions = this.officeReadPlatformService.retrieveAllOfficesForDropdown();
+            fromClientOptions = this.clientReadPlatformService.retrieveAllForLookupByOfficeId(mostRelevantFromOfficeId);
+        }
+
+        // defaults
+        final LocalDate transferDate = DateUtils.getLocalDateOfTenant();
+        Collection<OfficeData> toOfficeOptions = fromOfficeOptions;
+        Collection<ClientData> toClientOptions = null;
+
+        if (toAccountId != null && fromAccount != null) {
+            toAccount = this.portfolioAccountReadPlatformService.retrieveOne(toAccountId, mostRelevantToAccountType,
+                    fromAccount.currencyCode());
+            mostRelevantToClientId = toAccount.clientId();
+        }
+
+        if (mostRelevantToClientId != null) {
+            toClient = this.clientReadPlatformService.retrieveOne(mostRelevantToClientId);
+            mostRelevantToOfficeId = toClient.officeId();
+
+            toClientOptions = this.clientReadPlatformService.retrieveAllForLookupByOfficeId(mostRelevantToOfficeId);
+
+            toAccountOptions = retrieveToAccounts(fromAccount, mostRelevantToAccountType, mostRelevantToClientId);
+        }
+
+        if (mostRelevantToOfficeId != null) {
+            toOffice = this.officeReadPlatformService.retrieveOffice(mostRelevantToOfficeId);
+            toOfficeOptions = this.officeReadPlatformService.retrieveAllOfficesForDropdown();
+
+            toClientOptions = this.clientReadPlatformService.retrieveAllForLookupByOfficeId(mostRelevantToOfficeId);
+            if (toClientOptions != null && toClientOptions.size() == 1) {
+                toClient = new ArrayList<>(toClientOptions).get(0);
+
+                toAccountOptions = retrieveToAccounts(fromAccount, mostRelevantToAccountType, mostRelevantToClientId);
+            }
+        }
+
+        return AccountTransferData.template(fromOffice, fromClient, fromAccountTypeData, fromAccount, transferDate, toOffice, toClient,
+                toAccountTypeData, toAccount, fromOfficeOptions, fromClientOptions, fromAccountTypeOptions, fromAccountOptions,
+                toOfficeOptions, toClientOptions, toAccountTypeOptions, toAccountOptions);
     }
 
 }

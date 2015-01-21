@@ -10,7 +10,7 @@ import java.util.Collection;
 import org.mifosplatform.infrastructure.core.service.Page;
 import org.mifosplatform.portfolio.account.PortfolioAccountType;
 import org.mifosplatform.portfolio.account.data.AccountTransferData;
-import org.mifosplatform.portfolio.group.service.SearchParameters;
+import org.mifosplatform.infrastructure.core.service.SearchParameters;
 
 public interface AccountTransfersReadPlatformService {
 
@@ -26,4 +26,7 @@ public interface AccountTransfersReadPlatformService {
     Page<AccountTransferData> retrieveByStandingInstruction(Long id, SearchParameters searchParameters);
 
     Collection<Long> fetchPostInterestTransactionIds(Long accountId);
+    
+    AccountTransferData retrieveRefundByTransferTemplate(Long fromOfficeId, Long fromClientId, Long fromAccountId, Integer fromAccountType,
+            Long toOfficeId, Long toClientId, Long toAccountId, Integer toAccountType);
 }

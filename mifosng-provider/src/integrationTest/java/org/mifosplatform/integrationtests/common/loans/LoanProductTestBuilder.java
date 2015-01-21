@@ -42,7 +42,7 @@ public class LoanProductTestBuilder {
     public static final String RECALCULATION_STRATEGY_REDUCE_NUMBER_OF_INSTALLMENTS = "2";
     public static final String RECALCULATION_STRATEGY_REDUCE_EMI_AMOUN = "3";
 
-    public static final String RECALCULATION_COMPOUNDING_METHOD_NONE= "0";
+    public static final String RECALCULATION_COMPOUNDING_METHOD_NONE = "0";
     public static final String RECALCULATION_COMPOUNDING_METHOD_INTEREST = "1";
     public static final String RECALCULATION_COMPOUNDING_METHOD_FEE = "2";
     public static final String RECALCULATION_COMPOUNDING_METHOD_INTEREST_AND_FEE = "3";
@@ -56,7 +56,7 @@ public class LoanProductTestBuilder {
     private String inMultiplesOf = "0";
 
     private String nameOfLoanProduct = Utils.randomNameGenerator("LOAN_PRODUCT_", 6);
-    private String shortName = Utils.randomNameGenerator("", 4);
+    private final String shortName = Utils.randomNameGenerator("", 4);
     private String principal = "10000.00";
     private String numberOfRepayments = "5";
     private String repaymentFrequency = MONTHS;
@@ -76,8 +76,8 @@ public class LoanProductTestBuilder {
     private Account[] accountList = null;
 
     private Boolean multiDisburseLoan = false;
-    private String outstandingLoanBalance = "35000";
-    private String maxTrancheCount = "35000";
+    private final String outstandingLoanBalance = "35000";
+    private final String maxTrancheCount = "35000";
 
     private Boolean isInterestRecalculationEnabled = false;
     private String daysInYearType = "1";
@@ -87,6 +87,11 @@ public class LoanProductTestBuilder {
     private String recalculationRestFrequencyType = "1";
     private String recalculationRestFrequencyInterval = "0";
     private String recalculationRestFrequencyDate = null;
+    private String minimumDaysBetweenDisbursalAndFirstRepayment = null;
+    private Boolean holdGuaranteeFunds = null;
+    private String mandatoryGuarantee = null;
+    private String minimumGuaranteeFromOwnFunds = null;
+    private String minimumGuaranteeFromGuarantor = null;
 
     public String build(final String chargeId) {
         final HashMap<String, Object> map = new HashMap<>();
@@ -120,6 +125,9 @@ public class LoanProductTestBuilder {
         map.put("minPrincipal", this.minPrincipal);
         map.put("maxPrincipal", this.maxPrincipal);
         map.put("overdueDaysForNPA", this.overdueDaysForNPA);
+        if (this.minimumDaysBetweenDisbursalAndFirstRepayment != null) {
+            map.put("minimumDaysBetweenDisbursalAndFirstRepayment", this.minimumDaysBetweenDisbursalAndFirstRepayment);
+        }
         if (multiDisburseLoan) {
             map.put("multiDisburseLoan", this.multiDisburseLoan);
             map.put("maxTrancheCount", this.maxTrancheCount);
@@ -140,6 +148,14 @@ public class LoanProductTestBuilder {
             map.put("recalculationRestFrequencyType", recalculationRestFrequencyType);
             map.put("recalculationRestFrequencyInterval", recalculationRestFrequencyInterval);
             map.put("recalculationRestFrequencyDate", recalculationRestFrequencyDate);
+        }
+        if (holdGuaranteeFunds != null) {
+            map.put("holdGuaranteeFunds", this.holdGuaranteeFunds);
+            if (this.holdGuaranteeFunds) {
+                map.put("mandatoryGuarantee", this.mandatoryGuarantee);
+                map.put("minimumGuaranteeFromGuarantor", this.minimumGuaranteeFromGuarantor);
+                map.put("minimumGuaranteeFromOwnFunds", this.minimumGuaranteeFromOwnFunds);
+            }
         }
         return new Gson().toJson(map);
     }
@@ -374,6 +390,20 @@ public class LoanProductTestBuilder {
         this.recalculationRestFrequencyType = recalculationRestFrequencyType;
         this.recalculationRestFrequencyInterval = recalculationRestFrequencyInterval;
         this.recalculationRestFrequencyDate = recalculationRestFrequencyDate;
+        return this;
+    }
+
+    public LoanProductTestBuilder withMinimumDaysBetweenDisbursalAndFirstRepayment(final String minimumDaysBetweenDisbursalAndFirstRepayment) {
+        this.minimumDaysBetweenDisbursalAndFirstRepayment = minimumDaysBetweenDisbursalAndFirstRepayment;
+        return this;
+    }
+
+    public LoanProductTestBuilder withOnHoldFundDetails(final String mandatoryGuarantee, final String minimumGuaranteeFromGuarantor,
+            final String minimumGuaranteeFromOwnFunds) {
+        this.holdGuaranteeFunds = true;
+        this.mandatoryGuarantee = mandatoryGuarantee;
+        this.minimumGuaranteeFromGuarantor = minimumGuaranteeFromGuarantor;
+        this.minimumGuaranteeFromOwnFunds = minimumGuaranteeFromOwnFunds;
         return this;
     }
 

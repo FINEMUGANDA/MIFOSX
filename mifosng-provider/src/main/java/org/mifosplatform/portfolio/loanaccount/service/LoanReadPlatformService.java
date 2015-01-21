@@ -6,19 +6,23 @@
 package org.mifosplatform.portfolio.loanaccount.service;
 
 import java.util.Collection;
+import java.util.Date;
 
 import org.joda.time.LocalDate;
 import org.mifosplatform.infrastructure.core.service.Page;
+import org.mifosplatform.infrastructure.core.service.SearchParameters;
 import org.mifosplatform.organisation.staff.data.StaffData;
 import org.mifosplatform.portfolio.calendar.data.CalendarData;
-import org.mifosplatform.portfolio.group.service.SearchParameters;
 import org.mifosplatform.portfolio.loanaccount.data.DisbursementData;
 import org.mifosplatform.portfolio.loanaccount.data.LoanAccountData;
+import org.mifosplatform.portfolio.loanaccount.data.LoanApprovalData;
 import org.mifosplatform.portfolio.loanaccount.data.LoanScheduleAccrualData;
 import org.mifosplatform.portfolio.loanaccount.data.LoanTermVariationsData;
 import org.mifosplatform.portfolio.loanaccount.data.LoanTransactionData;
+import org.mifosplatform.portfolio.loanaccount.data.PaidInAdvanceData;
 import org.mifosplatform.portfolio.loanaccount.data.RepaymentScheduleRelatedLoanData;
 import org.mifosplatform.portfolio.loanaccount.loanschedule.data.LoanScheduleData;
+import org.mifosplatform.portfolio.loanaccount.loanschedule.data.LoanSchedulePeriodData;
 import org.mifosplatform.portfolio.loanaccount.loanschedule.data.OverdueLoanScheduleData;
 
 public interface LoanReadPlatformService {
@@ -43,6 +47,8 @@ public interface LoanReadPlatformService {
     LoanTransactionData retrieveNewClosureDetails();
 
     LoanTransactionData retrieveDisbursalTemplate(Long loanId, boolean paymentDetailsRequired);
+
+    LoanApprovalData retrieveApprovalTemplate(Long loanId);
 
     LoanAccountData retrieveTemplateWithCompleteGroupAndProductDetails(Long groupId, Long productId);
 
@@ -91,4 +97,16 @@ public interface LoanReadPlatformService {
     Collection<Long> fetchArrearLoans();
 
     LoanTransactionData retrieveLoanPrePaymentTemplate(Long loanId);
+
+    Collection<LoanTransactionData> retrieveWaiverLoanTransactions(Long loanId);
+
+    Collection<LoanSchedulePeriodData> fetchWaiverInterestRepaymentData(Long loanId);
+
+    boolean isGuaranteeRequired(Long loanId);
+
+    Date retrieveMinimumDateOfRepaymentTransaction(Long loanId);
+
+    PaidInAdvanceData retrieveTotalPaidInAdvance(Long loanId);
+
+    LoanTransactionData retrieveRefundByCashTemplate(Long loanId);
 }
