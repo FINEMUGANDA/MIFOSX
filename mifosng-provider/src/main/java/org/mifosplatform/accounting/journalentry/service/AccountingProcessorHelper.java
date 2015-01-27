@@ -620,6 +620,8 @@ public class AccountingProcessorHelper {
                 result = "Loan Disbursement" + accountInfo;
             } else if (loanTransaction.isAnyTypeOfRepayment()) {
                 result = "Loan Repayment" + accountInfo;
+            } else if (loanTransaction.isAccrual()) {
+                result = "Loan Accrual" + accountInfo;
             }
         }
         return result;
