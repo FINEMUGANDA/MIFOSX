@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.sql.Connection;
+import java.net.URL;
 import java.sql.Date;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -267,7 +268,7 @@ public class ReadReportingServiceImpl implements ReadReportingService {
         Resource res;
 
         try {
-            res = manager.createDirectly(reportPath, MasterReport.class);
+            res = manager.createDirectly(new URL(reportPath), MasterReport.class);
             final MasterReport masterReport = (MasterReport) res.getResource();
             final DefaultReportEnvironment reportEnvironment = (DefaultReportEnvironment) masterReport.getReportEnvironment();
             if (locale != null) {
