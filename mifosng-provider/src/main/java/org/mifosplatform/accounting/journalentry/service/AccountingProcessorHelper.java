@@ -44,6 +44,7 @@ import org.mifosplatform.organisation.office.domain.OfficeRepository;
 import org.mifosplatform.portfolio.account.PortfolioAccountType;
 import org.mifosplatform.portfolio.account.service.AccountTransfersReadPlatformService;
 import org.mifosplatform.portfolio.loanaccount.data.LoanTransactionEnumData;
+import org.mifosplatform.portfolio.loanaccount.domain.Loan;
 import org.mifosplatform.portfolio.loanaccount.domain.LoanTransaction;
 import org.mifosplatform.portfolio.loanaccount.domain.LoanTransactionRepository;
 import org.mifosplatform.portfolio.paymentdetail.domain.PaymentDetail;
@@ -612,16 +613,17 @@ public class AccountingProcessorHelper {
     private String getTransactionDescription(final LoanTransaction loanTransaction, final GLAccount account) {
         String result = null;
         if (loanTransaction != null) {
-            String accountInfo = "";
-            if (account != null) {
-                accountInfo = " (" +account.getName()+ " # " + account.getGlCode() + ")";
+            String loanInfo = "";
+            Loan loan = loanTransaction.getLoan();
+            if (loan != null) {
+                loanInfo = "(#" + loan.getAccountNumber() + ")";
             }
             if (loanTransaction.isDisbursement()) {
-                result = "Loan Disbursement" + accountInfo;
+                result = "Loan Disbursement" + loanInfo;
             } else if (loanTransaction.isAnyTypeOfRepayment()) {
-                result = "Loan Repayment" + accountInfo;
+                result = "Loan Repayment" + loanInfo;
             } else if (loanTransaction.isAccrual()) {
-                result = "Loan Accrual" + accountInfo;
+                result = "Loan Accrual" + loanInfo;
             }
         }
         return result;
