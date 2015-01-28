@@ -93,7 +93,7 @@ public class ReadReportingServiceImpl implements ReadReportingService {
         this.jdbcTemplate = new JdbcTemplate(this.dataSource);
         this.genericDataService = genericDataService;
     }
-258
+
     @Override
     public StreamingOutput retrieveReportCSV(final String name, final String type, final Map<String, String> queryParams) {
 
@@ -258,7 +258,7 @@ public class ReadReportingServiceImpl implements ReadReportingService {
         //final String reportPath = FileSystemContentRepository.MIFOSX_BASE_DIR + File.separator + "pentahoReports" + File.separator
         //        + reportName + ".prpt";
 		final String reportPath = "src" + File.separator + "main" + File.separator + "pentahoReports" + File.separator
-                + reportName + ".prpt";		
+                + reportName + ".prpt";
         logger.info("Report path: " + reportPath);
 
         // load report definition
