@@ -12,8 +12,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.sql.Connection;
 import java.net.URL;
+import java.sql.Connection;
 import java.sql.Date;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -260,6 +260,8 @@ public class ReadReportingServiceImpl implements ReadReportingService {
         //        + reportName + ".prpt";
 		final String reportPath = "src" + File.separator + "main" + File.separator + "pentahoReports" + File.separator
                 + reportName + ".prpt";
+		final ClassLoader classloader = this.getClass().getClassLoader();
+	    final URL reportDefinitionURL = classloader.getResource(reportPath);		
         logger.info("Report path: " + reportPath);
 
         // load report definition
@@ -268,7 +270,7 @@ public class ReadReportingServiceImpl implements ReadReportingService {
         Resource res;
 
         try {
-            res = manager.createDirectly(new URL(reportPath), MasterReport.class);
+            res = manager.createDirectly(reportDefinitionURL, MasterReport.class);
             final MasterReport masterReport = (MasterReport) res.getResource();
             final DefaultReportEnvironment reportEnvironment = (DefaultReportEnvironment) masterReport.getReportEnvironment();
             if (locale != null) {
