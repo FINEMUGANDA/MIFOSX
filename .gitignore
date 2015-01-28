@@ -2,4 +2,4 @@
 /build/
 /mifosng-provider/.nb-gradle/
 manifest.mf
-
+.nb-gradle-properties
