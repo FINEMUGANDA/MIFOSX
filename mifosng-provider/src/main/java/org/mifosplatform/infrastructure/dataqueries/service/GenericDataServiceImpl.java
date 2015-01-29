@@ -155,7 +155,7 @@ public class GenericDataServiceImpl implements GenericDataService {
                                     + localDateTime.getMinuteOfHour() + ", " + localDateTime.getSecondOfMinute() + ", "
                                     + localDateTime.getMillisOfSecond() + "]");
                         } else {
-                            writer.append(doubleQuote + replace(currVal, doubleQuote, slashDoubleQuote) + doubleQuote);
+                            writer.append(prepareString(currVal));
                         }
                     }
                 } else {
@@ -176,6 +176,13 @@ public class GenericDataServiceImpl implements GenericDataService {
         writer.append("\n]");
         return writer.toString();
 
+    }
+
+    private String prepareString(String value) {
+      String result = value;
+      result = replace(result, "\"", "\\\"");
+      result = replace(result, "\n", "\\n");
+      return "\"" + result + "\"";
     }
 
     @Override
