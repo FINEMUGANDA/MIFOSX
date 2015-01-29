@@ -255,15 +255,14 @@ public class ReadReportingServiceImpl implements ReadReportingService {
         if (this.noPentaho) { throw new PlatformDataIntegrityException("error.msg.no.pentaho", "Pentaho is not enabled",
                 "Pentaho is not enabled"); }
 
-        //final String reportPath = FileSystemContentRepository.MIFOSX_BASE_DIR + File.separator + "pentahoReports" + File.separator
-        //        + reportName + ".prpt";
-		final String reportPath = "/var/go/.mifosx/pentahoReports/" + reportName + ".prpt";
-        logger.info("Report path: " + reportPath);
+        final String reportPath = FileSystemContentRepository.MIFOSX_BASE_DIR + File.separator + "pentahoReports" + File.separator
+                + reportName + ".prpt";
+		logger.info("Report path: " + reportPath);
 
         // load report definition
         final ResourceManager manager = new ResourceManager();
         manager.registerDefaults();
-        final Resource res;
+        Resource res;
 
         try {
             res = manager.createDirectly(reportPath, MasterReport.class);
