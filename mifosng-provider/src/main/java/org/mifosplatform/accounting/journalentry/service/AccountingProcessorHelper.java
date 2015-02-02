@@ -44,6 +44,7 @@ import org.mifosplatform.organisation.office.domain.OfficeRepository;
 import org.mifosplatform.portfolio.account.PortfolioAccountType;
 import org.mifosplatform.portfolio.account.service.AccountTransfersReadPlatformService;
 import org.mifosplatform.portfolio.loanaccount.data.LoanTransactionEnumData;
+import org.mifosplatform.portfolio.loanaccount.domain.Loan;
 import org.mifosplatform.portfolio.loanaccount.domain.LoanTransaction;
 import org.mifosplatform.portfolio.loanaccount.domain.LoanTransactionRepository;
 import org.mifosplatform.portfolio.paymentdetail.domain.PaymentDetail;
@@ -565,8 +566,9 @@ public class AccountingProcessorHelper {
             loanTransaction = this.loanTransactionRepository.findOne(id);
             modifiedTransactionId = LOAN_TRANSACTION_IDENTIFIER + transactionId;
         }
+        String description = getTransactionDescription(loanTransaction, account);
         final JournalEntry journalEntry = JournalEntry.createNew(office, paymentDetail, account, currencyCode, modifiedTransactionId,
-                manualEntry, transactionDate, JournalEntryType.CREDIT, amount, null, PortfolioProductType.LOAN.getValue(), loanId, null,
+                manualEntry, transactionDate, JournalEntryType.CREDIT, amount, description, PortfolioProductType.LOAN.getValue(), loanId, null,
                 loanTransaction, savingsAccountTransaction);
         this.glJournalEntryRepository.saveAndFlush(journalEntry);
     }
@@ -601,10 +603,30 @@ public class AccountingProcessorHelper {
             loanTransaction = this.loanTransactionRepository.findOne(id);
             modifiedTransactionId = LOAN_TRANSACTION_IDENTIFIER + transactionId;
         }
+        String description = getTransactionDescription(loanTransaction, account);
         final JournalEntry journalEntry = JournalEntry.createNew(office, paymentDetail, account, currencyCode, modifiedTransactionId,
-                manualEntry, transactionDate, JournalEntryType.DEBIT, amount, null, PortfolioProductType.LOAN.getValue(), loanId, null,
+                manualEntry, transactionDate, JournalEntryType.DEBIT, amount, description, PortfolioProductType.LOAN.getValue(), loanId, null,
                 loanTransaction, savingsAccountTransaction);
         this.glJournalEntryRepository.saveAndFlush(journalEntry);
+    }
+
+    private String getTransactionDescription(final LoanTransaction loanTransaction, final GLAccount account) {
+        String result = null;
+        if (loanTransaction != null) {
+            String loanInfo = "";
+            Loan loan = loanTransaction.getLoan();
+            if (loan != null) {
+                loanInfo = "(#" + loan.getAccountNumber() + ")";
+            }
+            if (loanTransaction.isDisbursement()) {
+                result = "Loan Disbursement" + loanInfo;
+            } else if (loanTransaction.isAnyTypeOfRepayment()) {
+                result = "Loan Repayment" + loanInfo;
+            } else if (loanTransaction.isAccrual()) {
+                result = "Loan Accrual" + loanInfo;
+            }
+        }
+        return result;
     }
 
     private void createDebitJournalEntryForSavings(final Office office, final String currencyCode, final GLAccount account,

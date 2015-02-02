@@ -257,7 +257,7 @@ public class ReadReportingServiceImpl implements ReadReportingService {
 
         final String reportPath = FileSystemContentRepository.MIFOSX_BASE_DIR + File.separator + "pentahoReports" + File.separator
                 + reportName + ".prpt";
-        logger.info("Report path: " + reportPath);
+		logger.info("Report path: " + reportPath);
 
         // load report definition
         final ResourceManager manager = new ResourceManager();
