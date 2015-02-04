@@ -624,6 +624,8 @@ public class AccountingProcessorHelper {
                 result = "Loan Repayment" + loanInfo;
             } else if (loanTransaction.isAccrual()) {
                 result = "Loan Accrual" + loanInfo;
+            } else if (loanTransaction.isWriteOff()) {
+                result = "Loan Written Off" + loanInfo;
             }
         }
         return result;
