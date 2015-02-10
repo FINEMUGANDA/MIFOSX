@@ -434,6 +434,14 @@ public class LoanEnumerations {
                 optionData = new LoanStatusEnumData(LoanStatus.TRANSFER_ON_HOLD.getValue().longValue(),
                         LoanStatus.TRANSFER_ON_HOLD.getCode(), "Transfer on hold");
             break;
+            case ACTIVE_IN_GOOD_STANDING:
+                optionData = new LoanStatusEnumData(LoanStatus.ACTIVE_IN_GOOD_STANDING.getValue().longValue(),
+                        LoanStatus.TRANSFER_ON_HOLD.getCode(), "Active In Good Standing");
+            break;
+            case ACTIVE_IN_BAD_STANDING:
+                optionData = new LoanStatusEnumData(LoanStatus.ACTIVE_IN_BAD_STANDING.getValue().longValue(),
+                        LoanStatus.TRANSFER_ON_HOLD.getCode(), "Active In Bad Standing");
+            break;
             default:
             break;
         }

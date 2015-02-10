@@ -166,10 +166,31 @@ public class ScheduledJobRunnerServiceImpl implements ScheduledJobRunnerService 
         updateSqlBuilder.append("MIN(mr.duedate) as overdue_since_date_derived ");
         updateSqlBuilder.append(" FROM m_loan ml ");
         updateSqlBuilder.append(" INNER JOIN m_loan_repayment_schedule mr on mr.loan_id = ml.id ");
-        updateSqlBuilder.append(" WHERE ml.loan_status_id = 300 "); // active
+        updateSqlBuilder.append(" WHERE ml.loan_status_id IN (300, 800, 900) "); // active
         updateSqlBuilder.append(" and mr.completed_derived is false ");
         updateSqlBuilder.append(" and mr.duedate < SUBDATE(CURDATE(),INTERVAL  ifnull(ml.grace_on_arrears_ageing,0) day) ");
         updateSqlBuilder.append(" GROUP BY ml.id");
+
+        final int result = jdbcTemplate.update(updateSqlBuilder.toString());
+
+        logger.info(ThreadLocalContextUtil.getTenant().getName() + ": Results affected by update: " + result);
+    }
+
+    @Transactional
+    @Override
+    @CronTarget(jobName = JobName.UPDATE_LOAN_STATUS)
+    public void updateLoanStatus() {
+
+        final JdbcTemplate jdbcTemplate = new JdbcTemplate(this.dataSourceServiceFactory.determineDataSourceService().retrieveDataSource());
+        jdbcTemplate.execute("update m_loan ml set ml.loan_status_id=800 where ml.loan_status_id in (900)");// Reset status to ActiveInGoodStanding for all ActiveInBadStanding;
+
+        final StringBuilder updateSqlBuilder = new StringBuilder(900);
+        updateSqlBuilder.append("update m_loan as ml ");
+        updateSqlBuilder.append("inner join m_loan_repayment_schedule mr on mr.loan_id=ml.id ");
+        updateSqlBuilder.append("set ml.loan_status_id=900 "); //ActiveInBadStanding
+        updateSqlBuilder.append("WHERE ml.loan_status_id in (300, 800, 900) ");// Where status is Active, ActiveInGoodStanding, ActiveInBadStanding
+        updateSqlBuilder.append("and mr.completed_derived is false ");
+        updateSqlBuilder.append("and mr.duedate < SUBDATE(CURDATE(),INTERVAL ifnull(ml.grace_on_arrears_ageing,0) day)");
 
         final int result = jdbcTemplate.update(updateSqlBuilder.toString());
 
@@ -198,7 +219,7 @@ public class ScheduledJobRunnerServiceImpl implements ScheduledJobRunnerService 
                 .append(" (SUM(ifnull(mr.principal_completed_derived, 0)) + SUM(ifnull(mr.interest_completed_derived, 0)) + SUM(ifnull(mr.fee_charges_completed_derived, 0)) + SUM(ifnull(mr.penalty_charges_completed_derived, 0))) as total_in_advance_derived");
         updateSqlBuilder.append(" FROM m_loan ml ");
         updateSqlBuilder.append(" INNER JOIN m_loan_repayment_schedule mr on mr.loan_id = ml.id ");
-        updateSqlBuilder.append(" WHERE ml.loan_status_id = 300 ");
+        updateSqlBuilder.append(" WHERE ml.loan_status_id IN (300, 800, 900) ");
         updateSqlBuilder.append(" and mr.duedate >= CURDATE() ");
         updateSqlBuilder.append(" GROUP BY ml.id");
         updateSqlBuilder
@@ -281,7 +302,7 @@ public class ScheduledJobRunnerServiceImpl implements ScheduledJobRunnerService 
         updateSqlBuilder.append(" (select loan.id from m_loan_repayment_schedule mr ");
         updateSqlBuilder
                 .append(" INNER JOIN  m_loan loan on mr.loan_id = loan.id INNER JOIN m_product_loan mpl on mpl.id = loan.product_id AND mpl.overdue_days_for_npa is not null ");
-        updateSqlBuilder.append("WHERE loan.loan_status_id = 300 and mr.completed_derived is false ");
+        updateSqlBuilder.append("WHERE loan.loan_status_id IN (300, 800, 900) and mr.completed_derived is false ");
         updateSqlBuilder
                 .append(" and mr.duedate < SUBDATE(CURDATE(),INTERVAL  ifnull(mpl.overdue_days_for_npa,0) day) group by loan.id)  as sl ");
         updateSqlBuilder.append("SET ml.is_npa=1 where ml.id=sl.id");
