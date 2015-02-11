@@ -182,13 +182,13 @@ public class ScheduledJobRunnerServiceImpl implements ScheduledJobRunnerService 
     public void updateLoanStatus() {
 
         final JdbcTemplate jdbcTemplate = new JdbcTemplate(this.dataSourceServiceFactory.determineDataSourceService().retrieveDataSource());
-        jdbcTemplate.execute("update m_loan ml set ml.loan_status_id=800 where ml.loan_status_id in (900)");// Reset status to ActiveInGoodStanding for all ActiveInBadStanding;
+        jdbcTemplate.execute("update m_loan ml set ml.loan_status_id=800 where ml.loan_status_id in (300, 900)");// Reset status to ActiveInGoodStanding for all ActiveInBadStanding;
 
         final StringBuilder updateSqlBuilder = new StringBuilder(900);
         updateSqlBuilder.append("update m_loan as ml ");
         updateSqlBuilder.append("inner join m_loan_repayment_schedule mr on mr.loan_id=ml.id ");
         updateSqlBuilder.append("set ml.loan_status_id=900 "); //ActiveInBadStanding
-        updateSqlBuilder.append("WHERE ml.loan_status_id in (300, 800, 900) ");// Where status is Active, ActiveInGoodStanding, ActiveInBadStanding
+        updateSqlBuilder.append("WHERE ml.loan_status_id in (300, 800) ");// Where status is Active, ActiveInGoodStanding, ActiveInBadStanding
         updateSqlBuilder.append("and mr.completed_derived is false ");
         updateSqlBuilder.append("and mr.duedate < SUBDATE(CURDATE(),INTERVAL ifnull(ml.grace_on_arrears_ageing,0) day)");
 
