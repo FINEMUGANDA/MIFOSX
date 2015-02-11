@@ -58,7 +58,7 @@ public class DefaultLoanLifecycleStateMachine implements LoanLifecycleStateMachi
             break;
             case LOAN_CHARGE_PAYMENT:
             case LOAN_REPAYMENT_OR_WAIVER:
-                if (anyOfAllowedWhenComingFrom(from, LoanStatus.ACTIVE_IN_BAD_STANDING, LoanStatus.ACTIVE_IN_GOOD_STANDING, LoanStatus.CLOSED_OBLIGATIONS_MET, LoanStatus.OVERPAID)) {
+                if (anyOfAllowedWhenComingFrom(from, LoanStatus.ACTIVE_IN_GOOD_STANDING, LoanStatus.CLOSED_OBLIGATIONS_MET, LoanStatus.OVERPAID)) {
                     newState = stateOf(LoanStatus.ACTIVE_IN_GOOD_STANDING, this.allowedLoanStatuses);
                 } else {
                     newState = from;

@@ -1163,6 +1163,9 @@ public class Loan extends AbstractPersistable<Long> {
             }
             this.summaryArrearsAging.updateSummary(loanCurrency(), this.repaymentScheduleInstallments, this.loanSummaryWrapper);
             if (this.summaryArrearsAging.isNotInArrears(loanCurrency())) {
+                if (LoanStatus.ACTIVE_IN_BAD_STANDING.getValue().equals(this.loanStatus)) {
+                    this.loanStatus = LoanStatus.ACTIVE_IN_GOOD_STANDING.getValue();
+                }
                 this.summaryArrearsAging = null;
             }
             updateLoanOutstandingBalaces();
