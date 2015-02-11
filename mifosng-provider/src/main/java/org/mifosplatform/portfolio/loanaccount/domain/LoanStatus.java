@@ -13,7 +13,7 @@ public enum LoanStatus {
     INVALID(0, "loanStatusType.invalid"), //
     SUBMITTED_AND_PENDING_APPROVAL(100, "loanStatusType.submitted.and.pending.approval"), //
     APPROVED(200, "loanStatusType.approved"), //
-    ACTIVE(300, "loanStatusType.active"), //
+    ACTIVE(300, "loanStatusType.active"), // deprecated
     TRANSFER_IN_PROGRESS(303, "loanStatusType.transfer.in.progress"), //
     TRANSFER_ON_HOLD(304, "loanStatusType.transfer.on.hold"), //
     WITHDRAWN_BY_CLIENT(400, "loanStatusType.withdrawn.by.client"), //
@@ -21,7 +21,9 @@ public enum LoanStatus {
     CLOSED_OBLIGATIONS_MET(600, "loanStatusType.closed.obligations.met"), //
     CLOSED_WRITTEN_OFF(601, "loanStatusType.closed.written.off"), //
     CLOSED_RESCHEDULE_OUTSTANDING_AMOUNT(602, "loanStatusType.closed.reschedule.outstanding.amount"), //
-    OVERPAID(700, "loanStatusType.overpaid");
+    OVERPAID(700, "loanStatusType.overpaid"),
+    ACTIVE_IN_GOOD_STANDING(800, "loanStatusType.active.in.good.standing"),
+    ACTIVE_IN_BAD_STANDING(900, "loanStatusType.active.in.bad.standing");
 
     private final Integer value;
     private final String code;
@@ -63,6 +65,12 @@ public enum LoanStatus {
             case 700:
                 enumeration = LoanStatus.OVERPAID;
             break;
+            case 800:
+                enumeration = LoanStatus.ACTIVE_IN_GOOD_STANDING;
+            break;
+            case 900:
+                enumeration = LoanStatus.ACTIVE_IN_BAD_STANDING;
+            break;
         }
         return enumeration;
     }
@@ -93,7 +101,9 @@ public enum LoanStatus {
     }
 
     public boolean isActive() {
-        return this.value.equals(LoanStatus.ACTIVE.getValue());
+        return this.value.equals(LoanStatus.ACTIVE.getValue())
+                || this.value.equals(LoanStatus.ACTIVE_IN_GOOD_STANDING.getValue())
+                || this.value.equals(LoanStatus.ACTIVE_IN_BAD_STANDING.getValue());
     }
 
     public boolean isClosed() {

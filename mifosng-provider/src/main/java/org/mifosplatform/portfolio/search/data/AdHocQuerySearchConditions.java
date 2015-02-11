@@ -82,7 +82,7 @@ public class AdHocQuerySearchConditions {
             for (String statusCode : this.loanStatus) {
 
                 if (statusCode.equalsIgnoreCase("active")) {
-                    loanStatusValues.add(LoanStatus.ACTIVE.getValue().toString());
+                    loanStatusValues.add(LoanStatus.ACTIVE_IN_BAD_STANDING.getValue().toString());
                 }
 
                 if (statusCode.equalsIgnoreCase("overpaid")) {
@@ -100,6 +100,7 @@ public class AdHocQuerySearchConditions {
                 if (statusCode.equalsIgnoreCase("arrears")) {
                     // TODO - No status code is there for loans which are in
                     // active bad standing
+                    loanStatusValues.add(LoanStatus.ACTIVE_IN_GOOD_STANDING.getValue().toString());
                 }
 
                 if (statusCode.equalsIgnoreCase("all")) {

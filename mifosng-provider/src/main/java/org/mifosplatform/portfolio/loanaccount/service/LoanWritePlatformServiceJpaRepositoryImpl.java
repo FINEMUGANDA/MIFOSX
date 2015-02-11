@@ -1709,8 +1709,10 @@ public class LoanWritePlatformServiceJpaRepositoryImpl implements LoanWritePlatf
     @Override
     @CronTarget(jobName = JobName.TRANSFER_FEE_CHARGE_FOR_LOANS)
     public void transferFeeCharges() throws JobExecutionException {
+
+        final Collection<Integer> loanStatuses = new ArrayList<>(Arrays.asList(LoanStatus.ACTIVE_IN_GOOD_STANDING.getValue(), LoanStatus.ACTIVE_IN_BAD_STANDING.getValue()));
         final Collection<LoanChargeData> chargeDatas = this.loanChargeReadPlatformService.retrieveLoanChargesForFeePayment(
-                ChargePaymentMode.ACCOUNT_TRANSFER.getValue(), LoanStatus.ACTIVE.getValue());
+                ChargePaymentMode.ACCOUNT_TRANSFER.getValue(), loanStatuses);
         final boolean isRegularTransaction = true;
         final StringBuilder sb = new StringBuilder();
         if (chargeDatas != null) {
@@ -1822,7 +1824,7 @@ public class LoanWritePlatformServiceJpaRepositoryImpl implements LoanWritePlatf
         if (loan.getTotalOverpaid() != null) {
             loan.setLoanStatus(LoanStatus.OVERPAID.getValue());
         } else {
-            loan.setLoanStatus(LoanStatus.ACTIVE.getValue());
+            loan.setLoanStatus(LoanStatus.ACTIVE_IN_GOOD_STANDING.getValue());
         }
         if (loanOfficer != null) {
             loan.reassignLoanOfficer(loanOfficer, transferDate);
@@ -1850,7 +1852,7 @@ public class LoanWritePlatformServiceJpaRepositoryImpl implements LoanWritePlatf
         final LoanTransaction newTransferAcceptanceTransaction = LoanTransaction.withdrawTransfer(loan.getOffice(), loan, transferDate,
                 DateUtils.getLocalDateTimeOfTenant(), currentUser);
         loan.getLoanTransactions().add(newTransferAcceptanceTransaction);
-        loan.setLoanStatus(LoanStatus.ACTIVE.getValue());
+        loan.setLoanStatus(LoanStatus.ACTIVE_IN_GOOD_STANDING.getValue());
 
         this.loanTransactionRepository.save(newTransferAcceptanceTransaction);
         saveLoanWithDataIntegrityViolationChecks(loan);
@@ -1993,7 +1995,7 @@ public class LoanWritePlatformServiceJpaRepositoryImpl implements LoanWritePlatf
         final boolean isHolidayEnabled = this.configurationDomainService.isRescheduleRepaymentsOnHolidaysEnabled();
         final WorkingDays workingDays = this.workingDaysRepository.findOne();
         final Collection<Integer> loanStatuses = new ArrayList<>(Arrays.asList(LoanStatus.SUBMITTED_AND_PENDING_APPROVAL.getValue(),
-                LoanStatus.APPROVED.getValue(), LoanStatus.ACTIVE.getValue()));
+                LoanStatus.APPROVED.getValue(), LoanStatus.ACTIVE_IN_GOOD_STANDING.getValue(), LoanStatus.ACTIVE_IN_BAD_STANDING.getValue()));
         final Collection<Integer> loanTypes = new ArrayList<>(Arrays.asList(AccountType.GROUP.getValue(), AccountType.JLG.getValue()));
         final Collection<Long> loanIds = new ArrayList<>(loanCalendarInstances.size());
         // loop through loanCalendarInstances to get loan ids
@@ -2183,7 +2185,7 @@ public class LoanWritePlatformServiceJpaRepositoryImpl implements LoanWritePlatf
         if (!isHolidayEnabled) { return; }
 
         final Collection<Integer> loanStatuses = new ArrayList<>(Arrays.asList(LoanStatus.SUBMITTED_AND_PENDING_APPROVAL.getValue(),
-                LoanStatus.APPROVED.getValue(), LoanStatus.ACTIVE.getValue()));
+                LoanStatus.APPROVED.getValue(), LoanStatus.ACTIVE_IN_GOOD_STANDING.getValue(), LoanStatus.ACTIVE_IN_BAD_STANDING.getValue()));
         // Get all Holidays which are active and not processed
         final List<Holiday> holidays = this.holidayRepository.findUnprocessed();
 
@@ -2219,13 +2221,12 @@ public class LoanWritePlatformServiceJpaRepositoryImpl implements LoanWritePlatf
 
         final List<Long> activeLoansLoanProductIds;
         final Long productId = loan.loanProduct().getId();
+        final Collection<Integer> loanStatuses = new ArrayList<>(Arrays.asList(LoanStatus.ACTIVE_IN_GOOD_STANDING.getValue(), LoanStatus.ACTIVE_IN_BAD_STANDING.getValue()));
 
         if (loan.isGroupLoan()) {
-            activeLoansLoanProductIds = this.loanRepository.findActiveLoansLoanProductIdsByGroup(loan.getGroupId(),
-                    LoanStatus.ACTIVE.getValue());
+            activeLoansLoanProductIds = this.loanRepository.findActiveLoansLoanProductIdsByGroup(loan.getGroupId(), loanStatuses);
         } else {
-            activeLoansLoanProductIds = this.loanRepository.findActiveLoansLoanProductIdsByClient(loan.getClientId(),
-                    LoanStatus.ACTIVE.getValue());
+            activeLoansLoanProductIds = this.loanRepository.findActiveLoansLoanProductIdsByClient(loan.getClientId(), loanStatuses);
         }
         checkForProductMixRestrictions(activeLoansLoanProductIds, productId, loan.loanProduct().productName());
     }

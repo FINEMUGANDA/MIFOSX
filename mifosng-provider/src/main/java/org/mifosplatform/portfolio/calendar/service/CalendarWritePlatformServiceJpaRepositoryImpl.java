@@ -166,7 +166,7 @@ public class CalendarWritePlatformServiceJpaRepositoryImpl implements CalendarWr
         final Long calendarId = command.entityId();
 
         final Collection<Integer> loanStatuses = new ArrayList<>(Arrays.asList(LoanStatus.SUBMITTED_AND_PENDING_APPROVAL.getValue(),
-                LoanStatus.APPROVED.getValue(), LoanStatus.ACTIVE.getValue()));
+                LoanStatus.APPROVED.getValue(), LoanStatus.ACTIVE_IN_GOOD_STANDING.getValue(), LoanStatus.ACTIVE_IN_BAD_STANDING.getValue()));
 
         final Integer numberOfActiveLoansSyncedWithThisCalendar = this.calendarInstanceRepository.countOfLoansSyncedWithCalendar(
                 calendarId, loanStatuses);

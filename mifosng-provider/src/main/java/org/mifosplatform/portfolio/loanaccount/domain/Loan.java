@@ -3007,7 +3007,7 @@ public class Loan extends AbstractPersistable<Long> {
         }
 
         if (isClosedObligationsMet() || isClosedWrittenOff() || isClosedWithOutsandingAmountMarkedForReschedule()) {
-            this.loanStatus = LoanStatus.ACTIVE.getValue();
+            this.loanStatus = LoanStatus.ACTIVE_IN_GOOD_STANDING.getValue();
         }
 
         if (newTransactionDetail.isRepayment() || newTransactionDetail.isInterestWaiver()) {
@@ -3026,7 +3026,7 @@ public class Loan extends AbstractPersistable<Long> {
         existingReversedTransactionIds.addAll(findExistingReversedTransactionIds());
         final LoanTransaction writeOffTransaction = findWriteOffTransaction();
         writeOffTransaction.reverse();
-        this.loanStatus = LoanStatus.ACTIVE.getValue();
+        this.loanStatus = LoanStatus.ACTIVE_IN_GOOD_STANDING.getValue();
         final LoanRepaymentScheduleTransactionProcessor loanRepaymentScheduleTransactionProcessor = this.transactionProcessorFactory
                 .determineProcessor(this.transactionProcessingStrategy);
         final List<LoanTransaction> allNonContraTransactionsPostDisbursement = retreiveListOfTransactionsPostDisbursement();
