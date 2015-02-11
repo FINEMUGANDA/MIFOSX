@@ -168,12 +168,15 @@ public class LoanChargeReadPlatformServiceImpl implements LoanChargeReadPlatform
     }
 
     @Override
-    public Collection<LoanChargeData> retrieveLoanChargesForFeePayment(final Integer paymentMode, final Integer loanStatus) {
+    public Collection<LoanChargeData> retrieveLoanChargesForFeePayment(final Integer paymentMode, final Collection<Integer> loanStatuses) {
         final LoanChargeMapperWithLoanId rm = new LoanChargeMapperWithLoanId();
         final String sql = "select "
                 + rm.schema()
-                + "where loan.loan_status_id= ? and lc.charge_payment_mode_enum=? and lc.waived =0 and lc.is_paid_derived=0 and lc.is_active = 1";
-        return this.jdbcTemplate.query(sql, rm, new Object[] { loanStatus, paymentMode });
+                + "where loan.loan_status_id in :active and lc.charge_payment_mode_enum = :paymentMode and lc.waived =0 and lc.is_paid_derived=0 and lc.is_active = 1";
+        Map<String, Object> paramMap = new HashMap<>();
+        paramMap.put("active", loanStatuses);
+        paramMap.put("paymentMode", paymentMode);
+        return this.jdbcTemplate.query(sql, rm, paramMap);
     }
 
     private static final class LoanChargeMapperWithLoanId implements RowMapper<LoanChargeData> {
