@@ -10,6 +10,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Collection;
 import java.util.List;
+import org.joda.time.Days;
 
 import org.joda.time.LocalDate;
 import org.mifosplatform.infrastructure.core.data.EnumOptionData;
@@ -335,9 +336,13 @@ public class AccountDetailsReadPlatformServiceJpaRepositoryImpl implements Accou
             final LocalDate expectedMaturityDate = JdbcSupport.getLocalDate(rs, "expectedMaturityDate");
 
             final LocalDate overdueSinceDate = JdbcSupport.getLocalDate(rs, "overdueSinceDate");
+            int daysInArrears = 0;
             Boolean inArrears = true;
             if (overdueSinceDate == null) {
                 inArrears = false;
+            } else {
+                Days days = Days.daysBetween(overdueSinceDate, LocalDate.now());
+                daysInArrears = days.getDays();
             }
 
             final LoanApplicationTimelineData timeline = new LoanApplicationTimelineData(submittedOnDate, submittedByUsername,
@@ -348,7 +353,7 @@ public class AccountDetailsReadPlatformServiceJpaRepositoryImpl implements Accou
                     expectedMaturityDate, writtenOffOnDate, closedByUsername, closedByFirstname, closedByLastname);
 
             return new LoanAccountSummaryData(id, accountNo, externalId, productId, loanProductName, shortLoanProductName, loanStatus, loanType, loanCycle,
-                    timeline, inArrears,originalLoan,loanBalance,amountPaid);
+                    timeline, inArrears, daysInArrears, originalLoan,loanBalance,amountPaid);
         }
     }
 

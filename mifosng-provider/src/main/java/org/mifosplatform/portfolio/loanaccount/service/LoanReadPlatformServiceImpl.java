@@ -733,6 +733,7 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService {
                     "feeChargesDueAtDisbursementCharged");
             LoanSummaryData loanSummary = null;
             Boolean inArrears = false;
+            Integer daysInArrears = 0;
             if (status.id().intValue() >= 300) {
 
                 // loan summary
@@ -775,6 +776,8 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService {
                 final LocalDate overdueSinceDate = JdbcSupport.getLocalDate(rs, "overdueSinceDate");
                 if (overdueSinceDate != null) {
                     inArrears = true;
+                    Days days = Days.daysBetween(overdueSinceDate, LocalDate.now());
+                    daysInArrears = days.getDays();
                 }
 
                 loanSummary = new LoanSummaryData(currencyData, principalDisbursed, principalPaid, principalWrittenOff,
@@ -836,7 +839,7 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService {
                     interestCalculationPeriodType, expectedFirstRepaymentOnDate, graceOnPrincipalPayment, graceOnInterestPayment,
                     graceOnInterestCharged, interestChargedFromDate, timeline, loanSummary, feeChargesDueAtDisbursementCharged,
                     syncDisbursementWithMeeting, loanCounter, loanProductCounter, multiDisburseLoan, fixedEmiAmount,
-                    outstandingLoanBalance, inArrears, graceOnArrearsAgeing, isNPA, daysInMonthType, daysInYearType,
+                    outstandingLoanBalance, inArrears, daysInArrears, graceOnArrearsAgeing, isNPA, daysInMonthType, daysInYearType,
                     isInterestRecalculationEnabled, interestRecalculationData, createStandingInstructionAtDisbursement);
         }
     }
