@@ -75,7 +75,7 @@ dependencies {
     [group: 'org.quartz-scheduler', name: 'quartz', version: '2.1.7'],
     [group: 'com.amazonaws', name: 'aws-java-sdk', version: '1.9.19'],
     [group: 'net.sf.ehcache', name: 'ehcache', version: '2.9.0'],
-    [group: 'com.github.spullara.mustache.java', name: 'compiler', version: '0.9.0'],
+    [group: 'com.github.spullara.mustache.java', name: 'compiler', version: '0.8.17'],
     [group: 'com.jayway.jsonpath', name: 'json-path', version: '0.9.1'], // NOTE: have to stick with this version; latest is 1.2.0, but API incompatible
 
     // Although Mifos (at the time of writing) doesn't have any compile time dep. on this,
