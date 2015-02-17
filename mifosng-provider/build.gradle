@@ -9,10 +9,11 @@ buildscript {
   }
 
   dependencies {
-    classpath 'org.gradle.api.plugins:gradle-tomcat-plugin:1.0',
+    classpath 'org.gradle.api.plugins:gradle-tomcat-plugin:1.2.5',
                'nl.javadude.gradle.plugins:license-gradle-plugin:0.11.0',
                'org.zeroturnaround:gradle-jrebel-plugin:1.1.2',
-               'org.springframework.boot:spring-boot-gradle-plugin:1.1.6.RELEASE' // also change springDataJpaVersion below
+               'org.springframework.boot:spring-boot-gradle-plugin:1.2.1.RELEASE', // also change springDataJpaVersion below
+               'com.github.ben-manes:gradle-versions-plugin:latest.integration'
   }
 }
 
@@ -25,16 +26,17 @@ apply plugin: 'idea'
 apply plugin: 'tomcat'
 apply plugin: 'project-report'
 apply plugin: 'java'
+apply plugin: 'com.github.ben-manes.versions'
 
 /* define the valid syntax level for source files */
 sourceCompatibility = JavaVersion.VERSION_1_7
 /* define binary compatibility version */
 targetCompatibility = JavaVersion.VERSION_1_7
 
-project.ext.springBootVersion = '1.1.6.RELEASE'
-project.ext.springVersion = '4.0.7.RELEASE'
-project.ext.jerseyVersion = '1.17'
-project.ext.springDataJpaVersion = '1.7.0.RELEASE' // also change spring-boot-gradle-plugin version above
+project.ext.springBootVersion = '1.2.1.RELEASE'
+project.ext.springVersion = '4.1.4.RELEASE'
+project.ext.jerseyVersion = '1.19'
+project.ext.springDataJpaVersion = '1.7.2.RELEASE' // also change spring-boot-gradle-plugin version above
 
 project.ext.mysqlUser='root'
 project.ext.mysqlPassword='mysql'
@@ -45,19 +47,20 @@ group = 'org.mifosplatform'
 repositories {
 	jcenter()
 	maven {
-    url "http://repository.pentaho.org/artifactory/pentaho/"
-    url "http://nexus.pentaho.org/content/repositories/pentaho-public-release-repos/"
-  }
+        url "http://repository.pentaho.org/artifactory/pentaho/"
+        url "http://nexus.pentaho.org/content/repositories/pentaho-public-release-repos/"
+    }
 	// mavenLocal() // useful for local dev using MariaDB4j SNAPSHOTs (not needed for real-world non-SNAPHOT builds)
 }
 
 configurations {
 	providedRuntime // needed for Spring Boot executable WAR
-  providedCompile
+    providedCompile
 	compile
 	runtime
 	all*.exclude group: 'commons-logging'
 }
+
 /* Pick up dependencies based on the environemnt, defaults to production */
 if (project.hasProperty('env') && project.getProperty('env') == 'dev') {
   apply from:  'dev-dependencies.gradle'
@@ -235,7 +238,7 @@ buildscript {
   }
 
   dependencies {
-    classpath "org.flywaydb:flyway-gradle-plugin:3.0" // version upgraded during Spring Boot & MariaDB4j work, as prev. used v0.2 didn't work well after *.sql moved from mifosng-db to mifosng-provider/src/main/resources (new version also has clearer errors, e.g. in case of missing DB)
+    classpath "org.flywaydb:flyway-gradle-plugin:3.1" // version upgraded during Spring Boot & MariaDB4j work, as prev. used v0.2 didn't work well after *.sql moved from mifosng-db to mifosng-provider/src/main/resources (new version also has clearer errors, e.g. in case of missing DB)
     classpath 'mysql:mysql-connector-java:5.1.22'
   }
 }

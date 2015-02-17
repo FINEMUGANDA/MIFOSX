@@ -10,8 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CachingConfigurer;
 import org.springframework.cache.annotation.EnableCaching;
-import org.springframework.cache.interceptor.DefaultKeyGenerator;
-import org.springframework.cache.interceptor.KeyGenerator;
+import org.springframework.cache.interceptor.*;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -30,7 +29,17 @@ public class PlatformCacheConfiguration implements CachingConfigurer {
     }
 
     @Override
+    public CacheResolver cacheResolver() {
+        return null;
+    }
+
+    @Override
     public KeyGenerator keyGenerator() {
         return new DefaultKeyGenerator();
+    }
+
+    @Override
+    public CacheErrorHandler errorHandler() {
+        return new SimpleCacheErrorHandler();
     }
 }
