@@ -131,7 +131,7 @@ public class SavingsProductToGLAccountMappingHelper extends ProductToGLAccountMa
                 SAVINGS_PRODUCT_ACCOUNTING_PARAMS.OVERDRAFT_PORTFOLIO_CONTROL.getValue(), element);
         final Long incomeFromInterest = this.fromApiJsonHelper.extractLongNamed(
                 SAVINGS_PRODUCT_ACCOUNTING_PARAMS.INCOME_FROM_INTEREST.getValue(), element);
-        final Long writeOffId = this.fromApiJsonHelper.extractLongNamed(SAVINGS_PRODUCT_ACCOUNTING_PARAMS.LOSSES_WRITTEN_OFF.getValue(),
+        final Long writeOffId = this.fromApiJsonHelper.extractLongNamed(SAVINGS_PRODUCT_ACCOUNTING_PARAMS.PRINCIPAL_WRITTEN_OFF.getValue(),
                 element);
         switch (accountingRuleType) {
             case NONE:
@@ -145,7 +145,7 @@ public class SavingsProductToGLAccountMappingHelper extends ProductToGLAccountMa
                 changes.put(SAVINGS_PRODUCT_ACCOUNTING_PARAMS.TRANSFERS_SUSPENSE.getValue(), transfersInSuspenseAccountId);
                 changes.put(SAVINGS_PRODUCT_ACCOUNTING_PARAMS.OVERDRAFT_PORTFOLIO_CONTROL.getValue(), overdraftControlId);
                 changes.put(SAVINGS_PRODUCT_ACCOUNTING_PARAMS.INCOME_FROM_INTEREST.getValue(), incomeFromInterest);
-                changes.put(SAVINGS_PRODUCT_ACCOUNTING_PARAMS.LOSSES_WRITTEN_OFF.getValue(), writeOffId);
+                changes.put(SAVINGS_PRODUCT_ACCOUNTING_PARAMS.PRINCIPAL_WRITTEN_OFF.getValue(), writeOffId);
             break;
             case ACCRUAL_PERIODIC:
             break;
@@ -198,7 +198,7 @@ public class SavingsProductToGLAccountMappingHelper extends ProductToGLAccountMa
                 mergeSavingsToExpenseAccountMappingChanges(element, SAVINGS_PRODUCT_ACCOUNTING_PARAMS.INTEREST_ON_SAVINGS.getValue(),
                         savingsProductId, CASH_ACCOUNTS_FOR_SAVINGS.INTEREST_ON_SAVINGS.getValue(),
                         CASH_ACCOUNTS_FOR_SAVINGS.INTEREST_ON_SAVINGS.toString(), changes);
-                mergeSavingsToExpenseAccountMappingChanges(element, SAVINGS_PRODUCT_ACCOUNTING_PARAMS.LOSSES_WRITTEN_OFF.getValue(),
+                mergeSavingsToExpenseAccountMappingChanges(element, SAVINGS_PRODUCT_ACCOUNTING_PARAMS.PRINCIPAL_WRITTEN_OFF.getValue(),
                         savingsProductId, CASH_ACCOUNTS_FOR_SAVINGS.LOSSES_WRITTEN_OFF.getValue(),
                         CASH_ACCOUNTS_FOR_SAVINGS.LOSSES_WRITTEN_OFF.toString(), changes);
 

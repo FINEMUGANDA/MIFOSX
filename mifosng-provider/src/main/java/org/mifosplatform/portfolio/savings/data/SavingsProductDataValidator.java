@@ -263,8 +263,8 @@ public class SavingsProductDataValidator {
                     .value(incomeFromInterest).notNull().integerGreaterThanZero();
 
             final Long writtenoff = this.fromApiJsonHelper.extractLongNamed(
-                    SAVINGS_PRODUCT_ACCOUNTING_PARAMS.LOSSES_WRITTEN_OFF.getValue(), element);
-            baseDataValidator.reset().parameter(SAVINGS_PRODUCT_ACCOUNTING_PARAMS.LOSSES_WRITTEN_OFF.getValue()).value(writtenoff)
+                    SAVINGS_PRODUCT_ACCOUNTING_PARAMS.PRINCIPAL_WRITTEN_OFF.getValue(), element);
+            baseDataValidator.reset().parameter(SAVINGS_PRODUCT_ACCOUNTING_PARAMS.PRINCIPAL_WRITTEN_OFF.getValue()).value(writtenoff)
                     .notNull().integerGreaterThanZero();
 
             validatePaymentChannelFundSourceMappings(baseDataValidator, element);
@@ -429,9 +429,9 @@ public class SavingsProductDataValidator {
         baseDataValidator.reset().parameter(SAVINGS_PRODUCT_ACCOUNTING_PARAMS.INCOME_FROM_INTEREST.getValue()).value(incomeFromInterest)
                 .ignoreIfNull().integerGreaterThanZero();
 
-        final Long writtenoff = this.fromApiJsonHelper.extractLongNamed(SAVINGS_PRODUCT_ACCOUNTING_PARAMS.LOSSES_WRITTEN_OFF.getValue(),
+        final Long writtenoff = this.fromApiJsonHelper.extractLongNamed(SAVINGS_PRODUCT_ACCOUNTING_PARAMS.PRINCIPAL_WRITTEN_OFF.getValue(),
                 element);
-        baseDataValidator.reset().parameter(SAVINGS_PRODUCT_ACCOUNTING_PARAMS.LOSSES_WRITTEN_OFF.getValue()).value(writtenoff)
+        baseDataValidator.reset().parameter(SAVINGS_PRODUCT_ACCOUNTING_PARAMS.PRINCIPAL_WRITTEN_OFF.getValue()).value(writtenoff)
                 .ignoreIfNull().integerGreaterThanZero();
 
         validatePaymentChannelFundSourceMappings(baseDataValidator, element);
