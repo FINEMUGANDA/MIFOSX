@@ -64,9 +64,9 @@ public class ProductToGLAccountMappingWritePlatformServiceImpl implements Produc
                 this.loanProductToGLAccountMappingHelper.saveLoanToAssetAccountMapping(element,
                         LOAN_PRODUCT_ACCOUNTING_PARAMS.LOAN_PORTFOLIO.getValue(), loanProductId,
                         CASH_ACCOUNTS_FOR_LOAN.LOAN_PORTFOLIO.getValue());
-                this.loanProductToGLAccountMappingHelper.saveLoanToAssetAccountMapping(element,
-                        LOAN_PRODUCT_ACCOUNTING_PARAMS.TRANSFERS_SUSPENSE.getValue(), loanProductId,
-                        CASH_ACCOUNTS_FOR_LOAN.TRANSFERS_SUSPENSE.getValue());
+//                this.loanProductToGLAccountMappingHelper.saveLoanToAssetAccountMapping(element,
+//                        LOAN_PRODUCT_ACCOUNTING_PARAMS.TRANSFERS_SUSPENSE.getValue(), loanProductId,
+//                        CASH_ACCOUNTS_FOR_LOAN.TRANSFERS_SUSPENSE.getValue());
 
                 // income
                 this.loanProductToGLAccountMappingHelper.saveLoanToIncomeAccountMapping(element,
@@ -78,9 +78,9 @@ public class ProductToGLAccountMappingWritePlatformServiceImpl implements Produc
                 this.loanProductToGLAccountMappingHelper.saveLoanToIncomeAccountMapping(element,
                         LOAN_PRODUCT_ACCOUNTING_PARAMS.INCOME_FROM_PENALTIES.getValue(), loanProductId,
                         CASH_ACCOUNTS_FOR_LOAN.INCOME_FROM_PENALTIES.getValue());
-                this.loanProductToGLAccountMappingHelper.saveLoanToIncomeAccountMapping(element,
-                        LOAN_PRODUCT_ACCOUNTING_PARAMS.INCOME_FROM_RECOVERY.getValue(), loanProductId,
-                        CASH_ACCOUNTS_FOR_LOAN.INCOME_FROM_RECOVERY.getValue());
+//                this.loanProductToGLAccountMappingHelper.saveLoanToIncomeAccountMapping(element,
+//                        LOAN_PRODUCT_ACCOUNTING_PARAMS.INCOME_FROM_RECOVERY.getValue(), loanProductId,
+//                        CASH_ACCOUNTS_FOR_LOAN.INCOME_FROM_RECOVERY.getValue());
 
                 // expenses
                 this.loanProductToGLAccountMappingHelper.saveLoanToExpenseAccountMapping(element,
@@ -106,9 +106,9 @@ public class ProductToGLAccountMappingWritePlatformServiceImpl implements Produc
                 this.loanProductToGLAccountMappingHelper.saveLoanToAssetAccountMapping(element,
                         LOAN_PRODUCT_ACCOUNTING_PARAMS.LOAN_PORTFOLIO.getValue(), loanProductId,
                         ACCRUAL_ACCOUNTS_FOR_LOAN.LOAN_PORTFOLIO.getValue());
-                this.loanProductToGLAccountMappingHelper.saveLoanToAssetAccountMapping(element,
-                        LOAN_PRODUCT_ACCOUNTING_PARAMS.TRANSFERS_SUSPENSE.getValue(), loanProductId,
-                        ACCRUAL_ACCOUNTS_FOR_LOAN.TRANSFERS_SUSPENSE.getValue());
+//                this.loanProductToGLAccountMappingHelper.saveLoanToAssetAccountMapping(element,
+//                        LOAN_PRODUCT_ACCOUNTING_PARAMS.TRANSFERS_SUSPENSE.getValue(), loanProductId,
+//                        ACCRUAL_ACCOUNTS_FOR_LOAN.TRANSFERS_SUSPENSE.getValue());
                 this.loanProductToGLAccountMappingHelper.saveLoanToAssetAccountMapping(element,
                         LOAN_PRODUCT_ACCOUNTING_PARAMS.INTEREST_RECEIVABLE.getValue(), loanProductId,
                         ACCRUAL_ACCOUNTS_FOR_LOAN.INTEREST_RECEIVABLE.getValue());
@@ -129,9 +129,9 @@ public class ProductToGLAccountMappingWritePlatformServiceImpl implements Produc
                 this.loanProductToGLAccountMappingHelper.saveLoanToIncomeAccountMapping(element,
                         LOAN_PRODUCT_ACCOUNTING_PARAMS.INCOME_FROM_PENALTIES.getValue(), loanProductId,
                         ACCRUAL_ACCOUNTS_FOR_LOAN.INCOME_FROM_PENALTIES.getValue());
-                this.loanProductToGLAccountMappingHelper.saveLoanToIncomeAccountMapping(element,
-                        LOAN_PRODUCT_ACCOUNTING_PARAMS.INCOME_FROM_RECOVERY.getValue(), loanProductId,
-                        ACCRUAL_ACCOUNTS_FOR_LOAN.INCOME_FROM_RECOVERY.getValue());
+//                this.loanProductToGLAccountMappingHelper.saveLoanToIncomeAccountMapping(element,
+//                        LOAN_PRODUCT_ACCOUNTING_PARAMS.INCOME_FROM_RECOVERY.getValue(), loanProductId,
+//                        ACCRUAL_ACCOUNTS_FOR_LOAN.INCOME_FROM_RECOVERY.getValue());
 
                 // expenses
                 this.loanProductToGLAccountMappingHelper.saveLoanToExpenseAccountMapping(element,
@@ -139,9 +139,9 @@ public class ProductToGLAccountMappingWritePlatformServiceImpl implements Produc
                         ACCRUAL_ACCOUNTS_FOR_LOAN.LOSSES_WRITTEN_OFF.getValue());
 
                 // liabilities
-                this.loanProductToGLAccountMappingHelper.saveLoanToLiabilityAccountMapping(element,
-                        LOAN_PRODUCT_ACCOUNTING_PARAMS.OVERPAYMENT.getValue(), loanProductId,
-                        ACCRUAL_ACCOUNTS_FOR_LOAN.OVERPAYMENT.getValue());
+//                this.loanProductToGLAccountMappingHelper.saveLoanToLiabilityAccountMapping(element,
+//                        LOAN_PRODUCT_ACCOUNTING_PARAMS.OVERPAYMENT.getValue(), loanProductId,
+//                        ACCRUAL_ACCOUNTS_FOR_LOAN.OVERPAYMENT.getValue());
 
                 // advanced accounting mappings
                 this.loanProductToGLAccountMappingHelper.savePaymentChannelToFundSourceMappings(command, element, loanProductId, null);
@@ -203,9 +203,9 @@ public class ProductToGLAccountMappingWritePlatformServiceImpl implements Produc
                 this.savingsProductToGLAccountMappingHelper.saveSavingsToLiabilityAccountMapping(element,
                         SAVINGS_PRODUCT_ACCOUNTING_PARAMS.SAVINGS_CONTROL.getValue(), savingProductId,
                         CASH_ACCOUNTS_FOR_SAVINGS.SAVINGS_CONTROL.getValue());
-                this.savingsProductToGLAccountMappingHelper.saveSavingsToLiabilityAccountMapping(element,
-                        SAVINGS_PRODUCT_ACCOUNTING_PARAMS.TRANSFERS_SUSPENSE.getValue(), savingProductId,
-                        CASH_ACCOUNTS_FOR_SAVINGS.TRANSFERS_SUSPENSE.getValue());
+//                this.savingsProductToGLAccountMappingHelper.saveSavingsToLiabilityAccountMapping(element,
+//                        SAVINGS_PRODUCT_ACCOUNTING_PARAMS.TRANSFERS_SUSPENSE.getValue(), savingProductId,
+//                        CASH_ACCOUNTS_FOR_SAVINGS.TRANSFERS_SUSPENSE.getValue());
 
                 // advanced accounting mappings
                 this.savingsProductToGLAccountMappingHelper.savePaymentChannelToFundSourceMappings(command, element, savingProductId, null);
