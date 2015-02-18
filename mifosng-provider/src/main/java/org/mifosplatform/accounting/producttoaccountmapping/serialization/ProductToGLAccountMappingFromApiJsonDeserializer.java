@@ -103,25 +103,25 @@ public final class ProductToGLAccountMappingFromApiJsonDeserializer {
             baseDataValidator.reset().parameter(LOAN_PRODUCT_ACCOUNTING_PARAMS.INCOME_FROM_PENALTIES.getValue()).value(incomeFromPenaltyId)
                     .notNull().integerGreaterThanZero();
 
-            final Long incomeFromRecoveryAccountId = this.fromApiJsonHelper.extractLongNamed(
-                    LOAN_PRODUCT_ACCOUNTING_PARAMS.INCOME_FROM_RECOVERY.getValue(), element);
-            baseDataValidator.reset().parameter(LOAN_PRODUCT_ACCOUNTING_PARAMS.INCOME_FROM_RECOVERY.getValue()).value(incomeFromRecoveryAccountId)
-                    .notNull().integerGreaterThanZero();
+//            final Long incomeFromRecoveryAccountId = this.fromApiJsonHelper.extractLongNamed(
+//                    LOAN_PRODUCT_ACCOUNTING_PARAMS.INCOME_FROM_RECOVERY.getValue(), element);
+//            baseDataValidator.reset().parameter(LOAN_PRODUCT_ACCOUNTING_PARAMS.INCOME_FROM_RECOVERY.getValue()).value(incomeFromRecoveryAccountId)
+//                    .notNull().integerGreaterThanZero();
 
             final Long writeOffAccountId = this.fromApiJsonHelper.extractLongNamed(
                     LOAN_PRODUCT_ACCOUNTING_PARAMS.LOSSES_WRITTEN_OFF.getValue(), element);
             baseDataValidator.reset().parameter(LOAN_PRODUCT_ACCOUNTING_PARAMS.LOSSES_WRITTEN_OFF.getValue()).value(writeOffAccountId)
                     .notNull().integerGreaterThanZero();
 
-            final Long overpaymentAccountId = this.fromApiJsonHelper.extractLongNamed(
-                    LOAN_PRODUCT_ACCOUNTING_PARAMS.OVERPAYMENT.getValue(), element);
-            baseDataValidator.reset().parameter(LOAN_PRODUCT_ACCOUNTING_PARAMS.OVERPAYMENT.getValue()).value(overpaymentAccountId)
-                    .notNull().integerGreaterThanZero();
+//            final Long overpaymentAccountId = this.fromApiJsonHelper.extractLongNamed(
+//                    LOAN_PRODUCT_ACCOUNTING_PARAMS.OVERPAYMENT.getValue(), element);
+//            baseDataValidator.reset().parameter(LOAN_PRODUCT_ACCOUNTING_PARAMS.OVERPAYMENT.getValue()).value(overpaymentAccountId)
+//                    .notNull().integerGreaterThanZero();
 
-            final Long transfersInSuspenseAccountId = this.fromApiJsonHelper.extractLongNamed(
-                    LOAN_PRODUCT_ACCOUNTING_PARAMS.TRANSFERS_SUSPENSE.getValue(), element);
-            baseDataValidator.reset().parameter(LOAN_PRODUCT_ACCOUNTING_PARAMS.TRANSFERS_SUSPENSE.getValue())
-                    .value(transfersInSuspenseAccountId).notNull().integerGreaterThanZero();
+//            final Long transfersInSuspenseAccountId = this.fromApiJsonHelper.extractLongNamed(
+//                    LOAN_PRODUCT_ACCOUNTING_PARAMS.TRANSFERS_SUSPENSE.getValue(), element);
+//            baseDataValidator.reset().parameter(LOAN_PRODUCT_ACCOUNTING_PARAMS.TRANSFERS_SUSPENSE.getValue())
+//                    .value(transfersInSuspenseAccountId).notNull().integerGreaterThanZero();
 
         }
 
@@ -172,10 +172,10 @@ public final class ProductToGLAccountMappingFromApiJsonDeserializer {
             baseDataValidator.reset().parameter(SAVINGS_PRODUCT_ACCOUNTING_PARAMS.SAVINGS_REFERENCE.getValue())
                     .value(savingsReferenceAccountId).notNull().integerGreaterThanZero();
 
-            final Long transfersInSuspenseAccountId = this.fromApiJsonHelper.extractLongNamed(
-                    SAVINGS_PRODUCT_ACCOUNTING_PARAMS.TRANSFERS_SUSPENSE.getValue(), element);
-            baseDataValidator.reset().parameter(SAVINGS_PRODUCT_ACCOUNTING_PARAMS.TRANSFERS_SUSPENSE.getValue())
-                    .value(transfersInSuspenseAccountId).notNull().integerGreaterThanZero();
+//            final Long transfersInSuspenseAccountId = this.fromApiJsonHelper.extractLongNamed(
+//                    SAVINGS_PRODUCT_ACCOUNTING_PARAMS.TRANSFERS_SUSPENSE.getValue(), element);
+//            baseDataValidator.reset().parameter(SAVINGS_PRODUCT_ACCOUNTING_PARAMS.TRANSFERS_SUSPENSE.getValue())
+//                    .value(transfersInSuspenseAccountId).notNull().integerGreaterThanZero();
 
             final Long interestOnSavingsAccountId = this.fromApiJsonHelper.extractLongNamed(
                     SAVINGS_PRODUCT_ACCOUNTING_PARAMS.INTEREST_ON_SAVINGS.getValue(), element);

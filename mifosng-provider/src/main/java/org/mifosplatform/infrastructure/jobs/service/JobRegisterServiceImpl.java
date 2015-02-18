@@ -5,6 +5,7 @@
  */
 package org.mifosplatform.infrastructure.jobs.service;
 
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -370,20 +371,24 @@ public class JobRegisterServiceImpl implements JobRegisterService, ApplicationLi
     }
 
     private Trigger createTrigger(final ScheduledJobDetail scheduledJobDetails, final JobDetail jobDetail) {
-        final MifosPlatformTenant tenant = ThreadLocalContextUtil.getTenant();
-        final CronTriggerFactoryBean cronTriggerFactoryBean = new CronTriggerFactoryBean();
-        cronTriggerFactoryBean.setName(scheduledJobDetails.getJobName() + "Trigger" + tenant.getId());
-        cronTriggerFactoryBean.setJobDetail(jobDetail);
-        final JobDataMap jobDataMap = new JobDataMap();
-        jobDataMap.put(SchedulerServiceConstants.TENANT_IDENTIFIER, tenant.getTenantIdentifier());
-        cronTriggerFactoryBean.setJobDataMap(jobDataMap);
-        final TimeZone timeZone = TimeZone.getTimeZone(tenant.getTimezoneId());
-        cronTriggerFactoryBean.setTimeZone(timeZone);
-        cronTriggerFactoryBean.setGroup(scheduledJobDetails.getGroupName());
-        cronTriggerFactoryBean.setCronExpression(scheduledJobDetails.getCronExpression());
-        cronTriggerFactoryBean.setPriority(scheduledJobDetails.getTaskPriority());
-        cronTriggerFactoryBean.afterPropertiesSet();
-        return cronTriggerFactoryBean.getObject();
+        try {
+            final MifosPlatformTenant tenant = ThreadLocalContextUtil.getTenant();
+            final CronTriggerFactoryBean cronTriggerFactoryBean = new CronTriggerFactoryBean();
+            cronTriggerFactoryBean.setName(scheduledJobDetails.getJobName() + "Trigger" + tenant.getId());
+            cronTriggerFactoryBean.setJobDetail(jobDetail);
+            final JobDataMap jobDataMap = new JobDataMap();
+            jobDataMap.put(SchedulerServiceConstants.TENANT_IDENTIFIER, tenant.getTenantIdentifier());
+            cronTriggerFactoryBean.setJobDataMap(jobDataMap);
+            final TimeZone timeZone = TimeZone.getTimeZone(tenant.getTimezoneId());
+            cronTriggerFactoryBean.setTimeZone(timeZone);
+            cronTriggerFactoryBean.setGroup(scheduledJobDetails.getGroupName());
+            cronTriggerFactoryBean.setCronExpression(scheduledJobDetails.getCronExpression());
+            cronTriggerFactoryBean.setPriority(scheduledJobDetails.getTaskPriority());
+            cronTriggerFactoryBean.afterPropertiesSet();
+            return cronTriggerFactoryBean.getObject();
+        } catch (ParseException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private String getStackTraceAsString(final Throwable throwable) {
