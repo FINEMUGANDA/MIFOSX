@@ -184,6 +184,11 @@ public class AccrualBasedAccountingProcessorForLoan implements AccountingProcess
             totalDebitAmount = totalDebitAmount.add(principalAmount);
             this.helper.createCreditJournalEntryOrReversalForLoan(office, currencyCode, ACCRUAL_ACCOUNTS_FOR_LOAN.LOAN_PORTFOLIO,
                     loanProductId, paymentTypeId, loanId, transactionId, transactionDate, principalAmount, isReversal);
+            if (writeOff) {
+                this.helper.createDebitJournalEntryOrReversalForLoan(office, currencyCode,
+                        ACCRUAL_ACCOUNTS_FOR_LOAN.PRINCIPAL_WRITTEN_OFF.getValue(), loanProductId, paymentTypeId, loanId, transactionId,
+                        transactionDate, principalAmount, isReversal);
+            }
         }
 
         // handle interest payment of writeOff (and reversals)
@@ -191,6 +196,11 @@ public class AccrualBasedAccountingProcessorForLoan implements AccountingProcess
             totalDebitAmount = totalDebitAmount.add(interestAmount);
             this.helper.createCreditJournalEntryOrReversalForLoan(office, currencyCode, ACCRUAL_ACCOUNTS_FOR_LOAN.INTEREST_RECEIVABLE,
                     loanProductId, paymentTypeId, loanId, transactionId, transactionDate, interestAmount, isReversal);
+            if (writeOff) {
+                this.helper.createDebitJournalEntryOrReversalForLoan(office, currencyCode,
+                        ACCRUAL_ACCOUNTS_FOR_LOAN.INTEREST_WRITTEN_OFF.getValue(), loanProductId, paymentTypeId, loanId, transactionId,
+                        transactionDate, interestAmount, isReversal);
+            }
         }
 
         // handle fees payment of writeOff (and reversals)
@@ -205,6 +215,11 @@ public class AccrualBasedAccountingProcessorForLoan implements AccountingProcess
                 this.helper.createCreditJournalEntryOrReversalForLoan(office, currencyCode, ACCRUAL_ACCOUNTS_FOR_LOAN.FEES_RECEIVABLE,
                         loanProductId, paymentTypeId, loanId, transactionId, transactionDate, feesAmount, isReversal);
             }
+            if (writeOff) {
+                this.helper.createDebitJournalEntryOrReversalForLoan(office, currencyCode,
+                        ACCRUAL_ACCOUNTS_FOR_LOAN.FEES_WRITTEN_OFF.getValue(), loanProductId, paymentTypeId, loanId, transactionId,
+                        transactionDate, feesAmount, isReversal);
+            }
         }
 
         // handle penalties payment of writeOff (and reversals)
@@ -218,6 +233,12 @@ public class AccrualBasedAccountingProcessorForLoan implements AccountingProcess
                 this.helper.createCreditJournalEntryOrReversalForLoan(office, currencyCode, ACCRUAL_ACCOUNTS_FOR_LOAN.PENALTIES_RECEIVABLE,
                         loanProductId, paymentTypeId, loanId, transactionId, transactionDate, penaltiesAmount, isReversal);
             }
+            if (writeOff) {
+                this.helper.createDebitJournalEntryOrReversalForLoan(office, currencyCode,
+                        ACCRUAL_ACCOUNTS_FOR_LOAN.LPI_WRITTEN_OFF.getValue(), loanProductId, paymentTypeId, loanId, transactionId,
+                        transactionDate, penaltiesAmount, isReversal);
+            }
+
         }
 
         /**
@@ -226,9 +247,9 @@ public class AccrualBasedAccountingProcessorForLoan implements AccountingProcess
          ***/
         if (!(totalDebitAmount.compareTo(BigDecimal.ZERO) == 0)) {
             if (writeOff) {
-                this.helper.createDebitJournalEntryOrReversalForLoan(office, currencyCode,
-                        ACCRUAL_ACCOUNTS_FOR_LOAN.LOSSES_WRITTEN_OFF.getValue(), loanProductId, paymentTypeId, loanId, transactionId,
-                        transactionDate, totalDebitAmount, isReversal);
+//                this.helper.createDebitJournalEntryOrReversalForLoan(office, currencyCode,
+//                        ACCRUAL_ACCOUNTS_FOR_LOAN.PRINCIPAL_WRITTEN_OFF.getValue(), loanProductId, paymentTypeId, loanId, transactionId,
+//                        transactionDate, totalDebitAmount, isReversal);
             } else {
                 if (loanTransactionDTO.isAccountTransfer()) {
                     this.helper.createDebitJournalEntryOrReversalForLoan(office, currencyCode,
