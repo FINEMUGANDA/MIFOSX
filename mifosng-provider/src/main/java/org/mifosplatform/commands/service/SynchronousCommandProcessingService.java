@@ -218,6 +218,8 @@ public class SynchronousCommandProcessingService implements CommandProcessingSer
             // end of client
         } else if (wrapper.isUpdateRolePermissions()) {
             handler = this.applicationContext.getBean("updateRolePermissionsCommandHandler", NewCommandSourceHandler.class);
+        } else if (wrapper.isUpdateRolePermissionExpressions()) {
+            handler = this.applicationContext.getBean("updateRolePermissionExpressionsCommandHandler", NewCommandSourceHandler.class);
         } else if (wrapper.isPermissionResource()) {
             handler = this.applicationContext.getBean("updateMakerCheckerPermissionsCommandHandler", NewCommandSourceHandler.class);
         } else if (wrapper.isRoleResource()) {
@@ -894,6 +896,7 @@ public class SynchronousCommandProcessingService implements CommandProcessingSer
     public boolean validateCommand(final CommandWrapper commandWrapper, final AppUser user) {
         boolean rollbackTransaction = this.configurationDomainService.isMakerCheckerEnabledForTask(commandWrapper.taskPermissionName());
         user.validateHasPermissionTo(commandWrapper.getTaskPermissionName());
+        user.validateHasPermissionTo(commandWrapper);
         return rollbackTransaction;
     }
 

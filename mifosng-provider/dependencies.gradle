@@ -46,6 +46,8 @@ dependencies {
     [group: 'mysql', name: 'mysql-connector-java', version: '5.1.34'],
     //[group: 'ch.vorburger.mariaDB4j', name: 'mariaDB4j', version: '2.1.3'],
 
+    [group: 'org.mvel', name: 'mvel2', version: '2.2.4.Final'],
+
     // [group: 'org.apache.tomcat', name: 'tomcat-jdbc', version: tomcatVersion],
 
     [group: 'pentaho-reporting-engine', name: 'pentaho-reporting-engine-classic-core', version: pentahoVersion],

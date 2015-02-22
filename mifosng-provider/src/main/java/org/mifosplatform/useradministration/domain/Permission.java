@@ -54,6 +54,14 @@ public class Permission extends AbstractPersistable<Long> {
         return this.code;
     }
 
+    public String getEntityName() {
+        return entityName;
+    }
+
+    public String getActionName() {
+        return actionName;
+    }
+
     public boolean hasMakerCheckerEnabled() {
         return this.canMakerChecker;
     }

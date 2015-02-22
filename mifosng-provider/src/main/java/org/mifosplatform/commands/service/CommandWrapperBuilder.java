@@ -111,6 +111,14 @@ public class CommandWrapperBuilder {
         return this;
     }
 
+    public CommandWrapperBuilder updateRolePermissionExpressions(final Long roleId) {
+        this.actionName = "EXPRESSIONS";
+        this.entityName = "ROLE";
+        this.entityId = roleId;
+        this.href = "/roles/" + roleId + "/expressions";
+        return this;
+    }
+
     public CommandWrapperBuilder createUser() {
         this.actionName = "CREATE";
         this.entityName = "USER";

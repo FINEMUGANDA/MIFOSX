@@ -11,14 +11,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
-import javax.persistence.ManyToMany;
-import javax.persistence.Table;
-import javax.persistence.UniqueConstraint;
+import javax.persistence.*;
 
 import org.mifosplatform.infrastructure.core.api.JsonCommand;
 import org.mifosplatform.useradministration.data.RoleData;
@@ -37,6 +30,10 @@ public class Role extends AbstractPersistable<Long> {
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "m_role_permission", joinColumns = @JoinColumn(name = "role_id"), inverseJoinColumns = @JoinColumn(name = "permission_id"))
     private final Set<Permission> permissions = new HashSet<>();
+
+    @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @JoinColumn(name="role_id", referencedColumnName="id")
+    private final Set<PermissionExpression> permissionExpressions = new HashSet<>();
 
     public static Role fromJson(final JsonCommand command) {
         final String name = command.stringValueOfParameterNamed("name");
@@ -106,6 +103,46 @@ public class Role extends AbstractPersistable<Long> {
             }
         }
         return match;
+    }
+
+    public boolean updatePermissionExpression(final Permission permission, final String expression) {
+        boolean changed;
+
+        PermissionExpression permissionExpression = getPermissionExpression(permission.getCode());
+
+        if(permissionExpression==null) {
+            permissionExpression = toPermissionExpression(permission, expression);
+        }
+
+        if (expression!=null && !"".equals(expression.trim())) {
+            permissionExpression.setExpression(expression);
+            changed = addPermissionExpression(permissionExpression);
+        } else {
+            changed = removePermissionExpression(permissionExpression);
+        }
+
+        return changed;
+    }
+
+    private PermissionExpression toPermissionExpression(Permission permission, String expression) {
+        return new PermissionExpression(getId(), permission.getEntityName(), permission.getActionName(), expression);
+    }
+
+    public boolean addPermissionExpression(final PermissionExpression permissionExpression) {
+        return this.permissionExpressions.add(permissionExpression);
+    }
+
+    private boolean removePermissionExpression(final PermissionExpression permissionExpression) {
+        return this.permissionExpressions.remove(permissionExpression);
+    }
+
+    public PermissionExpression getPermissionExpression(final String permissionCode) {
+        for (final PermissionExpression permissionExpression : this.permissionExpressions) {
+            if (permissionExpression.hasCode(permissionCode)) {
+                return permissionExpression;
+            }
+        }
+        return null;
     }
 
     public RoleData toData() {
