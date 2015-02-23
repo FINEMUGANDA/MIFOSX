@@ -21,6 +21,10 @@ public class RoleData implements Serializable {
         return new RolePermissionsData(this.id, this.name, this.description, permissionUsageData);
     }
 
+    public RolePermissionExpressionsData toRolePermissionExpressionData(final Collection<PermissionExpressionData> permissionExpressionUsageData) {
+        return new RolePermissionExpressionsData(this.id, this.name, this.description, permissionExpressionUsageData);
+    }
+
     public RoleData(final Long id, final String name, final String description) {
         this.id = id;
         this.name = name;

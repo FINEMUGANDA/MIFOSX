@@ -219,6 +219,10 @@ public class CommandWrapper {
         return this.actionName.equalsIgnoreCase("PERMISSIONS") && this.entityId != null;
     }
 
+    public boolean isUpdateRolePermissionExpressions() {
+        return this.actionName.equalsIgnoreCase("EXPRESSIONS") && this.entityId != null;
+    }
+
     public boolean isConfigurationResource() {
         return this.entityName.equalsIgnoreCase("CONFIGURATION");
     }

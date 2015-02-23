@@ -47,6 +47,8 @@ dependencies {
     [group: 'ch.vorburger.mariaDB4j', name: 'mariaDB4j', version: '2.1.3'],
     [group: 'org.apache.tomcat', name: 'tomcat-jdbc', version: tomcatVersion],
 
+    [group: 'org.mvel', name: 'mvel2', version: '2.2.4.Final'],
+
     [group: 'pentaho-reporting-engine', name: 'pentaho-reporting-engine-classic-core', version: pentahoVersion],
     [group: 'pentaho-reporting-engine', name: 'pentaho-reporting-engine-classic-extensions', version: pentahoVersion],
     [group: 'pentaho-reporting-engine', name: 'pentaho-reporting-engine-classic-extensions-scripting', version: pentahoVersion],

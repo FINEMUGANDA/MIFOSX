@@ -14,6 +14,7 @@ import org.mifosplatform.infrastructure.core.data.CommandProcessingResult;
 import org.mifosplatform.infrastructure.core.data.CommandProcessingResultBuilder;
 import org.mifosplatform.infrastructure.core.exception.PlatformDataIntegrityException;
 import org.mifosplatform.infrastructure.security.service.PlatformSecurityContext;
+import org.mifosplatform.useradministration.command.PermissionExpressionsCommand;
 import org.mifosplatform.useradministration.command.PermissionsCommand;
 import org.mifosplatform.useradministration.domain.Permission;
 import org.mifosplatform.useradministration.domain.PermissionRepository;
@@ -21,6 +22,7 @@ import org.mifosplatform.useradministration.domain.Role;
 import org.mifosplatform.useradministration.domain.RoleRepository;
 import org.mifosplatform.useradministration.exception.PermissionNotFoundException;
 import org.mifosplatform.useradministration.exception.RoleNotFoundException;
+import org.mifosplatform.useradministration.serialization.PermissionExpressionsCommandFromApiJsonDeserializer;
 import org.mifosplatform.useradministration.serialization.PermissionsCommandFromApiJsonDeserializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,16 +42,19 @@ public class RoleWritePlatformServiceJpaRepositoryImpl implements RoleWritePlatf
     private final PermissionRepository permissionRepository;
     private final RoleDataValidator roleCommandFromApiJsonDeserializer;
     private final PermissionsCommandFromApiJsonDeserializer permissionsFromApiJsonDeserializer;
+    private final PermissionExpressionsCommandFromApiJsonDeserializer permissionExpressionsFromApiJsonDeserializer;
 
     @Autowired
     public RoleWritePlatformServiceJpaRepositoryImpl(final PlatformSecurityContext context, final RoleRepository roleRepository,
             final PermissionRepository permissionRepository, final RoleDataValidator roleCommandFromApiJsonDeserializer,
-            final PermissionsCommandFromApiJsonDeserializer fromApiJsonDeserializer) {
+            final PermissionsCommandFromApiJsonDeserializer fromApiJsonDeserializer,
+            final PermissionExpressionsCommandFromApiJsonDeserializer expressionsFromApiJsonDeserializer) {
         this.context = context;
         this.roleRepository = roleRepository;
         this.permissionRepository = permissionRepository;
         this.roleCommandFromApiJsonDeserializer = roleCommandFromApiJsonDeserializer;
         this.permissionsFromApiJsonDeserializer = fromApiJsonDeserializer;
+        this.permissionExpressionsFromApiJsonDeserializer = expressionsFromApiJsonDeserializer;
     }
 
     @Transactional
@@ -155,6 +160,48 @@ public class RoleWritePlatformServiceJpaRepositoryImpl implements RoleWritePlatf
 
         if (!changedPermissions.isEmpty()) {
             changes.put("permissions", changedPermissions);
+            this.roleRepository.save(role);
+        }
+
+        return new CommandProcessingResultBuilder() //
+                .withCommandId(command.commandId()) //
+                .withEntityId(roleId) //
+                .with(changes) //
+                .build();
+    }
+
+    @Caching(evict = { @CacheEvict(value = "users", allEntries = true), @CacheEvict(value = "usersByUsername", allEntries = true) })
+    @Transactional
+    @Override
+    public CommandProcessingResult updateRolePermissionExpressions(final Long roleId, final JsonCommand command) {
+        this.context.authenticatedUser();
+
+        final Role role = this.roleRepository.findOne(roleId);
+        if (role == null) { throw new RoleNotFoundException(roleId); }
+
+        final Collection<Permission> allPermissions = this.permissionRepository.findAll();
+
+        final PermissionExpressionsCommand permissionsCommand = this.permissionExpressionsFromApiJsonDeserializer.commandFromApiJson(command.json());
+
+        final Map<String, String> commandExpressions = permissionsCommand.getExpressions();
+
+        final Map<String, Object> changes = new HashMap<>();
+
+        final Map<String, String> changedExpressions = new HashMap<>();
+        if(commandExpressions!=null) {
+            for (final String permissionCode : commandExpressions.keySet()) {
+                final String expression = commandExpressions.get(permissionCode);
+
+                final Permission permission = findPermissionByCode(allPermissions, permissionCode);
+                final boolean changed = role.updatePermissionExpression(permission, expression);
+                if (changed) {
+                    changedExpressions.put(permissionCode, expression);
+                }
+            }
+        }
+
+        if (!changedExpressions.isEmpty()) {
+            changes.put("expressions", changedExpressions);
             this.roleRepository.save(role);
         }
 
