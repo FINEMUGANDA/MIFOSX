@@ -1371,7 +1371,7 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService {
         final MusoniOverdueLoanScheduleMapper rm = new MusoniOverdueLoanScheduleMapper();
         final String sql = "select " + rm.schema() + " where DATE_SUB(CURDATE(),INTERVAL ? DAY) > ls.duedate "
                 + " and ls.completed_derived <> 1 and mc.charge_applies_to_enum =1 "
-                + " and mc.charge_time_enum = 9 and ml.loan_status_id = 300 ";
+                + " and mc.charge_time_enum = 9 and ml.loan_status_id IN (300, 800, 900) ";
         return this.jdbcTemplate.query(sql, rm, new Object[] { penaltyWaitPeriod });
     }
 
