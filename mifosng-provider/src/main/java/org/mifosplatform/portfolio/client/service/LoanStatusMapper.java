@@ -22,7 +22,7 @@ public class LoanStatusMapper {
     }
 
     public boolean isOpen() {
-        return Integer.valueOf(300).equals(this.statusId);
+        return Integer.valueOf(300).equals(this.statusId) || Integer.valueOf(800).equals(this.statusId) || Integer.valueOf(900).equals(this.statusId);
     }
 
     public boolean isWithdrawnByClient() {
