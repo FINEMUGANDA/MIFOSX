@@ -6,6 +6,9 @@ repos
 .project
 .settings
 .gradle
+classes
+.idea
+atlassian-ide-plugin.xml
 *.log
 *.iml
 *.ipr
