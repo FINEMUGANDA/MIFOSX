@@ -22,6 +22,7 @@ import org.mifosplatform.infrastructure.core.serialization.ToApiJsonSerializer;
 import org.mifosplatform.infrastructure.core.service.ThreadLocalContextUtil;
 import org.mifosplatform.infrastructure.hooks.event.HookEvent;
 import org.mifosplatform.infrastructure.hooks.event.HookEventSource;
+import org.mifosplatform.infrastructure.security.service.PermissionExpressionService;
 import org.mifosplatform.infrastructure.security.service.PlatformSecurityContext;
 import org.mifosplatform.useradministration.domain.AppUser;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,12 +39,15 @@ public class SynchronousCommandProcessingService implements CommandProcessingSer
     private final ToApiJsonSerializer<CommandProcessingResult> toApiResultJsonSerializer;
     private CommandSourceRepository commandSourceRepository;
     private final ConfigurationDomainService configurationDomainService;
+    private final PermissionExpressionService permissionExpressionService;
 
     @Autowired
     public SynchronousCommandProcessingService(final PlatformSecurityContext context, final ApplicationContext applicationContext,
             final ToApiJsonSerializer<Map<String, Object>> toApiJsonSerializer,
             final ToApiJsonSerializer<CommandProcessingResult> toApiResultJsonSerializer,
-            final CommandSourceRepository commandSourceRepository, final ConfigurationDomainService configurationDomainService) {
+            final CommandSourceRepository commandSourceRepository,
+            final ConfigurationDomainService configurationDomainService,
+            final PermissionExpressionService permissionExpressionService) {
         this.context = context;
         this.context = context;
         this.applicationContext = applicationContext;
@@ -52,6 +56,7 @@ public class SynchronousCommandProcessingService implements CommandProcessingSer
         this.commandSourceRepository = commandSourceRepository;
         this.commandSourceRepository = commandSourceRepository;
         this.configurationDomainService = configurationDomainService;
+        this.permissionExpressionService = permissionExpressionService;
     }
 
     @Transactional
@@ -895,8 +900,10 @@ public class SynchronousCommandProcessingService implements CommandProcessingSer
     @Override
     public boolean validateCommand(final CommandWrapper commandWrapper, final AppUser user) {
         boolean rollbackTransaction = this.configurationDomainService.isMakerCheckerEnabledForTask(commandWrapper.taskPermissionName());
-        user.validateHasPermissionTo(commandWrapper.getTaskPermissionName());
-        user.validateHasPermissionTo(commandWrapper);
+        if(!permissionExpressionService.validate(user, commandWrapper)) {
+            // only execute the normal permission checks if we didn't execute permission expressions
+            user.validateHasPermissionTo(commandWrapper.getTaskPermissionName());
+        }
         return rollbackTransaction;
     }
 
