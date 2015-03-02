@@ -16,6 +16,7 @@ import org.mifosplatform.infrastructure.core.api.JsonCommand;
 import org.mifosplatform.infrastructure.core.data.CommandProcessingResult;
 import org.mifosplatform.infrastructure.core.serialization.FromJsonHelper;
 import org.mifosplatform.infrastructure.jobs.service.SchedulerJobRunnerReadService;
+import org.mifosplatform.infrastructure.security.service.PermissionExpressionService;
 import org.mifosplatform.infrastructure.security.service.PlatformSecurityContext;
 import org.mifosplatform.useradministration.domain.AppUser;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,16 +33,18 @@ public class PortfolioCommandSourceWritePlatformServiceImpl implements Portfolio
     private final FromJsonHelper fromApiJsonHelper;
     private final CommandProcessingService processAndLogCommandService;
     private final SchedulerJobRunnerReadService schedulerJobRunnerReadService;
+    private final PermissionExpressionService permissionExpressionService;
 
     @Autowired
     public PortfolioCommandSourceWritePlatformServiceImpl(final PlatformSecurityContext context,
             final CommandSourceRepository commandSourceRepository, final FromJsonHelper fromApiJsonHelper,
-            final CommandProcessingService processAndLogCommandService, final SchedulerJobRunnerReadService schedulerJobRunnerReadService) {
+            final CommandProcessingService processAndLogCommandService, final SchedulerJobRunnerReadService schedulerJobRunnerReadService, final PermissionExpressionService permissionExpressionService) {
         this.context = context;
         this.commandSourceRepository = commandSourceRepository;
         this.fromApiJsonHelper = fromApiJsonHelper;
         this.processAndLogCommandService = processAndLogCommandService;
         this.schedulerJobRunnerReadService = schedulerJobRunnerReadService;
+        this.permissionExpressionService = permissionExpressionService;
     }
 
     @Override
@@ -58,8 +61,9 @@ public class PortfolioCommandSourceWritePlatformServiceImpl implements Portfolio
         } else {
             // if not user changing their own details - check user has
             // permission to perform specific task.
-            this.context.authenticatedUser(wrapper).validateHasPermissionTo(wrapper.getTaskPermissionName());
-            this.context.authenticatedUser(wrapper).validateHasPermissionTo(wrapper);
+            if(!permissionExpressionService.validate(this.context.authenticatedUser(wrapper), wrapper)) {
+                this.context.authenticatedUser(wrapper).validateHasPermissionTo(wrapper.getTaskPermissionName());
+            }
         }
         validateIsUpdateAllowed();
 

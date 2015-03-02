@@ -5,9 +5,6 @@
  */
 package org.mifosplatform.useradministration.domain;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonParser;
-import org.mifosplatform.commands.domain.CommandWrapper;
 import org.mifosplatform.infrastructure.core.api.JsonCommand;
 import org.mifosplatform.infrastructure.core.data.EnumOptionData;
 import org.mifosplatform.infrastructure.core.service.DateUtils;
@@ -17,7 +14,6 @@ import org.mifosplatform.infrastructure.security.service.PlatformPasswordEncoder
 import org.mifosplatform.infrastructure.security.service.RandomPasswordGenerator;
 import org.mifosplatform.organisation.office.domain.Office;
 import org.mifosplatform.organisation.staff.domain.Staff;
-import org.mvel2.MVEL;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.jpa.domain.AbstractPersistable;
@@ -467,60 +463,6 @@ public class AppUser extends AbstractPersistable<Long> implements PlatformUser {
             final String authorizationMessage = "User has no authority to: " + function;
             logger.info("Unauthorized access: userId: " + getId() + " action: " + function + " allowed: " + getAuthorities());
             throw new NoAuthorizationException(authorizationMessage);
-        }
-    }
-
-    public void validateHasPermissionTo(final CommandWrapper command) {
-        // TODO: remove this
-        logger.debug("############ VALIDATE COMMAND: {} - {}", command.getTaskPermissionName(), command.getJson());
-
-        List<PermissionExpression> expressions = new ArrayList<>();
-
-        for (final Role role : this.roles) {
-            PermissionExpression expression = role.getPermissionExpression(command.getTaskPermissionName());
-            if (expression!=null) {
-                expressions.add(expression);
-            }
-        }
-
-        if(!expressions.isEmpty()) {
-            // json
-            JsonParser p = new JsonParser();
-            JsonElement json = null;
-
-            if(command.getJson()!=null) {
-                json = p.parse(command.getJson());
-            }
-
-            Map<String, Object> vars = new HashMap<>();
-            vars.put("command", command);
-            vars.put("json", json);
-
-            // mvel
-            Boolean result = false;
-
-            try {
-                for(PermissionExpression expression : expressions) {
-                    result = (Boolean) MVEL.eval(expression.getExpression(), vars);
-                    if(result) {
-                        // as soon as we find a true expression we can stop
-                        break;
-                    }
-                }
-            } catch (Exception e) {
-                logger.error(e.toString(), e);
-            }
-
-            // TODO: remove this
-            logger.debug("############ VALIDATE COMMAND RESULT: {}", result);
-
-            if(!result) {
-                final String authorizationMessage = "User has no authority for permission expression: " + command.getTaskPermissionName();
-                throw new NoAuthorizationException(authorizationMessage);
-            }
-        } else {
-            // TODO: remove this
-            logger.debug("############ VALIDATE COMMAND NO EXPRESSION!");
         }
     }
 
