@@ -21,7 +21,8 @@ public enum ChargeTimeType {
     OVERDUE_INSTALLMENT(9, "chargeTimeType.overdueInstallment"), // only for
                                                                  // loan charges
     OVERDRAFT_FEE(10, "chargeTimeType.overdraftFee"),// only for savings
-    WEEKLY_FEE(11, "chargeTimeType.weeklyFee"); // only for savings
+    WEEKLY_FEE(11, "chargeTimeType.weeklyFee"), // only for savings
+    OVERDUE_MATURITY_DATE(12, "chargeTimeType.overdueMaturityDate");
 
     private final Integer value;
     private final String code;
@@ -41,7 +42,8 @@ public enum ChargeTimeType {
 
     public static Object[] validLoanValues() {
         return new Integer[] { ChargeTimeType.DISBURSEMENT.getValue(), ChargeTimeType.SPECIFIED_DUE_DATE.getValue(),
-                ChargeTimeType.INSTALMENT_FEE.getValue(), ChargeTimeType.OVERDUE_INSTALLMENT.getValue() };
+                ChargeTimeType.INSTALMENT_FEE.getValue(), ChargeTimeType.OVERDUE_INSTALLMENT.getValue(),
+                ChargeTimeType.OVERDUE_MATURITY_DATE.getValue() };
     }
     
     public static Object[] validLoanChargeValues() {
@@ -92,6 +94,9 @@ public enum ChargeTimeType {
                 case 11:
                     chargeTimeType = WEEKLY_FEE;
                 break;
+                case 12:
+                    chargeTimeType = OVERDUE_MATURITY_DATE;
+                break;
                 default:
                     chargeTimeType = INVALID;
                 break;
@@ -140,8 +145,12 @@ public enum ChargeTimeType {
         return this.value.equals(ChargeTimeType.OVERDUE_INSTALLMENT.getValue());
     }
 
+    public boolean isOverdueMaturityDate() {
+        return this.value.equals(ChargeTimeType.OVERDUE_MATURITY_DATE.getValue());
+    }
+
     public boolean isAllowedLoanChargeTime() {
-        return isTimeOfDisbursement() || isOnSpecifiedDueDate() || isInstalmentFee() || isOverdueInstallment();
+        return isTimeOfDisbursement() || isOnSpecifiedDueDate() || isInstalmentFee() || isOverdueInstallment() || isOverdueMaturityDate();
     }
 
     public boolean isAllowedSavingsChargeTime() {
