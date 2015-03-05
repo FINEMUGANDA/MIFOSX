@@ -25,7 +25,10 @@ public enum JobName {
     TRANSFER_INTEREST_TO_SAVINGS("Transfer Interest To Savings"),
     ADD_PERIODIC_ACCRUAL_ENTRIES("Add Periodic Accrual Transactions"),
     RECALCULATE_INTEREST_FOR_LOAN("Recalculate Interest For Loans"),
-    FOLLOW_UP_EMAIL_NOTIFICATION("Follow up Email Notification");
+    FOLLOW_UP_EMAIL_NOTIFICATION("Follow up Email Notification"),
+    PAYMENT_REMINDER_EMAIL_NOTIFICATION("Payment Reminder Email Notification"),
+    FOLLOW_UP_SMS_NOTIFICATION("Follow up SMS Notification"),
+    PAYMENT_REMINDER_SMS_NOTIFICATION("Payment Reminder SMS Notification");
 
     private final String name;
 

@@ -4,6 +4,8 @@ import org.apache.commons.mail.DefaultAuthenticator;
 import org.apache.commons.mail.Email;
 import org.apache.commons.mail.EmailException;
 import org.apache.commons.mail.SimpleEmail;
+import org.mifosplatform.infrastructure.configuration.data.EmailCredentialsData;
+import org.mifosplatform.infrastructure.configuration.service.ExternalServicesReadPlatformService;
 import org.mifosplatform.infrastructure.core.service.RoutingDataSource;
 import org.mifosplatform.infrastructure.jobs.annotation.CronTarget;
 import org.mifosplatform.infrastructure.jobs.service.JobName;
@@ -13,78 +15,76 @@ import org.mifosplatform.infrastructure.notification.domain.NotificationType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.jdbc.core.ColumnMapRowMapper;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
-import javax.sql.DataSource;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
 @Service
-public class EmailNotificationService implements NotificationService {
+public class EmailNotificationService extends AbstractNotificationService {
     private static final Logger logger = LoggerFactory.getLogger(EmailNotificationService.class);
 
     // TODO: make these configurable
-    private String hostname = "smtp.gmail.com";
-    private boolean startTlsEnabled = true;
-    private String authuserName = "support@cloudmicrofinance.com";
-    private String authuser = "support@cloudmicrofinance.com";
-    private String authpwd = "support80";
+    private String host = "smtp.gmail.com";
+    private boolean startTls = true;
+    private String authUsername = "support@cloudmicrofinance.com";
+    private String authPassword = "support80";
+    private String senderName = "Support FINEM (U) LTD";
     private String template = "Hello, %s.\n\nPlease note that the following clients are due for follow up today, %s:\n\n";
-    private String subject = "Mifos Notification";
+    private String followUpSubject = "FINEM Follow Up Notification";
     private boolean debug = false;
 
-    private final String queryOfficers = "SELECT n.createdByUserName AS username,u.email, u.firstname, u.lastname FROM notes n, m_appuser u WHERE n.createdByUserName=u.username AND n.followUpDate = CURRENT_DATE() GROUP BY email, firstname, lastname";
-    private final String queryClients = "SELECT l.client_id, c.firstname, c.lastname, c.account_no, c.mobile_no FROM notes n, m_loan l, m_client c WHERE n.loan_id=l.id AND l.client_id=c.id AND n.followUpDate = CURRENT_DATE() AND n.createdByUserName = ?";
-    private final String updateNotes = "UPDATE notes SET notification_id=? WHERE followUpDate = CURRENT_DATE() AND createdByUserName = ?";
-
-    private final DataSource dataSource;
-
-    private final JdbcTemplate jdbcTemplate;
-
-    private final NotificationLogRepository notificationLogRepository;
-
-    private final SimpleDateFormat df = new SimpleDateFormat("dd.MM.yyyy");
-
     @Autowired
-    public EmailNotificationService(final RoutingDataSource dataSource, final NotificationLogRepository notificationLogRepository) {
-        this.dataSource = dataSource;
-        this.jdbcTemplate = new JdbcTemplate(dataSource);
-        this.notificationLogRepository = notificationLogRepository;
+    public EmailNotificationService(final RoutingDataSource dataSource, final NotificationLogRepository notificationLogRepository, final ExternalServicesReadPlatformService externalServicesReadPlatformService) {
+        super(dataSource, notificationLogRepository);
+        /**
+        EmailCredentialsData credentials = externalServicesReadPlatformService.getEmailCredentials();
+        this.host = credentials.getHost();
+        this.senderName = credentials.getAuthUsername();
+        this.authPassword = credentials.getAuthPassword();
+        //this.followUpSubject = credentials.getSubject();
+        this.startTls = credentials.isStartTls();
+        this.debug = credentials.isDebug();
+         */
+    }
+
+    @Override
+    @CronTarget(jobName = JobName.PAYMENT_REMINDER_EMAIL_NOTIFICATION)
+    public void notifyPaymentReminders() {
+        logger.warn("Email payment reminder notifications not yet implemented!");
     }
 
     @Override
     @CronTarget(jobName = JobName.FOLLOW_UP_EMAIL_NOTIFICATION)
     public void notifyFollowUps() {
-        List<Map<String, Object>> officers = jdbcTemplate.query(queryOfficers, new ColumnMapRowMapper());
+        List<Map<String, Object>> officers = getFollowUpLoanOfficers();
 
         for(Map<String, Object> officer : officers) {
             boolean sent = false;
 
             String name = officer.get("firstname") + " " + officer.get("lastname");
+            String email = officer.get("email").toString();
 
             StringBuilder message = new StringBuilder();
             message.append(String.format(template, name, df.format(new Date())));
-            message.append(formatClients(jdbcTemplate.query(queryClients, new Object[]{officer.get("username")}, new ColumnMapRowMapper())));
+            message.append(formatClients(getFollowUpClients(officer.get("username").toString())));
 
             try {
-                send(officer.get("email").toString(), name, subject, message.toString());
+                send(email, name, followUpSubject, message.toString());
                 sent = true;
             } catch (EmailException e) {
                 logger.error(e.toString(), e);
             }
 
-            NotificationLog log = notificationLogRepository.save(new NotificationLog(NotificationType.EMAIL, new Date(), sent));
+            NotificationLog log = notificationLogRepository.save(new NotificationLog(NotificationType.EMAIL, email, new Date(), sent));
 
             if(sent) {
                 jdbcTemplate.update(updateNotes, log.getId(), officer.get("username"));
             }
 
             // TODO: remove this in production
-            logger.info("############### Notification sent: {}", sent);
+            logger.info("############### Email notification sent: {}", sent);
         }
     }
 
@@ -100,11 +100,11 @@ public class EmailNotificationService implements NotificationService {
 
     protected void send(String to, String name, String subject, String message) throws EmailException {
         final Email email = new SimpleEmail();
-        email.setAuthenticator(new DefaultAuthenticator(authuser, authpwd));
+        email.setAuthenticator(new DefaultAuthenticator(authUsername, authPassword));
         email.setDebug(debug);
-        email.setHostName(hostname);
-        email.getMailSession().getProperties().put("mail.smtp.starttls.enable", startTlsEnabled);
-        email.setFrom(authuser, authuserName);
+        email.setHostName(host);
+        email.getMailSession().getProperties().put("mail.smtp.starttls.enable", startTls);
+        email.setFrom(senderName, authUsername);
         email.setSubject(subject);
         email.setMsg(message);
         email.addTo(to, name);
