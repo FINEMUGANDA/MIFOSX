@@ -64,6 +64,10 @@ public class ChargeEnumerations {
                 optionData = new EnumOptionData(ChargeTimeType.OVERDRAFT_FEE.getValue().longValue(),
                         ChargeTimeType.OVERDRAFT_FEE.getCode(), "Overdraft Fee");
             break;
+            case OVERDUE_MATURITY_DATE:
+                optionData = new EnumOptionData(ChargeTimeType.OVERDUE_MATURITY_DATE.getValue().longValue(),
+                        ChargeTimeType.OVERDUE_MATURITY_DATE.getCode(), "Overdue Maturity Date Fees");
+                break;
             default:
                 optionData = new EnumOptionData(ChargeTimeType.INVALID.getValue().longValue(), ChargeTimeType.INVALID.getCode(), "Invalid");
             break;
@@ -111,6 +115,10 @@ public class ChargeEnumerations {
             case PERCENT_OF_AMOUNT_AND_INTEREST:
                 optionData = new EnumOptionData(ChargeCalculationType.PERCENT_OF_AMOUNT_AND_INTEREST.getValue().longValue(),
                         ChargeCalculationType.PERCENT_OF_AMOUNT_AND_INTEREST.getCode(), "% Loan Amount + Interest");
+            break;
+            case PERCENT_OF_TOTAL_OUTSTANDING:
+                optionData = new EnumOptionData(ChargeCalculationType.PERCENT_OF_TOTAL_OUTSTANDING.getValue().longValue(),
+                        ChargeCalculationType.PERCENT_OF_TOTAL_OUTSTANDING.getCode(), "% Total Outstanding Loan");
             break;
             case PERCENT_OF_INTEREST:
                 optionData = new EnumOptionData(ChargeCalculationType.PERCENT_OF_INTEREST.getValue().longValue(),
