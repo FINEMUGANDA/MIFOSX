@@ -48,6 +48,8 @@ dependencies {
 
     [group: 'org.mvel', name: 'mvel2', version: '2.2.4.Final'],
 
+    [group: 'org.infobip.oneapi', name: 'oneapi-java', version: '0.0.1'],
+
     // [group: 'org.apache.tomcat', name: 'tomcat-jdbc', version: tomcatVersion],
 
     [group: 'pentaho-reporting-engine', name: 'pentaho-reporting-engine-classic-core', version: pentahoVersion],

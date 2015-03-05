@@ -49,6 +49,8 @@ dependencies {
 
     [group: 'org.mvel', name: 'mvel2', version: '2.2.4.Final'],
 
+    [group: 'org.infobip.oneapi', name: 'oneapi-java', version: '0.0.1'],
+
     [group: 'pentaho-reporting-engine', name: 'pentaho-reporting-engine-classic-core', version: pentahoVersion],
     [group: 'pentaho-reporting-engine', name: 'pentaho-reporting-engine-classic-extensions', version: pentahoVersion],
     [group: 'pentaho-reporting-engine', name: 'pentaho-reporting-engine-classic-extensions-scripting', version: pentahoVersion],
