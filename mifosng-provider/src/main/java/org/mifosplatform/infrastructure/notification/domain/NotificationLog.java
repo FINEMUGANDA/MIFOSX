@@ -49,6 +49,22 @@ public class NotificationLog extends AbstractPersistable<Long> {
         return NotificationType.valueOf(type);
     }
 
+    public String getRecipient() {
+        return recipient;
+    }
+
+    public String getEntityName() {
+        return entityName;
+    }
+
+    public Long getEntityId() {
+        return entityId;
+    }
+
+    public String getSmsError() {
+        return smsError;
+    }
+
     public Date getSentAt() {
         return sentAt;
     }
