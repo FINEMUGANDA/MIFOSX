@@ -5,10 +5,15 @@
  */
 package org.mifosplatform.infrastructure.configuration.service;
 
+import org.mifosplatform.infrastructure.configuration.data.EmailCredentialsData;
 import org.mifosplatform.infrastructure.configuration.data.S3CredentialsData;
+import org.mifosplatform.infrastructure.configuration.data.SmsCredentialsData;
 
 public interface ExternalServicesReadPlatformService {
 
     S3CredentialsData getS3Credentials();
 
+    EmailCredentialsData getEmailCredentials();
+
+    SmsCredentialsData getSmsCredentials();
 }

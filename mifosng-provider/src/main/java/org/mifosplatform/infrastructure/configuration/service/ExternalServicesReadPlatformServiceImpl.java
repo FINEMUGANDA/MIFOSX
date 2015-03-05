@@ -8,7 +8,9 @@ package org.mifosplatform.infrastructure.configuration.service;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import org.mifosplatform.infrastructure.configuration.data.EmailCredentialsData;
 import org.mifosplatform.infrastructure.configuration.data.S3CredentialsData;
+import org.mifosplatform.infrastructure.configuration.data.SmsCredentialsData;
 import org.mifosplatform.infrastructure.core.service.RoutingDataSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
@@ -52,5 +54,76 @@ public class ExternalServicesReadPlatformServiceImpl implements ExternalServices
         final String sql = "SELECT es.name, es.value FROM c_external_service es where es.name in('s3_bucket_name','s3_access_key','s3_secret_key')";
         final S3CredentialsData s3CredentialsData = this.jdbcTemplate.query(sql, resultSetExtractor, new Object[] {});
         return s3CredentialsData;
+    }
+
+    private static final class EmailCredentialsDataExtractor implements ResultSetExtractor<EmailCredentialsData> {
+
+        @Override
+        public EmailCredentialsData extractData(final ResultSet rs) throws SQLException, DataAccessException {
+            String host = null;
+            String authUsername = null;
+            String authPassword = null;
+            boolean startTls = false;
+            boolean debug = false;
+            while (rs.next()) {
+                if (rs.getString("name").equalsIgnoreCase(ExternalServicesConstants.EMAIL_HOST)) {
+                    host = rs.getString("value");
+                } else if (rs.getString("name").equalsIgnoreCase(ExternalServicesConstants.EMAIL_AUTH_USERNAME)) {
+                    authUsername = rs.getString("value");
+                } else if (rs.getString("name").equalsIgnoreCase(ExternalServicesConstants.EMAIL_AUTH_PASSWORD)) {
+                    authPassword = rs.getString("value");
+                } else if (rs.getString("name").equalsIgnoreCase(ExternalServicesConstants.EMAIL_STARTTLS)) {
+                    startTls = "true".equals(rs.getString("value"));
+                } else if (rs.getString("name").equalsIgnoreCase(ExternalServicesConstants.EMAIL_DEBUG)) {
+                    debug = "true".equals(rs.getString("value"));
+                }
+            }
+            return new EmailCredentialsData(host, authUsername, authPassword, startTls, debug);
+        }
+    }
+
+    @Override
+    public EmailCredentialsData getEmailCredentials() {
+        final ResultSetExtractor<EmailCredentialsData> resultSetExtractor = new EmailCredentialsDataExtractor();
+        final String sql = "SELECT es.name, es.value FROM c_external_service es where es.name like 'email_%'";
+        final EmailCredentialsData credentialsData = this.jdbcTemplate.query(sql, resultSetExtractor, new Object[] {});
+        return credentialsData;
+    }
+
+    private static final class SmsCredentialsDataExtractor implements ResultSetExtractor<SmsCredentialsData> {
+
+        @Override
+        public SmsCredentialsData extractData(final ResultSet rs) throws SQLException, DataAccessException {
+            String authUsername = null;
+            String authPassword = null;
+            String sender = null;
+            Long outboundMaxPerDay = -1L;
+            String notifyUrl = null;
+            boolean debug = false;
+            while (rs.next()) {
+                if (rs.getString("name").equalsIgnoreCase(ExternalServicesConstants.SMS_AUTH_USERNAME)) {
+                    authUsername = rs.getString("value");
+                } else if (rs.getString("name").equalsIgnoreCase(ExternalServicesConstants.SMS_AUTH_PASSWORD)) {
+                    authPassword = rs.getString("value");
+                } else if (rs.getString("name").equalsIgnoreCase(ExternalServicesConstants.SMS_SENDER)) {
+                    sender = rs.getString("value");
+                } else if (rs.getString("name").equalsIgnoreCase(ExternalServicesConstants.SMS_OUTBOUND_MAX_PER_DAY)) {
+                    outboundMaxPerDay = Long.valueOf(rs.getString("value"));
+                } else if (rs.getString("name").equalsIgnoreCase(ExternalServicesConstants.SMS_NOTIFY_URL)) {
+                    notifyUrl = rs.getString("value");
+                } else if (rs.getString("name").equalsIgnoreCase(ExternalServicesConstants.SMS_DEBUG)) {
+                    debug = "true".equals(rs.getString("value"));
+                }
+            }
+            return new SmsCredentialsData(authUsername, authPassword, sender, outboundMaxPerDay, notifyUrl, debug);
+        }
+    }
+
+    @Override
+    public SmsCredentialsData getSmsCredentials() {
+        final ResultSetExtractor<SmsCredentialsData> resultSetExtractor = new SmsCredentialsDataExtractor();
+        final String sql = "SELECT es.name, es.value FROM c_external_service es where es.name like 'sms_%'";
+        final SmsCredentialsData credentialsData = this.jdbcTemplate.query(sql, resultSetExtractor, new Object[] {});
+        return credentialsData;
     }
 }
