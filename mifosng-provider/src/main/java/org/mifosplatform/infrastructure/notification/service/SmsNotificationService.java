@@ -65,7 +65,7 @@ public class SmsNotificationService extends AbstractNotificationService {
             boolean sent = false;
             SendMessageResult result = null;
 
-            String mobileNo = client.get("mobile_no").toString();
+            String mobileNo = normalize(client.get("mobile_no").toString());
             Long loanRepaymentScheduleId = (Long)client.get("loan_repayment_schedule_id");
 
             StringBuilder message = new StringBuilder();
@@ -88,6 +88,14 @@ public class SmsNotificationService extends AbstractNotificationService {
     @CronTarget(jobName = JobName.FOLLOW_UP_SMS_NOTIFICATION)
     public void notifyFollowUps() {
         logger.warn("SMS follow up notifications not yet implemented!");
+    }
+
+    private String normalize(String mobileNo) {
+        if(mobileNo.startsWith("0")) {
+            return "256" + mobileNo.substring(1);
+        }
+
+        return mobileNo;
     }
 
     protected SendMessageResult send(String to, String message) {
