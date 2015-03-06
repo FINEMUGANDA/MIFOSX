@@ -31,11 +31,14 @@ public class NotificationLog extends AbstractPersistable<Long> {
     @Column(name = "sms_error")
     private String smsError;
 
-    public NotificationLog(final NotificationType type, String recipient, final Date sentAt, final Boolean sent) {
-        this(type, recipient, sentAt, sent, null, null, null);
+    @Column(name = "message_id")
+    private String messageId;
+
+    public NotificationLog(final NotificationType type, String recipient, final Date sentAt, final Boolean sent, String messageId) {
+        this(type, recipient, sentAt, sent, null, null, null, messageId);
     }
 
-    public NotificationLog(final NotificationType type, String recipient, final Date sentAt, final Boolean sent, String entityName, Long entityId, String smsError) {
+    public NotificationLog(final NotificationType type, String recipient, final Date sentAt, final Boolean sent, String entityName, Long entityId, String smsError, String messageId) {
         this.type = type.name();
         this.recipient = recipient;
         this.entityName = entityName;
@@ -43,6 +46,7 @@ public class NotificationLog extends AbstractPersistable<Long> {
         this.sentAt = sentAt;
         this.sent = sent;
         this.smsError = smsError;
+        this.messageId = messageId;
     }
 
     public NotificationType getType() {
@@ -71,5 +75,9 @@ public class NotificationLog extends AbstractPersistable<Long> {
 
     public Boolean isSent() {
         return sent;
+    }
+
+    public String getMessageId() {
+        return messageId;
     }
 }

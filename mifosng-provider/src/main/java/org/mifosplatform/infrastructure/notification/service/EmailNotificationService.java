@@ -61,19 +61,20 @@ public class EmailNotificationService extends AbstractNotificationService {
 
                 String name = officer.get("firstname") + " " + officer.get("lastname");
                 String email = officer.get("email").toString();
+                String messageId = null;
 
                 StringBuilder message = new StringBuilder();
                 message.append(String.format(template, name, df.format(new Date())));
                 message.append(formatClients(getFollowUpClients(officer.get("username").toString())));
 
                 try {
-                    send(email, name, followUpSubject, message.toString());
+                    messageId = send(email, name, followUpSubject, message.toString());
                     sent = true;
                 } catch (EmailException e) {
                     logger.error(e.toString(), e);
                 }
 
-                NotificationLog log = notificationLogRepository.save(new NotificationLog(NotificationType.EMAIL, email, new Date(), sent));
+                NotificationLog log = notificationLogRepository.save(new NotificationLog(NotificationType.EMAIL, email, new Date(), sent, messageId));
 
                 if(sent) {
                     jdbcTemplate.update(updateNotes, log.getId(), officer.get("username"));
@@ -107,7 +108,7 @@ public class EmailNotificationService extends AbstractNotificationService {
         return credentials;
     }
 
-    protected void send(String to, String name, String subject, String message) throws EmailException {
+    protected String send(String to, String name, String subject, String message) throws EmailException {
         final Email email = new SimpleEmail();
         EmailCredentialsData credentials = getCredentials();
         email.setAuthenticator(new DefaultAuthenticator(credentials.getAuthUsername(), credentials.getAuthPassword()));
@@ -118,6 +119,6 @@ public class EmailNotificationService extends AbstractNotificationService {
         email.setSubject(subject);
         email.setMsg(message);
         email.addTo(to, name);
-        email.send();
+        return email.send();
     }
 }

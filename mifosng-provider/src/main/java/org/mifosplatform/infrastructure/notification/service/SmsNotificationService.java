@@ -85,7 +85,7 @@ public class SmsNotificationService extends AbstractNotificationService {
 
                 SendMessageResultItem item = result.getSendMessageResults()[0];
 
-                notificationLogRepository.save(new NotificationLog(NotificationType.SMS, mobileNo, new Date(), sent, "m_loan_repayment_schedule", loanRepaymentScheduleId, item.getMessageStatus()));
+                notificationLogRepository.save(new NotificationLog(NotificationType.SMS, mobileNo, new Date(), sent, "m_loan_repayment_schedule", loanRepaymentScheduleId, item.getMessageStatus(), item.getMessageId()));
 
                 logger.info("############### SMS notification sent: {}", sent);
             }
