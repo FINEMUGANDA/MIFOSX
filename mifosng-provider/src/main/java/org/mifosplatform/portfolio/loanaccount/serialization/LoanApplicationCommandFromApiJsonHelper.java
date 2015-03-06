@@ -912,7 +912,11 @@ public final class LoanApplicationCommandFromApiJsonHelper {
                         errorcode = "specific." + LoanApiConstants.LOAN_CHARGE_CAN_NOT_BE_ADDED_WITH_INTEREST_CALCULATION_TYPE;
                     }
                 break;
-
+                case PERCENT_OF_TOTAL_OUTSTANDING:
+                    if (loanCharge.isInstalmentFee()) {
+                        errorcode = "installment." + LoanApiConstants.LOAN_CHARGE_CAN_NOT_BE_ADDED_WITH_PRINCIPAL_CALCULATION_TYPE;
+                    }
+                break;
                 default:
                 break;
             }

@@ -17,11 +17,12 @@ public class OverdueLoanScheduleData {
     private final String dueDate;
     private final BigDecimal principalOverdue;
     private final BigDecimal interestOverdue;
+    private final BigDecimal feeOverdue;
     private final Integer periodNumber;
 
     public OverdueLoanScheduleData(final Long loanId, final Long chargeId, final String dueDate, final BigDecimal amount,
             final String dateFormat, final String locale, final BigDecimal principalOverdue, final BigDecimal interestOverdue,
-            final Integer periodNumber) {
+            final BigDecimal feeOverdue, final Integer periodNumber) {
         this.loanId = loanId;
         this.chargeId = chargeId;
         this.dueDate = dueDate;
@@ -30,6 +31,7 @@ public class OverdueLoanScheduleData {
         this.locale = locale;
         this.principalOverdue = principalOverdue;
         this.interestOverdue = interestOverdue;
+        this.feeOverdue = feeOverdue;
         this.periodNumber = periodNumber;
     }
 
@@ -66,7 +68,7 @@ public class OverdueLoanScheduleData {
     public String toString() {
         return "{" + "chargeId:" + this.chargeId + ", locale:'" + this.locale + '\'' + ", amount:" + this.amount + ", dateFormat:'"
                 + this.dateFormat + '\'' + ", dueDate:'" + this.dueDate + '\'' + ", principal:'" + this.principalOverdue + '\''
-                + ", interest:'" + this.interestOverdue + '\'' + '}';
+                + ", interest:'" + this.interestOverdue + "', fee:'" + this.feeOverdue + '\'' + '}';
     }
 
 }

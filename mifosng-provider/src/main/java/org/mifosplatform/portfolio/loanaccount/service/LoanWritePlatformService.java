@@ -76,6 +76,8 @@ public interface LoanWritePlatformService {
 
     void applyChargeForOverdueLoans() throws JobExecutionException;
 
+    void applyChargeForOverdueMaturityDateLoans() throws JobExecutionException;
+
     CommandProcessingResult undoWriteOff(Long loanId);
 
     CommandProcessingResult updateDisbursementDateForTranche(Long loanId, Long disbursementId, JsonCommand command);

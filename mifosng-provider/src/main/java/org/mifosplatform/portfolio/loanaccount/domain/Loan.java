@@ -537,7 +537,7 @@ public class Loan extends AbstractPersistable<Long> {
             chargeAmt = loanCharge.getPercentage();
             if (loanCharge.isInstalmentFee()) {
                 totalChargeAmt = calculatePerInstallmentChargeAmount(loanCharge);
-            } else if (loanCharge.isOverdueInstallmentCharge()) {
+            } else if (loanCharge.isOverdueInstallmentCharge() || loanCharge.isOverdueMaturityDateCharge()) {
                 totalChargeAmt = loanCharge.amountOutstanding();
             }
         } else {
@@ -816,6 +816,12 @@ public class Loan extends AbstractPersistable<Long> {
             case PERCENT_OF_INTEREST:
                 amount = getTotalInterest();
             break;
+            case PERCENT_OF_TOTAL_OUTSTANDING:
+                LoanRepaymentScheduleInstallment total = getTotalOutstandingOnLoan();
+                MonetaryCurrency currency = getCurrency();
+//                amount = getPrincpal().getAmount().add(getTotalInterest()).add(getTotalFee());
+                amount = total.getPrincipalOutstanding(currency).getAmount().add(total.getInterestOutstanding(currency).getAmount()).add(total.getFeeChargesOutstanding(currency).getAmount());
+                break;
             default:
             break;
         }
@@ -827,6 +833,10 @@ public class Loan extends AbstractPersistable<Long> {
      */
     public BigDecimal getTotalInterest() {
         return this.loanSummaryWrapper.calculateTotalInterestCharged(this.repaymentScheduleInstallments, getCurrency()).getAmount();
+    }
+
+    public BigDecimal getTotalFee() {
+        return this.loanSummaryWrapper.calculateTotalFeeChargesCharged(this.repaymentScheduleInstallments, getCurrency()).getAmount();
     }
 
     private BigDecimal calculatePerInstallmentChargeAmount(final LoanCharge loanCharge) {
@@ -865,6 +875,9 @@ public class Loan extends AbstractPersistable<Long> {
             case PERCENT_OF_INTEREST:
                 percentOf = installment.getInterestCharged(getCurrency());
             break;
+            case PERCENT_OF_TOTAL_OUTSTANDING:
+                percentOf = installment.getPrincipal(getCurrency()).plus(installment.getInterestCharged(getCurrency())).plus(installment.getFeeChargesCharged(getCurrency()));
+                break;
             default:
             break;
         }
@@ -1534,6 +1547,9 @@ public class Loan extends AbstractPersistable<Long> {
             case PERCENT_OF_INTEREST:
                 amount = installment.getInterestOutstanding(getCurrency());
             break;
+            case PERCENT_OF_TOTAL_OUTSTANDING:
+                amount = installment.getPrincipalOutstanding(getCurrency()).plus(installment.getInterestOutstanding(getCurrency())).plus(installment.getFeeChargesOutstanding(getCurrency()));
+                break;
             default:
             break;
         }

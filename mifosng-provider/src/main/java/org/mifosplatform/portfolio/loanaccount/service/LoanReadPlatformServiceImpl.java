@@ -884,9 +884,113 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService {
             final BigDecimal interestActualDue = interestExpectedDue.subtract(interestWaived).subtract(interestWrittenOff);
             final BigDecimal interestOutstanding = interestActualDue.subtract(interestPaid);
 
+            final BigDecimal feeChargeExpectedDue = JdbcSupport.getBigDecimalDefaultToZeroIfNull(rs, "feeChargesDue");
+            final BigDecimal feeChargesPaid = JdbcSupport.getBigDecimalDefaultToZeroIfNull(rs, "feeChargesPaid");
+            final BigDecimal feeChargesWaived = JdbcSupport.getBigDecimalDefaultToZeroIfNull(rs, "feeChargesWaived");
+            final BigDecimal feeChargesWrittenOff = JdbcSupport.getBigDecimalDefaultToZeroIfNull(rs, "feeChargesWrittenOff");
+
+            final BigDecimal feeActualDue = feeChargeExpectedDue.subtract(feeChargesWaived).subtract(feeChargesWrittenOff);
+            final BigDecimal feeOutstanding = feeActualDue.subtract(feeChargesPaid);
+
             final Integer installmentNumber = JdbcSupport.getIntegerDefaultToNullIfZero(rs, "period");
             final OverdueLoanScheduleData overdueLoanScheduleData = new OverdueLoanScheduleData(loanId, chargeId, dueDate, amount,
-                    dateFormat, locale, principalOutstanding, interestOutstanding, installmentNumber);
+                    dateFormat, locale, principalOutstanding, interestOutstanding, feeOutstanding, installmentNumber);
+
+            return overdueLoanScheduleData;
+        }
+    }
+
+    private static final class OverdueMaturityDateLoanScheduleMapper implements RowMapper<OverdueLoanScheduleData> {
+
+        public String schema() {
+            return " ml.id as loanId,"
+                    + " mc.amount as amount,"
+                    + " mc.id as chargeId,"
+                    + " ml.maturedon_date as maturityDate,"
+                    + " mlc.due_for_collection_as_of_date as dueDate,"
+                    + " max(ls.installment) as period,"
+
+                    + " ml.principal_amount as principalDue,"
+                    + " ml.principal_repaid_derived as principalPaid,"
+                    + " ml.principal_writtenoff_derived as principalWrittenOff,"
+                    + " ml.interest_charged_derived as interestDue,"
+                    + " ml.interest_repaid_derived as interestPaid,"
+                    + " ml.interest_waived_derived as interestWaived,"
+                    + " ml.interest_writtenoff_derived as interestWrittenOff,"
+                    + " ml.fee_charges_charged_derived as feeChargesDue,"
+                    + " ml.fee_charges_repaid_derived as feeChargesPaid,"
+                    + " ml.fee_charges_waived_derived as feeChargesWaived,"
+                    + " ml.fee_charges_writtenoff_derived as feeChargesWrittenOff,"
+                    + " ml.penalty_charges_charged_derived as penaltyChargesDue,"
+                    + " ml.penalty_charges_repaid_derived as penaltyChargesPaid,"
+                    + " ml.penalty_charges_waived_derived as penaltyChargesWaived,"
+                    + " ml.penalty_charges_writtenoff_derived as penaltyChargesWrittenOff"
+
+
+                    + " from m_loan ml"
+                    + " left join m_loan_charge mlc on mlc.loan_id = ml.id and mlc.charge_time_enum = 12"
+                    + " inner join m_loan_repayment_schedule ls on ml.id = ls.loan_id"
+                    + " left join m_product_loan_charge plc on plc.product_loan_id = ml.product_id"
+                    + " left join m_charge mc on mc.id = plc.charge_id ";
+//            where
+//                    (DATE_SUB('2016-02-01',INTERVAL 2 DAY) > ml.maturedon_date and (mlc.due_for_collection_as_of_date is null or DATE_SUB('2016-03-01',INTERVAL 2 DAY) > mlc.due_for_collection_as_of_date))
+//            and mc.charge_applies_to_enum =1
+//            and mc.charge_time_enum = 12
+//            and ml.loan_status_id IN (300, 800, 900)
+//            group by ls.loan_id
+
+//            return " ls.loan_id as loanId, ls.installment as period, ls.fromdate as fromDate, ls.duedate as dueDate, ls.obligations_met_on_date as obligationsMetOnDate, ls.completed_derived as complete,"
+//                    + " ls.principal_amount as principalDue, ls.principal_completed_derived as principalPaid, ls.principal_writtenoff_derived as principalWrittenOff, "
+//                    + " ls.interest_amount as interestDue, ls.interest_completed_derived as interestPaid, ls.interest_waived_derived as interestWaived, ls.interest_writtenoff_derived as interestWrittenOff, "
+//                    + " ls.fee_charges_amount as feeChargesDue, ls.fee_charges_completed_derived as feeChargesPaid, ls.fee_charges_waived_derived as feeChargesWaived, ls.fee_charges_writtenoff_derived as feeChargesWrittenOff, "
+//                    + " ls.penalty_charges_amount as penaltyChargesDue, ls.penalty_charges_completed_derived as penaltyChargesPaid, ls.penalty_charges_waived_derived as penaltyChargesWaived, ls.penalty_charges_writtenoff_derived as penaltyChargesWrittenOff, "
+//                    + " ls.total_paid_in_advance_derived as totalPaidInAdvanceForPeriod, ls.total_paid_late_derived as totalPaidLateForPeriod, "
+//                    + " mc.amount,mc.id as chargeId "
+//                    + " from m_loan_repayment_schedule ls "
+//                    + " inner join m_loan ml on ml.id = ls.loan_id "
+//                    + " join m_product_loan_charge plc on plc.product_loan_id = ml.product_id "
+//                    + " join m_charge mc on mc.id = plc.charge_id ";
+
+        }
+
+        @Override
+        public OverdueLoanScheduleData mapRow(final ResultSet rs, @SuppressWarnings("unused") final int rowNum) throws SQLException {
+            final Long chargeId = rs.getLong("chargeId");
+            final Long loanId = rs.getLong("loanId");
+            final BigDecimal amount = rs.getBigDecimal("amount");
+            final String dateFormat = "yyyy-MM-dd";
+            final String maturityDate = rs.getString("maturityDate");
+            String dueDate = rs.getString("dueDate");
+            if (StringUtils.isEmpty(dueDate)) {
+                dueDate = maturityDate;
+            }
+            final String locale = "en_GB";
+
+            final BigDecimal principalDue = JdbcSupport.getBigDecimalDefaultToZeroIfNull(rs, "principalDue");
+            final BigDecimal principalPaid = JdbcSupport.getBigDecimalDefaultToZeroIfNull(rs, "principalPaid");
+            final BigDecimal principalWrittenOff = JdbcSupport.getBigDecimalDefaultToZeroIfNull(rs, "principalWrittenOff");
+
+            final BigDecimal principalOutstanding = principalDue.subtract(principalPaid).subtract(principalWrittenOff);
+
+            final BigDecimal interestExpectedDue = JdbcSupport.getBigDecimalDefaultToZeroIfNull(rs, "interestDue");
+            final BigDecimal interestPaid = JdbcSupport.getBigDecimalDefaultToZeroIfNull(rs, "interestPaid");
+            final BigDecimal interestWaived = JdbcSupport.getBigDecimalDefaultToZeroIfNull(rs, "interestWaived");
+            final BigDecimal interestWrittenOff = JdbcSupport.getBigDecimalDefaultToZeroIfNull(rs, "interestWrittenOff");
+
+            final BigDecimal interestActualDue = interestExpectedDue.subtract(interestWaived).subtract(interestWrittenOff);
+            final BigDecimal interestOutstanding = interestActualDue.subtract(interestPaid);
+
+            final BigDecimal feeChargeExpectedDue = JdbcSupport.getBigDecimalDefaultToZeroIfNull(rs, "feeChargesDue");
+            final BigDecimal feeChargesPaid = JdbcSupport.getBigDecimalDefaultToZeroIfNull(rs, "feeChargesPaid");
+            final BigDecimal feeChargesWaived = JdbcSupport.getBigDecimalDefaultToZeroIfNull(rs, "feeChargesWaived");
+            final BigDecimal feeChargesWrittenOff = JdbcSupport.getBigDecimalDefaultToZeroIfNull(rs, "feeChargesWrittenOff");
+
+            final BigDecimal feeActualDue = feeChargeExpectedDue.subtract(feeChargesWaived).subtract(feeChargesWrittenOff);
+            final BigDecimal feeOutstanding = feeActualDue.subtract(feeChargesPaid);
+
+            final Integer installmentNumber = JdbcSupport.getIntegerDefaultToNullIfZero(rs, "period");
+            final OverdueLoanScheduleData overdueLoanScheduleData = new OverdueLoanScheduleData(loanId, chargeId, dueDate, amount,
+                    dateFormat, locale, principalOutstanding, interestOutstanding, feeOutstanding, installmentNumber);
 
             return overdueLoanScheduleData;
         }
@@ -1373,6 +1477,21 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService {
                 + " and ls.completed_derived <> 1 and mc.charge_applies_to_enum =1 "
                 + " and mc.charge_time_enum = 9 and ml.loan_status_id IN (300, 800, 900) ";
         return this.jdbcTemplate.query(sql, rm, new Object[] { penaltyWaitPeriod });
+    }
+
+    @Override
+    public Collection<OverdueLoanScheduleData> retrieveAllLoansWithOverdueMaturityDate(final Long penaltyWaitPeriod) {
+        final OverdueMaturityDateLoanScheduleMapper rm = new OverdueMaturityDateLoanScheduleMapper();
+        final String sql = "select " + rm.schema() + " where "
+                    + " (DATE_SUB('2016-02-01',INTERVAL ? DAY) > ml.maturedon_date and (mlc.due_for_collection_as_of_date is null or DATE_SUB('2016-03-01',INTERVAL ? DAY) > mlc.due_for_collection_as_of_date))"
+                    + " and mc.charge_applies_to_enum =1"
+                    + " and mc.charge_time_enum = 12"
+                    + " and ml.loan_status_id IN (300, 800, 900)"
+                    + " group by ls.loan_id";
+//        final String sql = "select " + rm.schema() + " where DATE_SUB(CURDATE(),INTERVAL ? DAY) > ls.duedate "
+//                + " and ls.completed_derived <> 1 and mc.charge_applies_to_enum =1 "
+//                + " and mc.charge_time_enum = 12 and ml.loan_status_id IN (300, 800, 900) ";
+        return this.jdbcTemplate.query(sql, rm, new Object[] { penaltyWaitPeriod, penaltyWaitPeriod });
     }
 
     @SuppressWarnings("deprecation")
