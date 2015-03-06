@@ -5,6 +5,7 @@ import org.apache.commons.mail.Email;
 import org.apache.commons.mail.EmailException;
 import org.apache.commons.mail.SimpleEmail;
 import org.mifosplatform.infrastructure.configuration.data.EmailCredentialsData;
+import org.mifosplatform.infrastructure.configuration.domain.GlobalConfigurationRepository;
 import org.mifosplatform.infrastructure.configuration.service.ExternalServicesReadPlatformService;
 import org.mifosplatform.infrastructure.core.service.RoutingDataSource;
 import org.mifosplatform.infrastructure.jobs.annotation.CronTarget;
@@ -20,33 +21,25 @@ import org.springframework.stereotype.Service;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 @Service
 public class EmailNotificationService extends AbstractNotificationService {
     private static final Logger logger = LoggerFactory.getLogger(EmailNotificationService.class);
 
-    // TODO: make these configurable
-    private String host = "smtp.gmail.com";
-    private boolean startTls = true;
-    private String authUsername = "support@cloudmicrofinance.com";
-    private String authPassword = "support80";
-    private String senderName = "Support FINEM (U) LTD";
+    private final ExternalServicesReadPlatformService externalServicesReadPlatformService;
     private String template = "Hello, %s.\n\nPlease note that the following clients are due for follow up today, %s:\n\n";
     private String followUpSubject = "FINEM Follow Up Notification";
-    private boolean debug = false;
+
+    private EmailCredentialsData credentials;
+
+    private AtomicBoolean running = new AtomicBoolean(false);
 
     @Autowired
-    public EmailNotificationService(final RoutingDataSource dataSource, final NotificationLogRepository notificationLogRepository, final ExternalServicesReadPlatformService externalServicesReadPlatformService) {
-        super(dataSource, notificationLogRepository);
-        /**
-        EmailCredentialsData credentials = externalServicesReadPlatformService.getEmailCredentials();
-        this.host = credentials.getHost();
-        this.senderName = credentials.getAuthUsername();
-        this.authPassword = credentials.getAuthPassword();
-        //this.followUpSubject = credentials.getSubject();
-        this.startTls = credentials.isStartTls();
-        this.debug = credentials.isDebug();
-         */
+    public EmailNotificationService(final RoutingDataSource dataSource, final NotificationLogRepository notificationLogRepository, final ExternalServicesReadPlatformService externalServicesReadPlatformService, final GlobalConfigurationRepository globalConfigurationRepository) {
+        super(dataSource, notificationLogRepository, globalConfigurationRepository);
+
+        this.externalServicesReadPlatformService = externalServicesReadPlatformService;
     }
 
     @Override
@@ -58,33 +51,41 @@ public class EmailNotificationService extends AbstractNotificationService {
     @Override
     @CronTarget(jobName = JobName.FOLLOW_UP_EMAIL_NOTIFICATION)
     public void notifyFollowUps() {
-        List<Map<String, Object>> officers = getFollowUpLoanOfficers();
+        if(!running.get()) {
+            running.set(true);
 
-        for(Map<String, Object> officer : officers) {
-            boolean sent = false;
+            List<Map<String, Object>> officers = getFollowUpLoanOfficers();
 
-            String name = officer.get("firstname") + " " + officer.get("lastname");
-            String email = officer.get("email").toString();
+            for(Map<String, Object> officer : officers) {
+                boolean sent = false;
 
-            StringBuilder message = new StringBuilder();
-            message.append(String.format(template, name, df.format(new Date())));
-            message.append(formatClients(getFollowUpClients(officer.get("username").toString())));
+                String name = officer.get("firstname") + " " + officer.get("lastname");
+                String email = officer.get("email").toString();
 
-            try {
-                send(email, name, followUpSubject, message.toString());
-                sent = true;
-            } catch (EmailException e) {
-                logger.error(e.toString(), e);
+                StringBuilder message = new StringBuilder();
+                message.append(String.format(template, name, df.format(new Date())));
+                message.append(formatClients(getFollowUpClients(officer.get("username").toString())));
+
+                try {
+                    send(email, name, followUpSubject, message.toString());
+                    sent = true;
+                } catch (EmailException e) {
+                    logger.error(e.toString(), e);
+                }
+
+                NotificationLog log = notificationLogRepository.save(new NotificationLog(NotificationType.EMAIL, email, new Date(), sent));
+
+                if(sent) {
+                    jdbcTemplate.update(updateNotes, log.getId(), officer.get("username"));
+                }
+
+                // TODO: remove this in production
+                logger.info("############### Email notification sent: {}", sent);
             }
 
-            NotificationLog log = notificationLogRepository.save(new NotificationLog(NotificationType.EMAIL, email, new Date(), sent));
-
-            if(sent) {
-                jdbcTemplate.update(updateNotes, log.getId(), officer.get("username"));
-            }
-
-            // TODO: remove this in production
-            logger.info("############### Email notification sent: {}", sent);
+            running.set(false);
+        } else {
+            logger.warn("############### Email notification job is already running!");
         }
     }
 
@@ -92,19 +93,28 @@ public class EmailNotificationService extends AbstractNotificationService {
         StringBuilder builder = new StringBuilder();
 
         for(Map<String, Object> client : clients) {
-            builder.append("- ").append(client.get("firstname")).append(" ").append(client.get("lastname")).append(" (").append(client.get("account_no")).append("): ").append(client.get("mobile_no")).append("\n");
+            builder.append("- ").append(client.get("firstname")).append(" ").append(client.get("lastname")).append(" - Account No. (").append(client.get("account_no")).append(") - Phone (").append(client.get("mobile_no")).append(")\n");
         }
 
         return builder.toString();
     }
 
+    protected EmailCredentialsData getCredentials() {
+        if(credentials==null) {
+            credentials = externalServicesReadPlatformService.getEmailCredentials();
+        }
+
+        return credentials;
+    }
+
     protected void send(String to, String name, String subject, String message) throws EmailException {
         final Email email = new SimpleEmail();
-        email.setAuthenticator(new DefaultAuthenticator(authUsername, authPassword));
-        email.setDebug(debug);
-        email.setHostName(host);
-        email.getMailSession().getProperties().put("mail.smtp.starttls.enable", startTls);
-        email.setFrom(senderName, authUsername);
+        EmailCredentialsData credentials = getCredentials();
+        email.setAuthenticator(new DefaultAuthenticator(credentials.getAuthUsername(), credentials.getAuthPassword()));
+        email.setDebug(credentials.isDebug());
+        email.setHostName(credentials.getHost());
+        email.getMailSession().getProperties().put("mail.smtp.starttls.enable", credentials.isStartTls());
+        email.setFrom(credentials.getAuthUsername(), credentials.getSenderName());
         email.setSubject(subject);
         email.setMsg(message);
         email.addTo(to, name);

@@ -15,13 +15,16 @@ public class ExternalServicesConstants {
     public static final String EMAIL_AUTH_USERNAME = "email_auth_username";
     public static final String EMAIL_AUTH_PASSWORD = "email_auth_password";
     public static final String EMAIL_STARTTLS = "email_starttls";
+    public static final String EMAIL_SENDER_NAME = "email_sender_name";
     public static final String EMAIL_SUBJECT = "email_subject";
     public static final String EMAIL_DEBUG = "email_debug";
 
     public static final String SMS_AUTH_USERNAME = "sms_auth_username";
     public static final String SMS_AUTH_PASSWORD = "sms_auth_password";
     public static final String SMS_OUTBOUND_MAX_PER_DAY = "sms_outbound_max_per_day";
-    public static final String SMS_SENDER = "sms_sender";
+    public static final String SMS_SENDER_NAME = "sms_sender_name";
+    public static final String SMS_SENDER_ADDRESS = "sms_sender_address";
     public static final String SMS_NOTIFY_URL = "sms_notify_url";
     public static final String SMS_DEBUG = "sms_debug";
+    public static final String SMS_DEBUG_PHONE = "sms_debug_phone";
 }

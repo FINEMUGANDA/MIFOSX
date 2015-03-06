@@ -1,5 +1,7 @@
 package org.mifosplatform.infrastructure.notification.service;
 
+import org.mifosplatform.infrastructure.configuration.domain.GlobalConfigurationProperty;
+import org.mifosplatform.infrastructure.configuration.domain.GlobalConfigurationRepository;
 import org.mifosplatform.infrastructure.core.service.RoutingDataSource;
 import org.mifosplatform.infrastructure.notification.domain.NotificationLogRepository;
 import org.slf4j.Logger;
@@ -23,6 +25,8 @@ public abstract class AbstractNotificationService implements NotificationService
 
     protected final NotificationLogRepository notificationLogRepository;
 
+    protected final GlobalConfigurationRepository globalConfigurationRepository;
+
     protected final SimpleDateFormat df = new SimpleDateFormat("dd/MM/yyyy");
 
     protected static final String queryFollowUpOfficers = "SELECT n.createdByUserName AS username,u.email, u.firstname, u.lastname FROM notes n, m_appuser u WHERE n.createdByUserName=u.username AND n.notification_id IS NULL AND n.followUpDate = CURRENT_DATE() GROUP BY email, firstname, lastname";
@@ -30,10 +34,13 @@ public abstract class AbstractNotificationService implements NotificationService
     protected static final String updateNotes = "UPDATE notes SET notification_id=? WHERE followUpDate = CURRENT_DATE() AND createdByUserName = ?";
     protected static final String queryPaymentReminderClients = "SELECT lrs.id AS loan_repayment_schedule_id, c.firstname, c.lastname, c.mobile_no FROM m_loan_repayment_schedule lrs, m_loan l, m_client c WHERE lrs.loan_id = l.id AND l.client_id = c.id AND l.loan_status_id IN (800, 900) AND lrs.principal_amount > 0 AND (SELECT count(entity_id) FROM notification_log WHERE entity_name='m_loan_repayment_schedule' AND entity_id=lrs.id)=0 AND lrs.duedate = DATE_ADD(CURDATE(), INTERVAL ? DAY)";
 
-    protected AbstractNotificationService(final RoutingDataSource dataSource, final NotificationLogRepository notificationLogRepository) {
+    protected static final String CONFIG_NOTIFICATION_PAYMENT_REMINDER_DAYS_IN_ADVANCE = "notification-payment-reminder-days-in-advance";
+
+    protected AbstractNotificationService(final RoutingDataSource dataSource, final NotificationLogRepository notificationLogRepository, final GlobalConfigurationRepository globalConfigurationRepository) {
         this.dataSource = dataSource;
         this.jdbcTemplate = new JdbcTemplate(dataSource);
         this.notificationLogRepository = notificationLogRepository;
+        this.globalConfigurationRepository = globalConfigurationRepository;
     }
 
     protected List<Map<String, Object>> getFollowUpLoanOfficers() {
@@ -46,5 +53,9 @@ public abstract class AbstractNotificationService implements NotificationService
 
     protected List<Map<String, Object>> getPaymentReminderClients(Integer daysInAdvance) {
         return jdbcTemplate.query(queryPaymentReminderClients, new Object[]{daysInAdvance}, new ColumnMapRowMapper());
+    }
+
+    protected GlobalConfigurationProperty getGlobalConfiguration(String name) {
+        return globalConfigurationRepository.findOneByName(name);
     }
 }

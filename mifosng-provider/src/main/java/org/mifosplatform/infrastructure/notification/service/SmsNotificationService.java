@@ -4,8 +4,11 @@ import oneapi.client.impl.SMSClient;
 import oneapi.config.Configuration;
 import oneapi.model.SMSRequest;
 import oneapi.model.SendMessageResult;
+import oneapi.model.SendMessageResultItem;
 import org.joda.time.DateTime;
 import org.mifosplatform.infrastructure.configuration.data.SmsCredentialsData;
+import org.mifosplatform.infrastructure.configuration.domain.GlobalConfigurationProperty;
+import org.mifosplatform.infrastructure.configuration.domain.GlobalConfigurationRepository;
 import org.mifosplatform.infrastructure.configuration.service.ExternalServicesReadPlatformService;
 import org.mifosplatform.infrastructure.core.service.RoutingDataSource;
 import org.mifosplatform.infrastructure.jobs.annotation.CronTarget;
@@ -21,66 +24,75 @@ import org.springframework.stereotype.Service;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 @Service
 public class SmsNotificationService extends AbstractNotificationService {
     private static final Logger logger = LoggerFactory.getLogger(SmsNotificationService.class);
 
-    private String sender = "FINEM";
+    private final ExternalServicesReadPlatformService externalServicesReadPlatformService;
+    private String senderName = "FINEM";
+    private String senderAddress = "";
     private String notifyUrl = null;
     private Long outboundMaxPerDay;
     private String template = "Dear %s. Your loan repayment is due on %s. Pls pay to FINEM (U) LTD,A/C:2916200002 Centenary Bank and deliver voucher to FINEM office.Tks";
     private boolean debug = false;
-    // TODO: make these configurable
-    private int daysInAdvance = 15;
+    private String debugPhone = null;
 
-    private Configuration configuration;
     private SMSClient smsClient;
 
+    private AtomicBoolean running = new AtomicBoolean(false);
+
     @Autowired
-    public SmsNotificationService(final RoutingDataSource dataSource, final NotificationLogRepository notificationLogRepository, final ExternalServicesReadPlatformService externalServicesReadPlatformService) {
-        super(dataSource, notificationLogRepository);
-        // TODO: enable this
-        /**
-        SmsCredentialsData credentials = externalServicesReadPlatformService.getSmsCredentials();
-        this.sender = credentials.getSender();
-        this.notifyUrl = credentials.getNotifyUrl();
-        this.outboundMaxPerDay = credentials.getOutboundMaxPerDay();
-        this.debug = credentials.isDebug();
-        this.configuration = new Configuration(credentials.getAuthUsername(), credentials.getAuthPassword());
-         */
-        this.configuration = new Configuration("", "");
-        this.smsClient = new SMSClient(configuration);
+    public SmsNotificationService(final RoutingDataSource dataSource, final NotificationLogRepository notificationLogRepository, final ExternalServicesReadPlatformService externalServicesReadPlatformService, final GlobalConfigurationRepository globalConfigurationRepository) {
+        super(dataSource, notificationLogRepository, globalConfigurationRepository);
+
+        this.externalServicesReadPlatformService = externalServicesReadPlatformService;
     }
 
     @Override
     @CronTarget(jobName = JobName.PAYMENT_REMINDER_SMS_NOTIFICATION)
     public void notifyPaymentReminders() {
-        DateTime now = new DateTime();
-        DateTime dueDate = now.plusDays(daysInAdvance);
+        if(!running.get()) {
+            running.set(true);
 
-        List<Map<String, Object>> clients = getPaymentReminderClients(daysInAdvance);
+            configure();
 
-        for(Map<String, Object> client : clients) {
-            boolean sent = false;
-            SendMessageResult result = null;
+            GlobalConfigurationProperty daysInAdvance = getGlobalConfiguration(CONFIG_NOTIFICATION_PAYMENT_REMINDER_DAYS_IN_ADVANCE);
 
-            String mobileNo = normalize(client.get("mobile_no").toString());
-            Long loanRepaymentScheduleId = (Long)client.get("loan_repayment_schedule_id");
+            DateTime now = new DateTime();
+            DateTime dueDate = now.plusDays(daysInAdvance.getValue().intValue());
 
-            StringBuilder message = new StringBuilder();
-            message.append(String.format(template, client.get("firstname"), df.format(dueDate.toDate())));
+            List<Map<String, Object>> clients = getPaymentReminderClients(daysInAdvance.getValue().intValue());
 
-            try {
-                result = send(mobileNo, message.toString());
-                sent = true;
-            } catch (Exception e) {
-                logger.error(e.toString(), e);
+            for(Map<String, Object> client : clients) {
+                boolean sent = false;
+                SendMessageResult result = null;
+
+                String mobileNo = normalize(client.get("mobile_no").toString());
+                Long loanRepaymentScheduleId = (Long)client.get("loan_repayment_schedule_id");
+
+                StringBuilder message = new StringBuilder();
+                message.append(String.format(template, client.get("firstname"), df.format(dueDate.toDate())));
+
+                try {
+                    logger.info("=============== SMS DESTINATION: {}", mobileNo);
+                    result = send(mobileNo, message.toString());
+                    sent = true;
+                } catch (Exception e) {
+                    logger.error(e.toString(), e);
+                }
+
+                SendMessageResultItem item = result.getSendMessageResults()[0];
+
+                notificationLogRepository.save(new NotificationLog(NotificationType.SMS, mobileNo, new Date(), sent, "m_loan_repayment_schedule", loanRepaymentScheduleId, item.getMessageStatus()));
+
+                logger.info("############### SMS notification sent: {}", sent);
             }
 
-            notificationLogRepository.save(new NotificationLog(NotificationType.SMS, mobileNo, new Date(), sent, "m_loan_repayment_schedule", loanRepaymentScheduleId, null));
-
-            logger.info("############### SMS notification sent: {}", sent);
+            running.set(false);
+        } else {
+            logger.warn("############### SMS notification job is already running!");
         }
     }
 
@@ -91,25 +103,38 @@ public class SmsNotificationService extends AbstractNotificationService {
     }
 
     private String normalize(String mobileNo) {
-        if(mobileNo.startsWith("0")) {
+        if(debug) {
+            return debugPhone;
+        } else if(mobileNo.startsWith("0")) {
             return "256" + mobileNo.substring(1);
+        } else if(mobileNo.startsWith("+")) {
+            return mobileNo.substring(1);
         }
 
         return mobileNo;
     }
 
     protected SendMessageResult send(String to, String message) {
-        SMSRequest smsRequest = new SMSRequest(sender, message, to);
+        SMSRequest smsRequest = new SMSRequest(senderAddress, message, to);
         //smsRequest.setClientCorrelator(clientId);
-        //smsRequest.setSenderName(sender);
-        if(notifyUrl!=null) {
+        smsRequest.setSenderName(senderName);
+        if(notifyUrl!=null && !"".equals(notifyUrl.trim())) {
             smsRequest.setNotifyURL(notifyUrl); // TODO: implement this
         }
 
-        logger.debug("SMS request: {} - {} - {}" + smsRequest.getSenderName(), smsRequest.getAddress(), smsRequest.getMessage());
+        return smsClient.getSMSMessagingClient().sendSMS(smsRequest);
+    }
 
-        // TODO: enable this
-        //return smsClient.getSMSMessagingClient().sendSMS(smsRequest);
-        return null;
+    protected void configure() {
+        if(smsClient==null) {
+            SmsCredentialsData credentials = externalServicesReadPlatformService.getSmsCredentials();
+            this.senderName = credentials.getSenderName();
+            this.senderAddress = credentials.getSenderAddress();
+            this.notifyUrl = credentials.getNotifyUrl();
+            this.outboundMaxPerDay = credentials.getOutboundMaxPerDay();
+            this.debug = credentials.isDebug();
+            this.debugPhone = credentials.getDebugPhone();
+            this.smsClient = new SMSClient(new Configuration(credentials.getAuthUsername(), credentials.getAuthPassword()));
+        }
     }
 }

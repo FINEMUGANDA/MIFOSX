@@ -10,13 +10,15 @@ public class EmailCredentialsData {
     private final String host;
     private final String authUsername;
     private final String authPassword;
+    private final String senderName;
     private final boolean startTls;
     private final boolean debug;
 
-    public EmailCredentialsData(final String host, final String authUsername, final String authPassword, final boolean startTls, final boolean debug) {
+    public EmailCredentialsData(final String host, final String authUsername, final String authPassword, final String senderName, final boolean startTls, final boolean debug) {
         this.host = host;
         this.authUsername = authUsername;
         this.authPassword = authPassword;
+        this.senderName = senderName;
         this.startTls = startTls;
         this.debug = debug;
     }
@@ -31,6 +33,10 @@ public class EmailCredentialsData {
 
     public String getAuthPassword() {
         return authPassword;
+    }
+
+    public String getSenderName() {
+        return senderName;
     }
 
     public boolean isStartTls() {

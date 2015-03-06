@@ -63,6 +63,7 @@ public class ExternalServicesReadPlatformServiceImpl implements ExternalServices
             String host = null;
             String authUsername = null;
             String authPassword = null;
+            String senderName = null;
             boolean startTls = false;
             boolean debug = false;
             while (rs.next()) {
@@ -72,13 +73,15 @@ public class ExternalServicesReadPlatformServiceImpl implements ExternalServices
                     authUsername = rs.getString("value");
                 } else if (rs.getString("name").equalsIgnoreCase(ExternalServicesConstants.EMAIL_AUTH_PASSWORD)) {
                     authPassword = rs.getString("value");
+                } else if (rs.getString("name").equalsIgnoreCase(ExternalServicesConstants.EMAIL_SENDER_NAME)) {
+                    senderName = rs.getString("value");
                 } else if (rs.getString("name").equalsIgnoreCase(ExternalServicesConstants.EMAIL_STARTTLS)) {
                     startTls = "true".equals(rs.getString("value"));
                 } else if (rs.getString("name").equalsIgnoreCase(ExternalServicesConstants.EMAIL_DEBUG)) {
                     debug = "true".equals(rs.getString("value"));
                 }
             }
-            return new EmailCredentialsData(host, authUsername, authPassword, startTls, debug);
+            return new EmailCredentialsData(host, authUsername, authPassword, senderName, startTls, debug);
         }
     }
 
@@ -96,26 +99,32 @@ public class ExternalServicesReadPlatformServiceImpl implements ExternalServices
         public SmsCredentialsData extractData(final ResultSet rs) throws SQLException, DataAccessException {
             String authUsername = null;
             String authPassword = null;
-            String sender = null;
+            String senderName = null;
+            String senderAddress = null;
             Long outboundMaxPerDay = -1L;
             String notifyUrl = null;
             boolean debug = false;
+            String debugPhone = null;
             while (rs.next()) {
                 if (rs.getString("name").equalsIgnoreCase(ExternalServicesConstants.SMS_AUTH_USERNAME)) {
                     authUsername = rs.getString("value");
                 } else if (rs.getString("name").equalsIgnoreCase(ExternalServicesConstants.SMS_AUTH_PASSWORD)) {
                     authPassword = rs.getString("value");
-                } else if (rs.getString("name").equalsIgnoreCase(ExternalServicesConstants.SMS_SENDER)) {
-                    sender = rs.getString("value");
+                } else if (rs.getString("name").equalsIgnoreCase(ExternalServicesConstants.SMS_SENDER_NAME)) {
+                    senderName = rs.getString("value");
+                } else if (rs.getString("name").equalsIgnoreCase(ExternalServicesConstants.SMS_SENDER_ADDRESS)) {
+                    senderAddress = rs.getString("value");
                 } else if (rs.getString("name").equalsIgnoreCase(ExternalServicesConstants.SMS_OUTBOUND_MAX_PER_DAY)) {
                     outboundMaxPerDay = Long.valueOf(rs.getString("value"));
                 } else if (rs.getString("name").equalsIgnoreCase(ExternalServicesConstants.SMS_NOTIFY_URL)) {
                     notifyUrl = rs.getString("value");
                 } else if (rs.getString("name").equalsIgnoreCase(ExternalServicesConstants.SMS_DEBUG)) {
                     debug = "true".equals(rs.getString("value"));
+                } else if (rs.getString("name").equalsIgnoreCase(ExternalServicesConstants.SMS_DEBUG_PHONE)) {
+                    debugPhone = rs.getString("value");
                 }
             }
-            return new SmsCredentialsData(authUsername, authPassword, sender, outboundMaxPerDay, notifyUrl, debug);
+            return new SmsCredentialsData(authUsername, authPassword, senderName, senderAddress, outboundMaxPerDay, notifyUrl, debug, debugPhone);
         }
     }
 
