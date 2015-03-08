@@ -1483,7 +1483,7 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService {
     public Collection<OverdueLoanScheduleData> retrieveAllLoansWithOverdueMaturityDate(final Long penaltyWaitPeriod) {
         final OverdueMaturityDateLoanScheduleMapper rm = new OverdueMaturityDateLoanScheduleMapper();
         final String sql = "select " + rm.schema() + " where "
-                    + " (DATE_SUB('2016-02-01',INTERVAL ? DAY) > ml.maturedon_date and (mlc.due_for_collection_as_of_date is null or DATE_SUB('2016-03-01',INTERVAL ? DAY) > mlc.due_for_collection_as_of_date))"
+                    + " (DATE_SUB(CURDATE(),INTERVAL ? DAY) > ml.maturedon_date and (mlc.due_for_collection_as_of_date is null or DATE_SUB(CURDATE(),INTERVAL ? DAY) > mlc.due_for_collection_as_of_date))"
                     + " and mc.charge_applies_to_enum =1"
                     + " and mc.charge_time_enum = 12"
                     + " and ml.loan_status_id IN (300, 800, 900)"
