@@ -1383,7 +1383,7 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService {
         final Collection<CodeValueData> loanCollateralOptions = this.codeValueReadPlatformService
                 .retrieveCodeValuesByCode("LoanCollateral");
         final Collection<ChargeData> chargeOptions = this.chargeReadPlatformService.retrieveLoanProductApplicableCharges(productId,
-                new ChargeTimeType[] { ChargeTimeType.OVERDUE_INSTALLMENT });
+                new ChargeTimeType[] { ChargeTimeType.OVERDUE_INSTALLMENT, ChargeTimeType.OVERDUE_MATURITY_DATE });
         Integer loanCycleCounter = null;
         if (loanProduct.useBorrowerCycle()) {
             if (clientId == null) {
