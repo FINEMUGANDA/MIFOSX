@@ -2406,6 +2406,60 @@ public class LoanWritePlatformServiceJpaRepositoryImpl implements LoanWritePlatf
     }
 
     @Override
+    @CronTarget(jobName = JobName.APPLY_CHARGE_TO_OVERDUE_MATURITY_DATE_LOAN)
+    public void applyChargeForOverdueMaturityDateLoans() throws JobExecutionException {
+
+        final Long penaltyWaitPeriodValue = this.configurationDomainService.retrievePenaltyWaitPeriod();
+        final Collection<OverdueLoanScheduleData> overdueLoanScheduledData = this.loanReadPlatformService
+                .retrieveAllLoansWithOverdueMaturityDate(penaltyWaitPeriodValue);
+
+        if (!overdueLoanScheduledData.isEmpty()) {
+            final StringBuilder sb = new StringBuilder();
+            final Map<Long, Collection<OverdueLoanScheduleData>> overdueScheduleData = new HashMap<>();
+            for (final OverdueLoanScheduleData overdueInstallment : overdueLoanScheduledData) {
+                if (overdueScheduleData.containsKey(overdueInstallment.getLoanId())) {
+                    overdueScheduleData.get(overdueInstallment.getLoanId()).add(overdueInstallment);
+                } else {
+                    Collection<OverdueLoanScheduleData> loanData = new ArrayList<>();
+                    loanData.add(overdueInstallment);
+                    overdueScheduleData.put(overdueInstallment.getLoanId(), loanData);
+                }
+            }
+//
+            for (final Long loanId : overdueScheduleData.keySet()) {
+                try {
+//                    applyOverdueMaturityDateChargesForLoan(loanId, overdueScheduleData.get(loanId));
+                    applyOverdueChargesForLoan(loanId, overdueScheduleData.get(loanId));
+
+                } catch (final PlatformApiDataValidationException e) {
+                    final List<ApiParameterError> errors = e.getErrors();
+                    for (final ApiParameterError error : errors) {
+                        logger.error("Apply Charges due for overdue maturity date loans failed for account:" + loanId + " with message "
+                                + error.getDeveloperMessage());
+                        sb.append("Apply Charges due for overdue maturity date loans failed for account:").append(loanId).append(" with message ")
+                                .append(error.getDeveloperMessage());
+                    }
+                } catch (final AbstractPlatformDomainRuleException ex) {
+                    logger.error("Apply Charges due for overdue maturity date loans failed for account:" + loanId + " with message "
+                            + ex.getDefaultUserMessage());
+                    sb.append("Apply Charges due for overdue maturity date loans failed for account:").append(loanId).append(" with message ")
+                            .append(ex.getDefaultUserMessage());
+                } catch (Exception e) {
+                    Throwable realCause = e;
+                    if (e.getCause() != null) {
+                        realCause = e.getCause();
+                    }
+                    logger.error("Apply Charges due for overdue maturity date loans failed for account:" + loanId + " with message "
+                            + realCause.getMessage());
+                    sb.append("Apply Charges due for overdue maturity date loans failed for account:").append(loanId).append(" with message ")
+                            .append(realCause.getMessage());
+                }
+            }
+            if (sb.length() > 0) { throw new JobExecutionException(sb.toString()); }
+        }
+    }
+
+    @Override
     public CommandProcessingResult undoWriteOff(Long loanId) {
         final AppUser currentUser = getAppUserIfPresent();
 

@@ -18,13 +18,18 @@ public enum JobName {
     ACCOUNTING_RUNNING_BALANCE_UPDATE("Update Accounting Running Balances"), //
     PAY_DUE_SAVINGS_CHARGES("Pay Due Savings Charges"), //
     APPLY_CHARGE_TO_OVERDUE_LOAN_INSTALLMENT("Apply penalty to overdue loans"),
+    APPLY_CHARGE_TO_OVERDUE_MATURITY_DATE_LOAN("Apply penalty to overdue maturity date loans"),
     EXECUTE_STANDING_INSTRUCTIONS("Execute Standing Instruction"),
     ADD_ACCRUAL_ENTRIES("Add Accrual Transactions"),
     UPDATE_NPA("Update Non Performing Assets"),
     UPDATE_DEPOSITS_ACCOUNT_MATURITY_DETAILS("Update Deposit Accounts Maturity details"),
     TRANSFER_INTEREST_TO_SAVINGS("Transfer Interest To Savings"),
     ADD_PERIODIC_ACCRUAL_ENTRIES("Add Periodic Accrual Transactions"),
-    RECALCULATE_INTEREST_FOR_LOAN("Recalculate Interest For Loans");
+    RECALCULATE_INTEREST_FOR_LOAN("Recalculate Interest For Loans"),
+    FOLLOW_UP_EMAIL_NOTIFICATION("Follow up Email Notification"),
+    PAYMENT_REMINDER_EMAIL_NOTIFICATION("Payment Reminder Email Notification"),
+    FOLLOW_UP_SMS_NOTIFICATION("Follow up SMS Notification"),
+    PAYMENT_REMINDER_SMS_NOTIFICATION("Payment Reminder SMS Notification");
 
     private final String name;
 

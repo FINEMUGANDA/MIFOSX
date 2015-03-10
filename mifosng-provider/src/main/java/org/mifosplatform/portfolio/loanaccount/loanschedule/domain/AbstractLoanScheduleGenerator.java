@@ -1422,9 +1422,9 @@ public abstract class AbstractLoanScheduleGenerator implements LoanScheduleGener
                     LoanRepaymentScheduleInstallment installment = installmentMap.get(loanScheduleModelPeriod.periodNumber());
                     Money overdueChargeForInstallment = Money.zero(currency);
                     overdueChargeForInstallment = cumulativeOverDuePenaltyChargesDueWithin(loanScheduleModelPeriod.periodFromDate(),
-                            loanScheduleModelPeriod.periodDueDate(), loanCharges, currency, installment.getPrincipalOutstanding(currency)
-                                    .getAmount(), installment.getInterestOutstanding(currency).getAmount(), graceDate.isAfter(installment
-                                    .getDueDate()));
+                            loanScheduleModelPeriod.periodDueDate(), loanCharges, currency, installment.getPrincipalOutstanding(currency).getAmount(),
+                            installment.getInterestOutstanding(currency).getAmount(), installment.getFeeChargesOutstanding(currency).getAmount(),
+                            graceDate.isAfter(installment.getDueDate()));
                     totalPenaltyChargesCharged = totalPenaltyChargesCharged.add(overdueChargeForInstallment.getAmount());
                     BigDecimal feeChargesForInstallment = BigDecimal.ZERO;
                     loanScheduleModelPeriod.addLoanCharges(feeChargesForInstallment, overdueChargeForInstallment.getAmount());
@@ -1456,7 +1456,7 @@ public abstract class AbstractLoanScheduleGenerator implements LoanScheduleGener
 
     private Money cumulativeOverDuePenaltyChargesDueWithin(final LocalDate periodStart, final LocalDate periodEnd,
             final Set<LoanCharge> loanCharges, final MonetaryCurrency monetaryCurrency, final BigDecimal principalOverdue,
-            final BigDecimal interestOverdue, final boolean recalculate) {
+            final BigDecimal interestOverdue, final BigDecimal feeOverdue, final boolean recalculate) {
 
         Money cumulative = Money.zero(monetaryCurrency);
 
@@ -1474,6 +1474,9 @@ public abstract class AbstractLoanScheduleGenerator implements LoanScheduleGener
                             break;
                             case PERCENT_OF_INTEREST:
                                 amount = amount.add(interestOverdue);
+                            break;
+                            case PERCENT_OF_TOTAL_OUTSTANDING:
+                                amount = amount.add(principalOverdue).add(interestOverdue).add(feeOverdue);
                             break;
                             default:
                             break;
