@@ -31,7 +31,7 @@ public final class CurrencyCommandFromApiJsonDeserializer {
     /**
      * The parameters supported for this command.
      */
-    private final Set<String> supportedParameters = new HashSet<>(Arrays.asList("currencies"));
+    private final Set<String> supportedParameters = new HashSet<>(Arrays.asList("currencies", "base"));
 
     private final FromJsonHelper fromApiJsonHelper;
 
@@ -53,6 +53,9 @@ public final class CurrencyCommandFromApiJsonDeserializer {
         final JsonElement element = this.fromApiJsonHelper.parse(json);
         final String[] currencies = this.fromApiJsonHelper.extractArrayNamed("currencies", element);
         baseDataValidator.reset().parameter("currencies").value(currencies).arrayNotEmpty();
+
+        // TODO: check for null
+        final String base = this.fromApiJsonHelper.extractStringNamed("base", element);
 
         throwExceptionIfValidationWarningsExist(dataValidationErrors);
     }
