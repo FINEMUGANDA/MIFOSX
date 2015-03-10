@@ -156,6 +156,15 @@ public class LoanCharge extends AbstractPersistable<Long> {
                     amountPercentageAppliedTo = loan.getTotalInterest();
                 }
             break;
+            case PERCENT_OF_TOTAL_OUTSTANDING:
+                if (command.hasParameter("principal") && command.hasParameter("interest") && command.hasParameter("fee")) {
+                    amountPercentageAppliedTo = command.bigDecimalValueOfParameterNamed("principal")
+                            .add(command.bigDecimalValueOfParameterNamed("interest"))
+                            .add(command.bigDecimalValueOfParameterNamed("fee"));
+                } else {
+                    amountPercentageAppliedTo = loan.getPrincpal().getAmount().add(loan.getTotalInterest()).add(loan.getTotalFee());
+                }
+            break;
             default:
             break;
         }
@@ -203,7 +212,8 @@ public class LoanCharge extends AbstractPersistable<Long> {
         }
 
         if (ChargeTimeType.fromInt(this.chargeTime).equals(ChargeTimeType.SPECIFIED_DUE_DATE)
-                || ChargeTimeType.fromInt(this.chargeTime).equals(ChargeTimeType.OVERDUE_INSTALLMENT)) {
+                || ChargeTimeType.fromInt(this.chargeTime).equals(ChargeTimeType.OVERDUE_INSTALLMENT)
+                || ChargeTimeType.fromInt(this.chargeTime).equals(ChargeTimeType.OVERDUE_MATURITY_DATE)) {
 
             if (dueDate == null) {
                 final String defaultUserMessage = "Loan charge is missing due date.";
@@ -266,6 +276,7 @@ public class LoanCharge extends AbstractPersistable<Long> {
             case PERCENT_OF_AMOUNT:
             case PERCENT_OF_AMOUNT_AND_INTEREST:
             case PERCENT_OF_INTEREST:
+            case PERCENT_OF_TOTAL_OUTSTANDING:
                 this.percentage = chargeAmount;
                 this.amountPercentageAppliedTo = amountPercentageAppliedTo;
                 if (loanCharge.compareTo(BigDecimal.ZERO) == 0) {
@@ -365,6 +376,7 @@ public class LoanCharge extends AbstractPersistable<Long> {
                 case PERCENT_OF_AMOUNT:
                 case PERCENT_OF_AMOUNT_AND_INTEREST:
                 case PERCENT_OF_INTEREST:
+                case PERCENT_OF_TOTAL_OUTSTANDING:
                     this.percentage = amount;
                     this.amountPercentageAppliedTo = loanPrincipal;
                     if (loanCharge.compareTo(BigDecimal.ZERO) == 0) {
@@ -394,6 +406,9 @@ public class LoanCharge extends AbstractPersistable<Long> {
                 case PERCENT_OF_INTEREST:
                     amountPercentageAppliedTo = this.loan.getTotalInterest();
                 break;
+                case PERCENT_OF_TOTAL_OUTSTANDING:
+                    amountPercentageAppliedTo = this.loan.getPrincpal().getAmount().add(this.loan.getTotalInterest()).add(this.loan.getTotalFee());
+                    break;
                 default:
                 break;
             }
@@ -438,6 +453,7 @@ public class LoanCharge extends AbstractPersistable<Long> {
                 case PERCENT_OF_AMOUNT:
                 case PERCENT_OF_AMOUNT_AND_INTEREST:
                 case PERCENT_OF_INTEREST:
+                case PERCENT_OF_TOTAL_OUTSTANDING:
                     this.percentage = newValue;
                     this.amountPercentageAppliedTo = amount;
                     BigDecimal loanCharge = BigDecimal.ZERO;
@@ -498,6 +514,10 @@ public class LoanCharge extends AbstractPersistable<Long> {
 
     public boolean isOverdueInstallmentCharge() {
         return ChargeTimeType.fromInt(this.chargeTime).equals(ChargeTimeType.OVERDUE_INSTALLMENT);
+    }
+
+    public boolean isOverdueMaturityDateCharge() {
+        return ChargeTimeType.fromInt(this.chargeTime).equals(ChargeTimeType.OVERDUE_MATURITY_DATE);
     }
 
     private static boolean isGreaterThanZero(final BigDecimal value) {

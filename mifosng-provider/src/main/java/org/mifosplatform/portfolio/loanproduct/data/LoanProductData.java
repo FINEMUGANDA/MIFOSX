@@ -769,7 +769,7 @@ public class LoanProductData {
         Collection<ChargeData> overdueFeeCharges = new ArrayList<>();
         Collection<ChargeData> charges = charges();
         for (ChargeData chargeData : charges) {
-            if (chargeData.isOverdueInstallmentCharge()) {
+            if (chargeData.isOverdueInstallmentCharge() || chargeData.isOverdueMaturityDateCharge()) {
                 overdueFeeCharges.add(chargeData);
             }
         }
