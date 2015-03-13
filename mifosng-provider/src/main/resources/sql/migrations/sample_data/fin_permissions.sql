@@ -52,3 +52,11 @@ INSERT INTO `mifostenant-default`.m_permission (grouping, code, entity_name, act
 INSERT INTO `mifostenant-default`.m_permission (grouping, code, entity_name, action_name, can_maker_checker) VALUES ('datatable', 'UPDATE_client_note_general_CHECKER', 'client_note_general', 'UPDATE', 0);
 INSERT INTO `mifostenant-default`.m_permission (grouping, code, entity_name, action_name, can_maker_checker) VALUES ('datatable', 'DELETE_client_note_general', 'client_note_general', 'DELETE', 1);
 INSERT INTO `mifostenant-default`.m_permission (grouping, code, entity_name, action_name, can_maker_checker) VALUES ('datatable', 'DELETE_client_note_general_CHECKER', 'client_note_general', 'DELETE', 0);
+
+INSERT INTO `mifostenant-default`.m_permission (grouping, code, entity_name, action_name, can_maker_checker) VALUES ('fin_exchange_rate', 'CREATE_exchange_rate', 'exchange_rate', 'CREATE', 1);
+INSERT INTO `mifostenant-default`.m_permission (grouping, code, entity_name, action_name, can_maker_checker) VALUES ('fin_exchange_rate', 'CREATE_exchange_rate_CHECKER', 'exchange_rate', 'CREATE', 0);
+INSERT INTO `mifostenant-default`.m_permission (grouping, code, entity_name, action_name, can_maker_checker) VALUES ('fin_exchange_rate', 'READ_exchange_rate', 'exchange_rate', 'READ', 0);
+INSERT INTO `mifostenant-default`.m_permission (grouping, code, entity_name, action_name, can_maker_checker) VALUES ('fin_exchange_rate', 'UPDATE_exchange_rate', 'exchange_rate', 'UPDATE', 1);
+INSERT INTO `mifostenant-default`.m_permission (grouping, code, entity_name, action_name, can_maker_checker) VALUES ('fin_exchange_rate', 'UPDATE_exchange_rate_CHECKER', 'exchange_rate', 'UPDATE', 0);
+INSERT INTO `mifostenant-default`.m_permission (grouping, code, entity_name, action_name, can_maker_checker) VALUES ('fin_exchange_rate', 'DELETE_exchange_rate', 'exchange_rate', 'DELETE', 1);
+INSERT INTO `mifostenant-default`.m_permission (grouping, code, entity_name, action_name, can_maker_checker) VALUES ('fin_exchange_rate', 'DELETE_exchange_rate_CHECKER', 'exchange_rate', 'DELETE', 0);
