@@ -124,8 +124,9 @@ public class JournalEntryWritePlatformServiceJpaRepositoryImpl implements Journa
             final String transactionId = generateTransactionId(officeId);
             final String referenceNumber = command.stringValueOfParameterNamed(JournalEntryJsonInputParams.REFERENCE_NUMBER.getValue());
 
-            BigDecimal exchangeRate = calculateExchangeRate(journalEntryCommand.getCredits(), journalEntryCommand.getDebits());
-            BigDecimal exchangeRateReverse = BigDecimal.ONE.divide(exchangeRate, 6, BigDecimal.ROUND_HALF_EVEN);
+            BigDecimal[] exchangeRates = calculateExchangeRate(journalEntryCommand.getCredits(), journalEntryCommand.getDebits());
+            BigDecimal creditExchangeRate = exchangeRates[0];
+            BigDecimal debitExchangeRate = exchangeRates[1];
 
             if (accountRuleId != null) {
 
@@ -141,12 +142,12 @@ public class JournalEntryWritePlatformServiceJpaRepositoryImpl implements Journa
                         checkDebitAndCreditAmounts(journalEntryCommand.getCredits(), journalEntryCommand.getDebits());
                     }
 
-                    saveAllDebitOrCreditEntries(journalEntryCommand, office, paymentDetail, exchangeRate, transactionDate, journalEntryCommand.getCredits(), transactionId, JournalEntryType.CREDIT, referenceNumber);
+                    saveAllDebitOrCreditEntries(journalEntryCommand, office, paymentDetail, creditExchangeRate, transactionDate, journalEntryCommand.getCredits(), transactionId, JournalEntryType.CREDIT, referenceNumber);
                 } else {
                     final GLAccount creditAccountHead = accountingRule.getAccountToCredit();
                     validateGLAccountForTransaction(creditAccountHead);
                     validateDebitOrCreditArrayForExistingGLAccount(creditAccountHead, journalEntryCommand.getCredits());
-                    saveAllDebitOrCreditEntries(journalEntryCommand, office, paymentDetail, exchangeRate, transactionDate, journalEntryCommand.getCredits(), transactionId, JournalEntryType.CREDIT, referenceNumber);
+                    saveAllDebitOrCreditEntries(journalEntryCommand, office, paymentDetail, creditExchangeRate, transactionDate, journalEntryCommand.getCredits(), transactionId, JournalEntryType.CREDIT, referenceNumber);
                 }
 
                 if (accountingRule.getAccountToDebit() == null) {
@@ -158,16 +159,16 @@ public class JournalEntryWritePlatformServiceJpaRepositoryImpl implements Journa
                         checkDebitAndCreditAmounts(journalEntryCommand.getCredits(), journalEntryCommand.getDebits());
                     }
 
-                    saveAllDebitOrCreditEntries(journalEntryCommand, office, paymentDetail, exchangeRateReverse, transactionDate, journalEntryCommand.getDebits(), transactionId, JournalEntryType.DEBIT, referenceNumber);
+                    saveAllDebitOrCreditEntries(journalEntryCommand, office, paymentDetail, debitExchangeRate, transactionDate, journalEntryCommand.getDebits(), transactionId, JournalEntryType.DEBIT, referenceNumber);
                 } else {
                     final GLAccount debitAccountHead = accountingRule.getAccountToDebit();
                     validateGLAccountForTransaction(debitAccountHead);
                     validateDebitOrCreditArrayForExistingGLAccount(debitAccountHead, journalEntryCommand.getDebits());
-                    saveAllDebitOrCreditEntries(journalEntryCommand, office, paymentDetail, exchangeRateReverse, transactionDate, journalEntryCommand.getDebits(), transactionId, JournalEntryType.DEBIT, referenceNumber);
+                    saveAllDebitOrCreditEntries(journalEntryCommand, office, paymentDetail, debitExchangeRate, transactionDate, journalEntryCommand.getDebits(), transactionId, JournalEntryType.DEBIT, referenceNumber);
                 }
             } else {
-                saveAllDebitOrCreditEntries(journalEntryCommand, office, paymentDetail, exchangeRateReverse, transactionDate, journalEntryCommand.getDebits(), transactionId, JournalEntryType.DEBIT, referenceNumber);
-                saveAllDebitOrCreditEntries(journalEntryCommand, office, paymentDetail, exchangeRate, transactionDate, journalEntryCommand.getCredits(), transactionId, JournalEntryType.CREDIT, referenceNumber);
+                saveAllDebitOrCreditEntries(journalEntryCommand, office, paymentDetail, debitExchangeRate, transactionDate, journalEntryCommand.getDebits(), transactionId, JournalEntryType.DEBIT, referenceNumber);
+                saveAllDebitOrCreditEntries(journalEntryCommand, office, paymentDetail, creditExchangeRate, transactionDate, journalEntryCommand.getCredits(), transactionId, JournalEntryType.CREDIT, referenceNumber);
             }
 
             return new CommandProcessingResultBuilder().withCommandId(command.commandId()).withOfficeId(officeId)
@@ -230,23 +231,60 @@ public class JournalEntryWritePlatformServiceJpaRepositoryImpl implements Journa
         }
     }
 
-    private BigDecimal calculateExchangeRate(final SingleDebitOrCreditEntryCommand[] credits, final SingleDebitOrCreditEntryCommand[] debits) {
+    private BigDecimal[] calculateExchangeRate(final SingleDebitOrCreditEntryCommand[] credits, final SingleDebitOrCreditEntryCommand[] debits) {
         BigDecimal creditsSum = BigDecimal.ZERO;
         BigDecimal debitsSum = BigDecimal.ZERO;
+
+        BigDecimal creditExchangeRate = null;
+        BigDecimal debitExchangeRate = null;
+
+        OrganisationCurrency baseCurrency = organisationCurrencyRepo.findFirstByBase(true);
+
+        boolean creditIsHome = false;
+        boolean debitIsHome = false;
+
+        GLAccount glAccount = this.glAccountRepository.findOne(credits[0].getGlAccountId());
+
+        if(baseCurrency.getCode().equals(glAccount.getCurrencyCode())) {
+            creditIsHome = true;
+            creditExchangeRate = BigDecimal.ONE;
+        }
+
         for (final SingleDebitOrCreditEntryCommand creditEntryCommand : credits) {
             if (creditEntryCommand.getAmount() == null || creditEntryCommand.getGlAccountId() == null) {
-                return BigDecimal.ONE;
+                //creditExchangeRate = BigDecimal.ONE;
+                break;
             }
+
             creditsSum = creditsSum.add(creditEntryCommand.getAmount());
         }
+
+        glAccount = this.glAccountRepository.findOne(debits[0].getGlAccountId());
+
+        if(baseCurrency.getCode().equals(glAccount.getCurrencyCode())) {
+            debitIsHome = true;
+            debitExchangeRate = BigDecimal.ONE;
+        }
+
         for (final SingleDebitOrCreditEntryCommand debitEntryCommand : debits) {
             if (debitEntryCommand.getAmount() == null || debitEntryCommand.getGlAccountId() == null) {
-                return BigDecimal.ONE;
+                //debitExchangeRate = BigDecimal.ONE;
+                break;
             }
+
             debitsSum = debitsSum.add(debitEntryCommand.getAmount());
         }
 
-        return debitsSum.divide(creditsSum, JournalEntry.EXCHANGE_RATE_SCALE, BigDecimal.ROUND_HALF_EVEN);
+        if(creditIsHome) {
+            debitExchangeRate = creditsSum.divide(debitsSum, JournalEntry.EXCHANGE_RATE_SCALE, BigDecimal.ROUND_HALF_EVEN);
+        } else if(debitIsHome) {
+            creditExchangeRate = debitsSum.divide(creditsSum, JournalEntry.EXCHANGE_RATE_SCALE, BigDecimal.ROUND_HALF_EVEN);
+        } else {
+            creditExchangeRate = debitsSum.divide(creditsSum, JournalEntry.EXCHANGE_RATE_SCALE, BigDecimal.ROUND_HALF_EVEN);
+            debitExchangeRate = creditsSum.divide(debitsSum, JournalEntry.EXCHANGE_RATE_SCALE, BigDecimal.ROUND_HALF_EVEN);
+        }
+
+        return new BigDecimal[]{creditExchangeRate, debitExchangeRate};
     }
 
     private void checkDebitAndCreditAmounts(final SingleDebitOrCreditEntryCommand[] credits, final SingleDebitOrCreditEntryCommand[] debits) {
