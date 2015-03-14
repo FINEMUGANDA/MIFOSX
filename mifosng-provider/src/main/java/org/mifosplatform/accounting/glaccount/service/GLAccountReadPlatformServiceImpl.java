@@ -55,7 +55,7 @@ public class GLAccountReadPlatformServiceImpl implements GLAccountReadPlatformSe
         public String schema() {
             StringBuilder sb = new StringBuilder();
             sb.append(
-                    " gl.id as id, name as name, parent_id as parentId, gl_code as glCode, disabled as disabled, manual_journal_entries_allowed as manualEntriesAllowed, ")
+                    " gl.id as id, name as name, parent_id as parentId, currency_code as currencyCode, gl_code as glCode, disabled as disabled, manual_journal_entries_allowed as manualEntriesAllowed, ")
                     .append("classification_enum as classification, account_usage as accountUsage, gl.description as description, ")
                     .append(nameDecoratedBaseOnHierarchy).append(" as nameDecorated, ")
                     .append("cv.id as codeId, cv.code_value as codeValue ");
@@ -75,6 +75,7 @@ public class GLAccountReadPlatformServiceImpl implements GLAccountReadPlatformSe
             final Long id = rs.getLong("id");
             final String name = rs.getString("name");
             final Long parentId = JdbcSupport.getLong(rs, "parentId");
+            final String currencyCode = rs.getString("currencyCode");
             final String glCode = rs.getString("glCode");
             final boolean disabled = rs.getBoolean("disabled");
             final boolean manualEntriesAllowed = rs.getBoolean("manualEntriesAllowed");
@@ -91,7 +92,7 @@ public class GLAccountReadPlatformServiceImpl implements GLAccountReadPlatformSe
             if (associationParametersData.isRunningBalanceRequired()) {
                 organizationRunningBalance = rs.getLong("organizationRunningBalance");
             }
-            return new GLAccountData(id, name, parentId, glCode, disabled, manualEntriesAllowed, accountType, usage, description,
+            return new GLAccountData(id, name, parentId, currencyCode, glCode, disabled, manualEntriesAllowed, accountType, usage, description,
                     nameDecorated, tagId, organizationRunningBalance);
         }
     }
@@ -251,15 +252,16 @@ public class GLAccountReadPlatformServiceImpl implements GLAccountReadPlatformSe
     private static final class GLAccountDataLookUpMapper implements RowMapper<GLAccountDataForLookup> {
 
         public String schema() {
-            return " gl.id as id, gl.name as name, gl.gl_code as glCode from acc_accounting_rule rule join acc_rule_tags tags on tags.acc_rule_id = rule.id join acc_gl_account gl on gl.tag_id=tags.tag_id";
+            return " gl.id as id, gl.name as name, gl.currency_code as currencyCode, gl.gl_code as glCode from acc_accounting_rule rule join acc_rule_tags tags on tags.acc_rule_id = rule.id join acc_gl_account gl on gl.tag_id=tags.tag_id";
         }
 
         @Override
         public GLAccountDataForLookup mapRow(final ResultSet rs, @SuppressWarnings("unused") final int rowNum) throws SQLException {
             final Long id = JdbcSupport.getLong(rs, "id");
             final String name = rs.getString("name");
+            final String currencyCode = rs.getString("currencyCode");
             final String glCode = rs.getString("glCode");
-            return new GLAccountDataForLookup(id, name, glCode);
+            return new GLAccountDataForLookup(id, name, currencyCode, glCode);
         }
 
     }

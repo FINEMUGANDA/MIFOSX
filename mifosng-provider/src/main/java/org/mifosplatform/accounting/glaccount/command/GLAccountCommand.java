@@ -24,6 +24,7 @@ public class GLAccountCommand {
     private final Long id;
     private final String name;
     private final Long parentId;
+    private final String currencyCode;
     private final String glCode;
     private final Boolean disabled;
     private final Boolean manualEntriesAllowed;
@@ -32,11 +33,12 @@ public class GLAccountCommand {
     private final String description;
     private final Long tagId;
 
-    public GLAccountCommand(final Long id, final String name, final Long parentId, final String glCode, final Boolean disabled,
+    public GLAccountCommand(final Long id, final String name, final Long parentId, final String currencyCode, final String glCode, final Boolean disabled,
             final Boolean manualEntriesAllowed, final Integer type, final Integer usage, final String description, final Long tagId) {
         this.id = id;
         this.name = name;
         this.parentId = parentId;
+        this.currencyCode = currencyCode;
         this.glCode = glCode;
         this.disabled = disabled;
         this.manualEntriesAllowed = manualEntriesAllowed;
@@ -53,6 +55,9 @@ public class GLAccountCommand {
         final DataValidatorBuilder baseDataValidator = new DataValidatorBuilder(dataValidationErrors).resource("GLAccount");
 
         baseDataValidator.reset().parameter(GLAccountJsonInputParams.NAME.getValue()).value(this.name).notBlank().notExceedingLengthOf(200);
+
+        baseDataValidator.reset().parameter(GLAccountJsonInputParams.CURRENCY_CODE.getValue()).value(this.currencyCode).notBlank()
+                .notExceedingLengthOf(3);
 
         baseDataValidator.reset().parameter(GLAccountJsonInputParams.GL_CODE.getValue()).value(this.glCode).notBlank()
                 .notExceedingLengthOf(45);
@@ -87,6 +92,9 @@ public class GLAccountCommand {
         baseDataValidator.reset().parameter(GLAccountJsonInputParams.NAME.getValue()).value(this.name).ignoreIfNull().notBlank()
                 .notExceedingLengthOf(200);
 
+        baseDataValidator.reset().parameter(GLAccountJsonInputParams.CURRENCY_CODE.getValue()).ignoreIfNull().value(this.currencyCode).notBlank()
+                .notExceedingLengthOf(3);
+
         baseDataValidator.reset().parameter(GLAccountJsonInputParams.GL_CODE.getValue()).ignoreIfNull().value(this.glCode).notBlank()
                 .notExceedingLengthOf(45);
 
@@ -103,7 +111,7 @@ public class GLAccountCommand {
 
         baseDataValidator.reset().parameter(GLAccountJsonInputParams.DISABLED.getValue()).value(this.disabled).ignoreIfNull();
 
-        baseDataValidator.reset().anyOfNotNull(this.name, this.glCode, this.parentId, this.type, this.description, this.disabled);
+        baseDataValidator.reset().anyOfNotNull(this.name, this.currencyCode, this.glCode, this.parentId, this.type, this.description, this.disabled);
 
         if (!dataValidationErrors.isEmpty()) { throw new PlatformApiDataValidationException("validation.msg.validation.errors.exist",
                 "Validation errors exist.", dataValidationErrors); }

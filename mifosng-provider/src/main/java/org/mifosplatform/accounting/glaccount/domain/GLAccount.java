@@ -44,6 +44,9 @@ public class GLAccount extends AbstractPersistable<Long> {
     @Column(name = "name", nullable = false, length = 45)
     private String name;
 
+    @Column(name = "currency_code", nullable = true, length = 3) // TODO: should not be nullable
+    private String currencyCode;
+
     @Column(name = "gl_code", nullable = false, length = 100)
     private String glCode;
 
@@ -70,9 +73,10 @@ public class GLAccount extends AbstractPersistable<Long> {
         //
     }
 
-    private GLAccount(final GLAccount parent, final String name, final String glCode, final boolean disabled,
+    private GLAccount(final GLAccount parent, final String name, final String currencyCode, final String glCode, final boolean disabled,
             final boolean manualEntriesAllowed, final Integer type, final Integer usage, final String description, final CodeValue tagId) {
         this.name = StringUtils.defaultIfEmpty(name, null);
+        this.currencyCode = StringUtils.defaultIfEmpty(currencyCode, null); // TODO: should use default currency
         this.glCode = StringUtils.defaultIfEmpty(glCode, null);
         this.disabled = BooleanUtils.toBooleanDefaultIfNull(disabled, false);
         this.manualEntriesAllowed = BooleanUtils.toBooleanDefaultIfNull(manualEntriesAllowed, true);
@@ -85,6 +89,7 @@ public class GLAccount extends AbstractPersistable<Long> {
 
     public static GLAccount fromJson(final GLAccount parent, final JsonCommand command, final CodeValue glAccountTagType) {
         final String name = command.stringValueOfParameterNamed(GLAccountJsonInputParams.NAME.getValue());
+        final String currencyCode = command.stringValueOfParameterNamed(GLAccountJsonInputParams.CURRENCY_CODE.getValue());
         final String glCode = command.stringValueOfParameterNamed(GLAccountJsonInputParams.GL_CODE.getValue());
         final boolean disabled = command.booleanPrimitiveValueOfParameterNamed(GLAccountJsonInputParams.DISABLED.getValue());
         final boolean manualEntriesAllowed = command.booleanPrimitiveValueOfParameterNamed(GLAccountJsonInputParams.MANUAL_ENTRIES_ALLOWED
@@ -92,13 +97,14 @@ public class GLAccount extends AbstractPersistable<Long> {
         final Integer usage = command.integerValueSansLocaleOfParameterNamed(GLAccountJsonInputParams.USAGE.getValue());
         final Integer type = command.integerValueSansLocaleOfParameterNamed(GLAccountJsonInputParams.TYPE.getValue());
         final String description = command.stringValueOfParameterNamed(GLAccountJsonInputParams.DESCRIPTION.getValue());
-        return new GLAccount(parent, name, glCode, disabled, manualEntriesAllowed, type, usage, description, glAccountTagType);
+        return new GLAccount(parent, name, currencyCode, glCode, disabled, manualEntriesAllowed, type, usage, description, glAccountTagType);
     }
 
     public Map<String, Object> update(final JsonCommand command) {
         final Map<String, Object> actualChanges = new LinkedHashMap<>(15);
         handlePropertyUpdate(command, actualChanges, GLAccountJsonInputParams.DESCRIPTION.getValue(), this.description);
         handlePropertyUpdate(command, actualChanges, GLAccountJsonInputParams.DISABLED.getValue(), this.disabled);
+        handlePropertyUpdate(command, actualChanges, GLAccountJsonInputParams.CURRENCY_CODE.getValue(), this.currencyCode);
         handlePropertyUpdate(command, actualChanges, GLAccountJsonInputParams.GL_CODE.getValue(), this.glCode);
         handlePropertyUpdate(command, actualChanges, GLAccountJsonInputParams.MANUAL_ENTRIES_ALLOWED.getValue(), this.manualEntriesAllowed);
         handlePropertyUpdate(command, actualChanges, GLAccountJsonInputParams.NAME.getValue(), this.name);
@@ -143,6 +149,8 @@ public class GLAccount extends AbstractPersistable<Long> {
             // now update actual property
             if (paramName.equals(GLAccountJsonInputParams.DESCRIPTION.getValue())) {
                 this.description = newValue;
+            } else if (paramName.equals(GLAccountJsonInputParams.CURRENCY_CODE.getValue())) {
+                this.currencyCode = newValue;
             } else if (paramName.equals(GLAccountJsonInputParams.GL_CODE.getValue())) {
                 this.glCode = newValue;
             } else if (paramName.equals(GLAccountJsonInputParams.NAME.getValue())) {
@@ -195,6 +203,10 @@ public class GLAccount extends AbstractPersistable<Long> {
 
     public boolean isManualEntriesAllowed() {
         return this.manualEntriesAllowed;
+    }
+
+    public String getCurrencyCode() {
+        return this.currencyCode;
     }
 
     public String getGlCode() {

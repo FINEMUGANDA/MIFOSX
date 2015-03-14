@@ -44,7 +44,7 @@ public class ProductToGLAccountMappingReadPlatformServiceImpl implements Product
     private static final class ProductToGLAccountMappingMapper implements RowMapper<Map<String, Object>> {
 
         public String schema() {
-            return " mapping.id as id, mapping.gl_account_id as glAccountId,glaccount.name as name,glaccount.gl_code as code,"
+            return " mapping.id as id, mapping.gl_account_id as glAccountId,glaccount.name as name, glaccount.currency_code as currencyCode, glaccount.gl_code as code,"
                     + " mapping.product_id as productId, mapping.product_type as productType,mapping.financial_account_type as financialAccountType, "
                     + " mapping.payment_type as paymentTypeId,cv.code_value codeValue, mapping.charge_id as chargeId, charge.is_penalty as penalty, "
                     + " charge.name as chargeName "
@@ -65,6 +65,7 @@ public class ProductToGLAccountMappingReadPlatformServiceImpl implements Product
             final String paymentTypeValue = rs.getString("codeValue");
             final Integer financialAccountType = rs.getInt("financialAccountType");
             final String glAccountName = rs.getString("name");
+            final String currencyCode = rs.getString("currencyCode");
             final String glCode = rs.getString("code");
             final String chargeName = rs.getString("chargeName");
             final Boolean penalty = rs.getBoolean("penalty");
@@ -81,6 +82,7 @@ public class ProductToGLAccountMappingReadPlatformServiceImpl implements Product
             loanProductToGLAccountMap.put("chargeName", chargeName);
             loanProductToGLAccountMap.put("penalty", penalty);
             loanProductToGLAccountMap.put("glAccountName", glAccountName);
+            loanProductToGLAccountMap.put("currencyCode", currencyCode);
             loanProductToGLAccountMap.put("glCode", glCode);
             return loanProductToGLAccountMap;
         }
@@ -106,8 +108,9 @@ public class ProductToGLAccountMappingReadPlatformServiceImpl implements Product
 
                 final Long glAccountId = (Long) productToGLAccountMap.get("glAccountId");
                 final String glAccountName = (String) productToGLAccountMap.get("glAccountName");
+                final String currencyCode = (String) productToGLAccountMap.get("currencyCode");
                 final String glCode = (String) productToGLAccountMap.get("glCode");
-                final GLAccountData gLAccountData = new GLAccountData(glAccountId, glAccountName, glCode);
+                final GLAccountData gLAccountData = new GLAccountData(glAccountId, glAccountName, currencyCode, glCode);
 
                 if (glAccountForLoan.equals(CASH_ACCOUNTS_FOR_LOAN.FUND_SOURCE)) {
                     accountMappingDetails.put(LOAN_PRODUCT_ACCOUNTING_DATA_PARAMS.FUND_SOURCE.getValue(), gLAccountData);
@@ -138,8 +141,9 @@ public class ProductToGLAccountMappingReadPlatformServiceImpl implements Product
 
                 final Long glAccountId = (Long) productToGLAccountMap.get("glAccountId");
                 final String glAccountName = (String) productToGLAccountMap.get("glAccountName");
+                final String currencyCode = (String) productToGLAccountMap.get("currencyCode");
                 final String glCode = (String) productToGLAccountMap.get("glCode");
-                final GLAccountData gLAccountData = new GLAccountData(glAccountId, glAccountName, glCode);
+                final GLAccountData gLAccountData = new GLAccountData(glAccountId, glAccountName, currencyCode, glCode);
 
                 if (glAccountForLoan.equals(ACCRUAL_ACCOUNTS_FOR_LOAN.FUND_SOURCE)) {
                     accountMappingDetails.put(LOAN_PRODUCT_ACCOUNTING_DATA_PARAMS.FUND_SOURCE.getValue(), gLAccountData);
@@ -198,8 +202,9 @@ public class ProductToGLAccountMappingReadPlatformServiceImpl implements Product
 
                 final Long glAccountId = (Long) productToGLAccountMap.get("glAccountId");
                 final String glAccountName = (String) productToGLAccountMap.get("glAccountName");
+                final String currencyCode = (String) productToGLAccountMap.get("currencyCode");
                 final String glCode = (String) productToGLAccountMap.get("glCode");
-                final GLAccountData gLAccountData = new GLAccountData(glAccountId, glAccountName, glCode);
+                final GLAccountData gLAccountData = new GLAccountData(glAccountId, glAccountName, currencyCode, glCode);
 
                 if (glAccountForSavings.equals(CASH_ACCOUNTS_FOR_SAVINGS.SAVINGS_REFERENCE)) {
                     accountMappingDetails.put(SAVINGS_PRODUCT_ACCOUNTING_DATA_PARAMS.SAVINGS_REFERENCE.getValue(), gLAccountData);
@@ -258,8 +263,9 @@ public class ProductToGLAccountMappingReadPlatformServiceImpl implements Product
             final CodeValueData codeValueData = CodeValueData.instance(paymentTypeId, paymentTypeValue);
             final Long glAccountId = (Long) productToGLAccountMap.get("glAccountId");
             final String glAccountName = (String) productToGLAccountMap.get("glAccountName");
+            final String currencyCode = (String) productToGLAccountMap.get("currencyCode");
             final String glCode = (String) productToGLAccountMap.get("glCode");
-            final GLAccountData gLAccountData = new GLAccountData(glAccountId, glAccountName, glCode);
+            final GLAccountData gLAccountData = new GLAccountData(glAccountId, glAccountName, currencyCode, glCode);
 
             final PaymentTypeToGLAccountMapper paymentTypeToGLAccountMapper = new PaymentTypeToGLAccountMapper(codeValueData, gLAccountData);
             paymentTypeToGLAccountMappers.add(paymentTypeToGLAccountMapper);
@@ -306,8 +312,9 @@ public class ProductToGLAccountMappingReadPlatformServiceImpl implements Product
             }
             final Long glAccountId = (Long) chargeToIncomeAccountMap.get("glAccountId");
             final String glAccountName = (String) chargeToIncomeAccountMap.get("glAccountName");
+            final String currencyCode = (String) chargeToIncomeAccountMap.get("currencyCode");
             final String glCode = (String) chargeToIncomeAccountMap.get("glCode");
-            final GLAccountData gLAccountData = new GLAccountData(glAccountId, glAccountName, glCode);
+            final GLAccountData gLAccountData = new GLAccountData(glAccountId, glAccountName, currencyCode, glCode);
             final Long chargeId = (Long) chargeToIncomeAccountMap.get("chargeId");
             final String chargeName = (String) chargeToIncomeAccountMap.get("chargeName");
             final Boolean penalty1 = (Boolean) chargeToIncomeAccountMap.get("penalty");

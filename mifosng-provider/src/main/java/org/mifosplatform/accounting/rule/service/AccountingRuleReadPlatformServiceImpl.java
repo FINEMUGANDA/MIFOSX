@@ -61,8 +61,8 @@ public class AccountingRuleReadPlatformServiceImpl implements AccountingRuleRead
             sqlBuilder
                     .append(" rule.id as id,rule.name as name, rule.office_id as officeId,office.name as officeName,")
                     .append(" rule.description as description, rule.system_defined as systemDefined, rule.allow_multiple_debits as allowMultipleDebitEntries, rule.allow_multiple_credits as allowMultipleCreditEntries, ")
-                    .append("debitAccount.id AS debitAccountId, debitAccount.name as debitAccountName, debitAccount.gl_code as debitAccountGLCode, ")
-                    .append("creditAccount.id AS creditAccountId, creditAccount.name as creditAccountName, creditAccount.gl_code as creditAccountGLCode")
+                    .append("debitAccount.id AS debitAccountId, debitAccount.name as debitAccountName, debitAccount.currency_code as debitAccountCurrencyCode, debitAccount.gl_code as debitAccountGLCode, ")
+                    .append("creditAccount.id AS creditAccountId, creditAccount.name as creditAccountName, creditAccount.currency_code as creditAccountCurrencyCode, creditAccount.gl_code as creditAccountGLCode")
                     .append(" from m_office AS office, acc_accounting_rule AS rule ")
                     .append(" LEFT JOIN acc_gl_account AS creditAccount ON rule.credit_account_id = creditAccount.id ")
                     .append(" LEFT JOIN acc_gl_account AS debitAccount ON rule.debit_account_id = debitAccount.id ")
@@ -93,7 +93,9 @@ public class AccountingRuleReadPlatformServiceImpl implements AccountingRuleRead
                     final boolean allowMultipleCreditEntries = rs.getBoolean("allowMultipleCreditEntries");
                     final String debitAccountName = rs.getString("debitAccountName");
                     final String creditAccountName = rs.getString("creditAccountName");
+                    final String debitAccountCurrencyCode = rs.getString("debitAccountCurrencyCode");
                     final String debitAccountGLCode = rs.getString("debitAccountGLCode");
+                    final String creditAccountCurrencyCode = rs.getString("creditAccountCurrencyCode");
                     final String creditAccountGLCode = rs.getString("creditAccountGLCode");
 
                     final List<AccountingTagRuleData> creditTags;
@@ -109,7 +111,7 @@ public class AccountingRuleReadPlatformServiceImpl implements AccountingRuleRead
                     } else {
                         creditTags = null;
                         final GLAccountDataForLookup creditAccount = new GLAccountDataForLookup(accountToCreditId, creditAccountName,
-                                creditAccountGLCode);
+                                creditAccountCurrencyCode, creditAccountGLCode);
                         creditAccounts = new ArrayList<>(Arrays.asList(creditAccount));
                     }
                     if (accountToDebitId == null) {
@@ -120,7 +122,7 @@ public class AccountingRuleReadPlatformServiceImpl implements AccountingRuleRead
                     } else {
                         debitTags = null;
                         final GLAccountDataForLookup debitAccount = new GLAccountDataForLookup(accountToDebitId, debitAccountName,
-                                debitAccountGLCode);
+                                debitAccountCurrencyCode, debitAccountGLCode);
                         debitAccounts = new ArrayList<>(Arrays.asList(debitAccount));
                     }
                     accountingRuleData = new AccountingRuleData(id, officeId, officeName, name, description, systemDefined,

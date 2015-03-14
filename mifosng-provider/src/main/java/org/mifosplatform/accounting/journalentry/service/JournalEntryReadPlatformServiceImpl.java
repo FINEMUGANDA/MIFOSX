@@ -70,10 +70,10 @@ public class JournalEntryReadPlatformServiceImpl implements JournalEntryReadPlat
             StringBuilder sb = new StringBuilder();
             sb.append(" journalEntry.id as id, glAccount.classification_enum as classification ,")
                     .append("journalEntry.transaction_id,")
-                    .append(" glAccount.name as glAccountName, glAccount.gl_code as glAccountCode,glAccount.id as glAccountId, ")
+                    .append(" glAccount.name as glAccountName, glAccount.currency_code as glAccountCurrencyCode, glAccount.gl_code as glAccountCode, glAccount.id as glAccountId, ")
                     .append(" journalEntry.office_id as officeId, office.name as officeName, journalEntry.ref_num as referenceNumber, ")
                     .append(" journalEntry.manual_entry as manualEntry,journalEntry.entry_date as transactionDate, ")
-                    .append(" journalEntry.type_enum as entryType,journalEntry.amount as amount, journalEntry.transaction_id as transactionId,")
+                    .append(" journalEntry.type_enum as entryType,journalEntry.amount as amount,journalEntry.exchange_rate as exchangeRate, journalEntry.transaction_id as transactionId,")
                     .append(" journalEntry.entity_type_enum as entityType, journalEntry.entity_id as entityId, creatingUser.id as createdByUserId, ")
                     .append(" creatingUser.username as createdByUserName, journalEntry.description as comments, ")
                     .append(" journalEntry.created_date as createdDate, journalEntry.reversed as reversed, ")
@@ -122,6 +122,7 @@ public class JournalEntryReadPlatformServiceImpl implements JournalEntryReadPlat
             final LocalDate transactionDate = JdbcSupport.getLocalDate(rs, "transactionDate");
             final Boolean manualEntry = rs.getBoolean("manualEntry");
             final BigDecimal amount = rs.getBigDecimal("amount");
+            final BigDecimal exchangeRate = rs.getBigDecimal("exchangeRate");
             final int entryTypeId = JdbcSupport.getInteger(rs, "entryType");
             final EnumOptionData entryType = AccountingEnumerations.journalEntryType(entryTypeId);
             final String transactionId = rs.getString("transactionId");
@@ -201,7 +202,7 @@ public class JournalEntryReadPlatformServiceImpl implements JournalEntryReadPlat
                 transactionDetailData = new TransactionDetailData(transaction, paymentDetailData, noteData, transactionTypeEnumData);
             }
             return new JournalEntryData(id, officeId, officeName, glAccountName, glAccountId, glCode, accountType, transactionDate,
-                    entryType, amount, transactionId, manualEntry, entityType, entityId, createdByUserId, createdDate, createdByUserName,
+                    entryType, amount, exchangeRate, transactionId, manualEntry, entityType, entityId, createdByUserId, createdDate, createdByUserName,
                     comments, reversed, referenceNumber, officeRunningBalance, organizationRunningBalance, runningBalanceComputed,
                     transactionDetailData, currency);
         }

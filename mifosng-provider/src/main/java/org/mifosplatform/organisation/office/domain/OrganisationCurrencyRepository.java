@@ -12,4 +12,6 @@ public interface OrganisationCurrencyRepository extends JpaRepository<Organisati
         JpaSpecificationExecutor<OrganisationCurrency> {
 
     OrganisationCurrency findOneByCode(String currencyCode);
+
+    OrganisationCurrency findFirstByBase(Boolean selected);
 }

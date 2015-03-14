@@ -50,6 +50,7 @@ public final class GLAccountCommandFromApiJsonDeserializer extends AbstractFromA
         final Long id = this.fromApiJsonHelper.extractLongNamed(GLAccountJsonInputParams.ID.getValue(), element);
         final String name = this.fromApiJsonHelper.extractStringNamed(GLAccountJsonInputParams.NAME.getValue(), element);
         final Long parentId = this.fromApiJsonHelper.extractLongNamed(GLAccountJsonInputParams.PARENT_ID.getValue(), element);
+        final String currencyCode = this.fromApiJsonHelper.extractStringNamed(GLAccountJsonInputParams.CURRENCY_CODE.getValue(), element);
         final String glCode = this.fromApiJsonHelper.extractStringNamed(GLAccountJsonInputParams.GL_CODE.getValue(), element);
         final Boolean disabled = this.fromApiJsonHelper.extractBooleanNamed(GLAccountJsonInputParams.DISABLED.getValue(), element);
         final Boolean manualEntriesAllowed = this.fromApiJsonHelper.extractBooleanNamed(
@@ -59,6 +60,6 @@ public final class GLAccountCommandFromApiJsonDeserializer extends AbstractFromA
         final String description = this.fromApiJsonHelper.extractStringNamed(GLAccountJsonInputParams.DESCRIPTION.getValue(), element);
         final Long tagId = this.fromApiJsonHelper.extractLongNamed(GLAccountJsonInputParams.TAGID.getValue(), element);
 
-        return new GLAccountCommand(id, name, parentId, glCode, disabled, manualEntriesAllowed, type, usage, description, tagId);
+        return new GLAccountCommand(id, name, parentId, currencyCode, glCode, disabled, manualEntriesAllowed, type, usage, description, tagId);
     }
 }

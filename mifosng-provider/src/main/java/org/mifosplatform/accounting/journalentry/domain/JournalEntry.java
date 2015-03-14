@@ -29,6 +29,8 @@ import org.mifosplatform.useradministration.domain.AppUser;
 @Entity
 @Table(name = "acc_gl_journal_entry")
 public class JournalEntry extends AbstractAuditableCustom<AppUser, Long> {
+    public static final int EXCHANGE_RATE_PRECISION = 19;
+    public static final int EXCHANGE_RATE_SCALE = 10;
 
     @ManyToOne
     @JoinColumn(name = "office_id", nullable = false)
@@ -76,6 +78,9 @@ public class JournalEntry extends AbstractAuditableCustom<AppUser, Long> {
     @Column(name = "amount", scale = 6, precision = 19, nullable = false)
     private BigDecimal amount;
 
+    @Column(name = "exchange_rate", scale = EXCHANGE_RATE_SCALE, precision = EXCHANGE_RATE_PRECISION, nullable = false)
+    private BigDecimal exchangeRate;
+
     @Column(name = "description", length = 500)
     private String description;
 
@@ -89,12 +94,22 @@ public class JournalEntry extends AbstractAuditableCustom<AppUser, Long> {
     private String referenceNumber;
 
     public static JournalEntry createNew(final Office office, final PaymentDetail paymentDetail, final GLAccount glAccount,
+                                         final String currencyCode, final String transactionId, final boolean manualEntry, final Date transactionDate,
+                                         final JournalEntryType journalEntryType, final BigDecimal amount, final String description, final Integer entityType,
+                                         final Long entityId, final String referenceNumber, final LoanTransaction loanTransaction,
+                                         final SavingsAccountTransaction savingsTransaction) {
+        return createNew(office, paymentDetail, glAccount, currencyCode, transactionId, manualEntry, transactionDate,
+                journalEntryType, amount, BigDecimal.ONE, description, entityType, entityId, referenceNumber, loanTransaction,
+                savingsTransaction);
+    }
+
+    public static JournalEntry createNew(final Office office, final PaymentDetail paymentDetail, final GLAccount glAccount,
             final String currencyCode, final String transactionId, final boolean manualEntry, final Date transactionDate,
-            final JournalEntryType journalEntryType, final BigDecimal amount, final String description, final Integer entityType,
+            final JournalEntryType journalEntryType, final BigDecimal amount, final BigDecimal exchangeRate, final String description, final Integer entityType,
             final Long entityId, final String referenceNumber, final LoanTransaction loanTransaction,
             final SavingsAccountTransaction savingsTransaction) {
         return new JournalEntry(office, paymentDetail, glAccount, currencyCode, transactionId, manualEntry, transactionDate,
-                journalEntryType.getValue(), amount, description, entityType, entityId, referenceNumber, loanTransaction,
+                journalEntryType.getValue(), amount, exchangeRate, description, entityType, entityId, referenceNumber, loanTransaction,
                 savingsTransaction);
     }
 
@@ -103,7 +118,7 @@ public class JournalEntry extends AbstractAuditableCustom<AppUser, Long> {
     }
 
     public JournalEntry(final Office office, final PaymentDetail paymentDetail, final GLAccount glAccount, final String currencyCode,
-            final String transactionId, final boolean manualEntry, final Date transactionDate, final Integer type, final BigDecimal amount,
+            final String transactionId, final boolean manualEntry, final Date transactionDate, final Integer type, final BigDecimal amount, final BigDecimal exchangeRate,
             final String description, final Integer entityType, final Long entityId, final String referenceNumber,
             final LoanTransaction loanTransaction, final SavingsAccountTransaction savingsTransaction) {
         this.office = office;
@@ -115,6 +130,7 @@ public class JournalEntry extends AbstractAuditableCustom<AppUser, Long> {
         this.transactionDate = transactionDate;
         this.type = type;
         this.amount = amount;
+        this.exchangeRate = exchangeRate;
         this.description = StringUtils.defaultIfEmpty(description, null);
         this.entityType = entityType;
         this.entityId = entityId;
@@ -147,6 +163,10 @@ public class JournalEntry extends AbstractAuditableCustom<AppUser, Long> {
 
     public BigDecimal getAmount() {
         return this.amount;
+    }
+
+    public BigDecimal getExchangeRate() {
+        return exchangeRate;
     }
 
     public void setReversalJournalEntry(final JournalEntry reversalJournalEntry) {
