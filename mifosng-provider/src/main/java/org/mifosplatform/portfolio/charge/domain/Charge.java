@@ -483,6 +483,9 @@ public class Charge extends AbstractPersistable<Long> {
     public boolean isOverdueInstallment() {
         return ChargeTimeType.fromInt(this.chargeTime).isOverdueInstallment();
     }
+    public boolean isOverdueMaturityDate() {
+        return ChargeTimeType.fromInt(this.chargeTime).isOverdueMaturityDate();
+    }
 
     public MonthDay getFeeOnMonthDay() {
         MonthDay feeOnMonthDay = null;

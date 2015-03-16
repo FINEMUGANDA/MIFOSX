@@ -9,7 +9,6 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -124,7 +123,6 @@ import org.mifosplatform.portfolio.loanaccount.domain.LoanTransaction;
 import org.mifosplatform.portfolio.loanaccount.domain.LoanTransactionRepository;
 import org.mifosplatform.portfolio.loanaccount.domain.LoanTransactionType;
 import org.mifosplatform.portfolio.loanaccount.exception.InvalidPaidInAdvanceAmountException;
-import org.mifosplatform.portfolio.loanaccount.exception.InvalidRefundDateException;
 import org.mifosplatform.portfolio.loanaccount.exception.LoanDisbursalException;
 import org.mifosplatform.portfolio.loanaccount.exception.LoanOfficerAssignmentException;
 import org.mifosplatform.portfolio.loanaccount.exception.LoanOfficerUnassignmentException;
@@ -2345,7 +2343,42 @@ public class LoanWritePlatformServiceJpaRepositoryImpl implements LoanWritePlatf
             final JsonCommand command, Loan loan, final List<Long> existingTransactionIds, final List<Long> existingReversedTransactionIds) {
         boolean runInterestRecalculation = false;
         final Charge chargeDefinition = this.chargeRepository.findOneWithNotFoundDetection(loanChargeId);
+        Map<Integer, LocalDate> scheduleDates = new HashMap<>();;
+        if (chargeDefinition.isOverdueInstallment()) {
+            scheduleDates = getScheduleDatesForOverdueInstallment(loanId, chargeDefinition, command, periodNumber);
+        } else if (chargeDefinition.isOverdueMaturityDate()) {
+            scheduleDates = getScheduleDatesForOverdueMaturityDate(loanId, chargeDefinition, command, periodNumber);
+        }
 
+        LoanRepaymentScheduleInstallment installment = null;
+        if (!scheduleDates.isEmpty()) {
+            if (loan == null) {
+                loan = this.loanAssembler.assembleFrom(loanId);
+                checkClientOrGroupActive(loan);
+                existingTransactionIds.addAll(loan.findExistingTransactionIds());
+                existingReversedTransactionIds.addAll(loan.findExistingReversedTransactionIds());
+            }
+            installment = loan.fetchRepaymentScheduleInstallment(periodNumber);
+        }
+        if (loan != null) {
+
+            for (Map.Entry<Integer, LocalDate> entry : scheduleDates.entrySet()) {
+
+                final LoanCharge loanCharge = LoanCharge.createNewFromJson(loan, chargeDefinition, command, entry.getValue());
+
+                LoanOverdueInstallmentCharge overdueInstallmentCharge = new LoanOverdueInstallmentCharge(loanCharge, installment,
+                        entry.getKey());
+                loanCharge.updateOverdueInstallmentCharge(overdueInstallmentCharge);
+
+                boolean isAppliedOnBackDate = addCharge(loan, chargeDefinition, loanCharge);
+                runInterestRecalculation = runInterestRecalculation || isAppliedOnBackDate;
+            }
+        }
+
+        return new LoanOverdueDTO(loan, runInterestRecalculation);
+    }
+
+    public Map<Integer, LocalDate> getScheduleDatesForOverdueInstallment(final Long loanId, final Charge chargeDefinition, final JsonCommand command, final Integer periodNumber) {
         Collection<Integer> frequencyNumbers = loanChargeReadPlatformService.retrieveOverdueInstallmentChargeFrequencyNumber(loanId,
                 chargeDefinition.getId(), periodNumber);
 
@@ -2377,41 +2410,49 @@ public class LoanWritePlatformServiceJpaRepositoryImpl implements LoanWritePlatf
             scheduleDates.remove(frequency);
         }
 
-        LoanRepaymentScheduleInstallment installment = null;
-        if (!scheduleDates.isEmpty()) {
-            if (loan == null) {
-                loan = this.loanAssembler.assembleFrom(loanId);
-                checkClientOrGroupActive(loan);
-                existingTransactionIds.addAll(loan.findExistingTransactionIds());
-                existingReversedTransactionIds.addAll(loan.findExistingReversedTransactionIds());
-            }
-            installment = loan.fetchRepaymentScheduleInstallment(periodNumber);
+        return scheduleDates;
+    }
+
+    public Map<Integer, LocalDate> getScheduleDatesForOverdueMaturityDate(final Long loanId, final Charge chargeDefinition, final JsonCommand command, final Integer periodNumber) {
+        Collection<Integer> frequencyNumbers = loanChargeReadPlatformService.retrieveOverdueInstallmentChargeFrequencyNumber(loanId,
+                chargeDefinition.getId(), periodNumber);
+
+        Integer feeFrequency = chargeDefinition.feeFrequency();
+        final ScheduledDateGenerator scheduledDateGenerator = new DefaultScheduledDateGenerator();
+        Map<Integer, LocalDate> scheduleDates = new HashMap<>();
+        final Long penaltyWaitPeriodValue = this.configurationDomainService.retrievePenaltyWaitPeriod();
+        final Long penaltyPostingWaitPeriodValue = this.configurationDomainService.retrieveGraceOnPenaltyPostingPeriod();
+        final LocalDate dueDate = command.localDateValueOfParameterNamed("dueDate");
+        Long diff = penaltyWaitPeriodValue + 1 - penaltyPostingWaitPeriodValue;
+        if (diff < 0) {
+            diff = 0L;
         }
-        if (loan != null) {
-
-            for (Map.Entry<Integer, LocalDate> entry : scheduleDates.entrySet()) {
-
-                final LoanCharge loanCharge = LoanCharge.createNewFromJson(loan, chargeDefinition, command, entry.getValue());
-
-                LoanOverdueInstallmentCharge overdueInstallmentCharge = new LoanOverdueInstallmentCharge(loanCharge, installment,
-                        entry.getKey());
-                loanCharge.updateOverdueInstallmentCharge(overdueInstallmentCharge);
-
-                boolean isAppliedOnBackDate = addCharge(loan, chargeDefinition, loanCharge);
-                runInterestRecalculation = runInterestRecalculation || isAppliedOnBackDate;
+        LocalDate startDate = dueDate.plusDays(penaltyWaitPeriodValue.intValue() + 1);
+        Integer frequencyNumber = 1;
+        if (feeFrequency == null) {
+            scheduleDates.put(frequencyNumber++, startDate.minusDays(diff.intValue()));
+        } else {
+            startDate = scheduledDateGenerator.getRepaymentPeriodDate(PeriodFrequencyType.fromInt(feeFrequency), chargeDefinition.feeInterval(), dueDate, null, null);
+            while (new LocalDate().isAfter(startDate)) {
+                scheduleDates.put(frequencyNumber++, startDate);
+                LocalDate scheduleDate = scheduledDateGenerator.getRepaymentPeriodDate(PeriodFrequencyType.fromInt(feeFrequency), chargeDefinition.feeInterval(), startDate, null, null);
+                startDate = scheduleDate;
             }
         }
 
-        return new LoanOverdueDTO(loan, runInterestRecalculation);
+        for (Integer frequency : frequencyNumbers) {
+            scheduleDates.remove(frequency);
+        }
+
+        return scheduleDates;
     }
 
     @Override
     @CronTarget(jobName = JobName.APPLY_CHARGE_TO_OVERDUE_MATURITY_DATE_LOAN)
     public void applyChargeForOverdueMaturityDateLoans() throws JobExecutionException {
 
-        final Long penaltyWaitPeriodValue = this.configurationDomainService.retrievePenaltyWaitPeriod();
         final Collection<OverdueLoanScheduleData> overdueLoanScheduledData = this.loanReadPlatformService
-                .retrieveAllLoansWithOverdueMaturityDate(penaltyWaitPeriodValue);
+                .retrieveAllLoansWithOverdueMaturityDate();
 
         if (!overdueLoanScheduledData.isEmpty()) {
             final StringBuilder sb = new StringBuilder();
@@ -2425,10 +2466,9 @@ public class LoanWritePlatformServiceJpaRepositoryImpl implements LoanWritePlatf
                     overdueScheduleData.put(overdueInstallment.getLoanId(), loanData);
                 }
             }
-//
+
             for (final Long loanId : overdueScheduleData.keySet()) {
                 try {
-//                    applyOverdueMaturityDateChargesForLoan(loanId, overdueScheduleData.get(loanId));
                     applyOverdueChargesForLoan(loanId, overdueScheduleData.get(loanId));
 
                 } catch (final PlatformApiDataValidationException e) {
