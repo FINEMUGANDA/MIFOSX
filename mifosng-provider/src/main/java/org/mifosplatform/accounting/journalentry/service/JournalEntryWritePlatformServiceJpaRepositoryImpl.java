@@ -5,9 +5,6 @@
  */
 package org.mifosplatform.accounting.journalentry.service;
 
-import java.math.BigDecimal;
-import java.util.*;
-
 import org.apache.commons.lang.StringUtils;
 import org.joda.time.LocalDate;
 import org.mifosplatform.accounting.closure.domain.GLClosure;
@@ -39,6 +36,7 @@ import org.mifosplatform.infrastructure.core.data.CommandProcessingResultBuilder
 import org.mifosplatform.infrastructure.core.data.DataValidatorBuilder;
 import org.mifosplatform.infrastructure.core.exception.PlatformApiDataValidationException;
 import org.mifosplatform.infrastructure.core.exception.PlatformDataIntegrityException;
+import org.mifosplatform.infrastructure.core.service.RoutingDataSource;
 import org.mifosplatform.infrastructure.security.service.PlatformSecurityContext;
 import org.mifosplatform.organisation.office.domain.*;
 import org.mifosplatform.organisation.office.exception.OfficeNotFoundException;
@@ -48,9 +46,14 @@ import org.mifosplatform.useradministration.domain.AppUser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
+import java.util.*;
 
 @Service
 public class JournalEntryWritePlatformServiceJpaRepositoryImpl implements JournalEntryWritePlatformService {
@@ -71,6 +74,7 @@ public class JournalEntryWritePlatformServiceJpaRepositoryImpl implements Journa
     private final OrganisationCurrencyRepositoryWrapper organisationCurrencyRepository;
     private final PlatformSecurityContext context;
     private final PaymentDetailWritePlatformService paymentDetailWritePlatformService;
+    private final JdbcTemplate jdbcTemplate;
 
     @Autowired
     public JournalEntryWritePlatformServiceJpaRepositoryImpl(final GLClosureRepository glClosureRepository,
@@ -82,7 +86,7 @@ public class JournalEntryWritePlatformServiceJpaRepositoryImpl implements Journa
             final GLAccountReadPlatformService glAccountReadPlatformService,
             final OrganisationCurrencyRepository organisationCurrencyRepo,
             final OrganisationCurrencyRepositoryWrapper organisationCurrencyRepository, final PlatformSecurityContext context,
-            final PaymentDetailWritePlatformService paymentDetailWritePlatformService) {
+            final PaymentDetailWritePlatformService paymentDetailWritePlatformService, final RoutingDataSource dataSource) {
         this.glClosureRepository = glClosureRepository;
         this.officeRepository = officeRepository;
         this.glJournalEntryRepository = glJournalEntryRepository;
@@ -97,6 +101,7 @@ public class JournalEntryWritePlatformServiceJpaRepositoryImpl implements Journa
         this.organisationCurrencyRepository = organisationCurrencyRepository;
         this.context = context;
         this.paymentDetailWritePlatformService = paymentDetailWritePlatformService;
+        this.jdbcTemplate = new JdbcTemplate(dataSource);
     }
 
     @Transactional
@@ -179,6 +184,15 @@ public class JournalEntryWritePlatformServiceJpaRepositoryImpl implements Journa
         }
     }
 
+    private BigDecimal getCurrentExchangeRate(String base, String target) {
+        try {
+            BigDecimal result = jdbcTemplate.queryForObject("SELECT rate FROM exchange_rate WHERE base_code=? and target_code=? ORDER BY rate_year DESC, rate_month DESC LIMIT 1", new Object[]{base, target}, BigDecimal.class);
+            return result;
+        } catch (DataAccessException e) {
+            throw new JournalEntryInvalidException(GL_JOURNAL_ENTRY_INVALID_REASON.EXCHANGE_RATE_MISSING, null, null, null);
+        }
+    }
+
     private void validateDebitOrCreditArrayForExistingGLAccount(final GLAccount glaccount,
             final SingleDebitOrCreditEntryCommand[] creditOrDebits) {
         /**
@@ -243,32 +257,30 @@ public class JournalEntryWritePlatformServiceJpaRepositoryImpl implements Journa
         boolean creditIsHome = false;
         boolean debitIsHome = false;
 
-        GLAccount glAccount = this.glAccountRepository.findOne(credits[0].getGlAccountId());
+        GLAccount creditGlAccount = this.glAccountRepository.findOne(credits[0].getGlAccountId());
 
-        if(baseCurrency.getCode().equals(glAccount.getCurrencyCode())) {
+        if(baseCurrency.getCode().equals(creditGlAccount.getCurrencyCode())) {
             creditIsHome = true;
             creditExchangeRate = BigDecimal.ONE;
         }
 
         for (final SingleDebitOrCreditEntryCommand creditEntryCommand : credits) {
             if (creditEntryCommand.getAmount() == null || creditEntryCommand.getGlAccountId() == null) {
-                //creditExchangeRate = BigDecimal.ONE;
                 break;
             }
 
             creditsSum = creditsSum.add(creditEntryCommand.getAmount());
         }
 
-        glAccount = this.glAccountRepository.findOne(debits[0].getGlAccountId());
+        GLAccount debitGlAccount = this.glAccountRepository.findOne(debits[0].getGlAccountId());
 
-        if(baseCurrency.getCode().equals(glAccount.getCurrencyCode())) {
+        if(baseCurrency.getCode().equals(debitGlAccount.getCurrencyCode())) {
             debitIsHome = true;
             debitExchangeRate = BigDecimal.ONE;
         }
 
         for (final SingleDebitOrCreditEntryCommand debitEntryCommand : debits) {
             if (debitEntryCommand.getAmount() == null || debitEntryCommand.getGlAccountId() == null) {
-                //debitExchangeRate = BigDecimal.ONE;
                 break;
             }
 
@@ -276,12 +288,17 @@ public class JournalEntryWritePlatformServiceJpaRepositoryImpl implements Journa
         }
 
         if(creditIsHome) {
-            debitExchangeRate = creditsSum.divide(debitsSum, JournalEntry.EXCHANGE_RATE_SCALE, BigDecimal.ROUND_HALF_EVEN);
+            //debitExchangeRate = creditsSum.divide(debitsSum, JournalEntry.EXCHANGE_RATE_SCALE, BigDecimal.ROUND_HALF_EVEN);
+            debitExchangeRate = getCurrentExchangeRate(creditGlAccount.getCurrencyCode(), debitGlAccount.getCurrencyCode());
         } else if(debitIsHome) {
-            creditExchangeRate = debitsSum.divide(creditsSum, JournalEntry.EXCHANGE_RATE_SCALE, BigDecimal.ROUND_HALF_EVEN);
+            //creditExchangeRate = debitsSum.divide(creditsSum, JournalEntry.EXCHANGE_RATE_SCALE, BigDecimal.ROUND_HALF_EVEN);
+            creditExchangeRate = getCurrentExchangeRate(debitGlAccount.getCurrencyCode(), creditGlAccount.getCurrencyCode());
         } else {
-            creditExchangeRate = debitsSum.divide(creditsSum, JournalEntry.EXCHANGE_RATE_SCALE, BigDecimal.ROUND_HALF_EVEN);
-            debitExchangeRate = creditsSum.divide(debitsSum, JournalEntry.EXCHANGE_RATE_SCALE, BigDecimal.ROUND_HALF_EVEN);
+            //creditExchangeRate = debitsSum.divide(creditsSum, JournalEntry.EXCHANGE_RATE_SCALE, BigDecimal.ROUND_HALF_EVEN);
+            //debitExchangeRate = creditsSum.divide(debitsSum, JournalEntry.EXCHANGE_RATE_SCALE, BigDecimal.ROUND_HALF_EVEN);
+            OrganisationCurrency currency = organisationCurrencyRepo.findFirstByBase(true);
+            creditExchangeRate = getCurrentExchangeRate(currency.getCode(), creditGlAccount.getCurrencyCode());
+            debitExchangeRate = getCurrentExchangeRate(currency.getCode(), debitGlAccount.getCurrencyCode());
         }
 
         return new BigDecimal[]{creditExchangeRate, debitExchangeRate};
@@ -299,8 +316,9 @@ public class JournalEntryWritePlatformServiceJpaRepositoryImpl implements Journa
         Map<Long, GLAccount> accounts = new HashMap<>();
 
         for (final SingleDebitOrCreditEntryCommand creditEntryCommand : credits) {
-            if (creditEntryCommand.getAmount() == null || creditEntryCommand.getGlAccountId() == null) { throw new JournalEntryInvalidException(
-                    GL_JOURNAL_ENTRY_INVALID_REASON.DEBIT_CREDIT_ACCOUNT_OR_AMOUNT_EMPTY, null, null, null); }
+            if (creditEntryCommand.getAmount() == null || creditEntryCommand.getGlAccountId() == null) {
+                throw new JournalEntryInvalidException(GL_JOURNAL_ENTRY_INVALID_REASON.DEBIT_CREDIT_ACCOUNT_OR_AMOUNT_EMPTY, null, null, null);
+            }
             creditsSum = creditsSum.add(creditEntryCommand.getAmount());
 
             if(!accounts.containsKey(creditEntryCommand.getGlAccountId())) {
@@ -320,8 +338,9 @@ public class JournalEntryWritePlatformServiceJpaRepositoryImpl implements Journa
             }
         }
         for (final SingleDebitOrCreditEntryCommand debitEntryCommand : debits) {
-            if (debitEntryCommand.getAmount() == null || debitEntryCommand.getGlAccountId() == null) { throw new JournalEntryInvalidException(
-                    GL_JOURNAL_ENTRY_INVALID_REASON.DEBIT_CREDIT_ACCOUNT_OR_AMOUNT_EMPTY, null, null, null); }
+            if (debitEntryCommand.getAmount() == null || debitEntryCommand.getGlAccountId() == null) {
+                throw new JournalEntryInvalidException(GL_JOURNAL_ENTRY_INVALID_REASON.DEBIT_CREDIT_ACCOUNT_OR_AMOUNT_EMPTY, null, null, null);
+            }
             debitsSum = debitsSum.add(debitEntryCommand.getAmount());
 
             if(!accounts.containsKey(debitEntryCommand.getGlAccountId())) {
@@ -349,21 +368,29 @@ public class JournalEntryWritePlatformServiceJpaRepositoryImpl implements Journa
         if(currencies.size()>1) {
             OrganisationCurrency baseCurrency = organisationCurrencyRepo.findFirstByBase(true);
 
-            if(baseCurrency==null || (!currenciesCredit.contains(baseCurrency.getCode()) && !currenciesDebit.contains(baseCurrency.getCode())) ) {
+            if(baseCurrency==null ) {
                 throw new JournalEntryInvalidException(GL_JOURNAL_ENTRY_INVALID_REASON.HOME_CURRENCY_MISSING, null, null, null);
+            } else {
+                for(String currency : currencies) {
+                    if(!baseCurrency.getCode().equals(currency)) {
+                        BigDecimal rate = getCurrentExchangeRate(baseCurrency.getCode(), currency);
+                        if(rate==null || BigDecimal.ZERO.equals(rate)) {
+                            throw new JournalEntryInvalidException(GL_JOURNAL_ENTRY_INVALID_REASON.EXCHANGE_RATE_MISSING, null, null, null);
+                        }
+                    }
+                }
             }
+            /**
+             if(baseCurrency==null || (!currenciesCredit.contains(baseCurrency.getCode()) && !currenciesDebit.contains(baseCurrency.getCode())) ) {
+                 throw new JournalEntryInvalidException(GL_JOURNAL_ENTRY_INVALID_REASON.HOME_CURRENCY_MISSING, null, null, null);
+             }
+             */
         }
-
-        BigDecimal exchangeRate = debitsSum.divide(creditsSum, JournalEntry.EXCHANGE_RATE_SCALE, BigDecimal.ROUND_HALF_EVEN);
-
-        logger.info("################### ACCOUNTING (EXCHANGE RATE) - rate: {} - compare to: {} - #{}", exchangeRate, exchangeRate.compareTo(BigDecimal.ONE), currencies.size());
 
         if (currencies.size()==1) {
             if (creditsSum.compareTo(debitsSum) != 0) {
                 throw new JournalEntryInvalidException(GL_JOURNAL_ENTRY_INVALID_REASON.DEBIT_CREDIT_SUM_MISMATCH, null, null, null);
             }
-        } else {
-            // TODO: implement validation for automatic exchange rates
         }
     }
 
