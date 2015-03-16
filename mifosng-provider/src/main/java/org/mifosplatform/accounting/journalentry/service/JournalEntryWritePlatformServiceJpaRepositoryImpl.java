@@ -288,11 +288,11 @@ public class JournalEntryWritePlatformServiceJpaRepositoryImpl implements Journa
         }
 
         if(creditIsHome) {
-            //debitExchangeRate = creditsSum.divide(debitsSum, JournalEntry.EXCHANGE_RATE_SCALE, BigDecimal.ROUND_HALF_EVEN);
-            debitExchangeRate = getCurrentExchangeRate(creditGlAccount.getCurrencyCode(), debitGlAccount.getCurrencyCode());
+            debitExchangeRate = creditsSum.divide(debitsSum, JournalEntry.EXCHANGE_RATE_SCALE, BigDecimal.ROUND_HALF_EVEN);
+            //debitExchangeRate = getCurrentExchangeRate(creditGlAccount.getCurrencyCode(), debitGlAccount.getCurrencyCode());
         } else if(debitIsHome) {
-            //creditExchangeRate = debitsSum.divide(creditsSum, JournalEntry.EXCHANGE_RATE_SCALE, BigDecimal.ROUND_HALF_EVEN);
-            creditExchangeRate = getCurrentExchangeRate(debitGlAccount.getCurrencyCode(), creditGlAccount.getCurrencyCode());
+            creditExchangeRate = debitsSum.divide(creditsSum, JournalEntry.EXCHANGE_RATE_SCALE, BigDecimal.ROUND_HALF_EVEN);
+            //creditExchangeRate = getCurrentExchangeRate(debitGlAccount.getCurrencyCode(), creditGlAccount.getCurrencyCode());
         } else {
             //creditExchangeRate = debitsSum.divide(creditsSum, JournalEntry.EXCHANGE_RATE_SCALE, BigDecimal.ROUND_HALF_EVEN);
             //debitExchangeRate = creditsSum.divide(debitsSum, JournalEntry.EXCHANGE_RATE_SCALE, BigDecimal.ROUND_HALF_EVEN);
