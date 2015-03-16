@@ -27,10 +27,11 @@ public class OrganisationCurrencyReadPlatformServiceImpl implements Organisation
 
         final Collection<CurrencyData> selectedCurrencyOptions = this.currencyReadPlatformService.retrieveAllowedCurrencies();
         final Collection<CurrencyData> currencyOptions = this.currencyReadPlatformService.retrieveAllPlatformCurrencies();
+        final String base = this.currencyReadPlatformService.retrieveBasePlatformCurrency();
 
         // remove selected currency options
         currencyOptions.removeAll(selectedCurrencyOptions);
 
-        return new ApplicationCurrencyConfigurationData(currencyOptions, selectedCurrencyOptions);
+        return new ApplicationCurrencyConfigurationData(currencyOptions, selectedCurrencyOptions, base);
     }
 }

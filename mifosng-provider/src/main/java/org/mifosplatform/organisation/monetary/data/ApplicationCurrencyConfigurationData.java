@@ -16,10 +16,12 @@ public class ApplicationCurrencyConfigurationData {
     private final Collection<CurrencyData> selectedCurrencyOptions;
     @SuppressWarnings("unused")
     private final Collection<CurrencyData> currencyOptions;
+    @SuppressWarnings("unused")
+    private final String base;
 
-    public ApplicationCurrencyConfigurationData(final Collection<CurrencyData> currencyOptions,
-            final Collection<CurrencyData> selectedCurrencyOptions) {
+    public ApplicationCurrencyConfigurationData(final Collection<CurrencyData> currencyOptions, final Collection<CurrencyData> selectedCurrencyOptions, final String base) {
         this.currencyOptions = currencyOptions;
         this.selectedCurrencyOptions = selectedCurrencyOptions;
+        this.base = base;
     }
 }

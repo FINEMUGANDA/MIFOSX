@@ -25,12 +25,15 @@ import org.mifosplatform.organisation.office.domain.OrganisationCurrencyReposito
 import org.mifosplatform.portfolio.charge.service.ChargeReadPlatformService;
 import org.mifosplatform.portfolio.loanproduct.service.LoanProductReadPlatformService;
 import org.mifosplatform.portfolio.savings.service.SavingsProductReadPlatformService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class CurrencyWritePlatformServiceJpaRepositoryImpl implements CurrencyWritePlatformService {
+    private static final Logger logger = LoggerFactory.getLogger(CurrencyWritePlatformServiceJpaRepositoryImpl.class);
 
     private final PlatformSecurityContext context;
     private final ApplicationCurrencyRepositoryWrapper applicationCurrencyRepository;
@@ -63,7 +66,10 @@ public class CurrencyWritePlatformServiceJpaRepositoryImpl implements CurrencyWr
 
         this.fromApiJsonDeserializer.validateForUpdate(command.json());
 
+        final String base = command.stringValueOfParameterNamed("base");
         final String[] currencies = command.arrayValueOfParameterNamed("currencies");
+
+        logger.info("################################### CURRENCY: ", base);
 
         final Map<String, Object> changes = new LinkedHashMap<>();
         final List<String> allowedCurrencyCodes = new ArrayList<>();
@@ -73,6 +79,10 @@ public class CurrencyWritePlatformServiceJpaRepositoryImpl implements CurrencyWr
             final ApplicationCurrency currency = this.applicationCurrencyRepository.findOneWithNotFoundDetection(currencyCode);
 
             final OrganisationCurrency allowedCurrency = currency.toOrganisationCurrency();
+
+            if(base!=null) {
+                allowedCurrency.setBase(base.equals(allowedCurrency.getCode()));
+            }
 
             allowedCurrencyCodes.add(currencyCode);
             allowedCurrencies.add(allowedCurrency);
@@ -89,6 +99,7 @@ public class CurrencyWritePlatformServiceJpaRepositoryImpl implements CurrencyWr
         }
 
         changes.put("currencies", allowedCurrencyCodes.toArray(new String[allowedCurrencyCodes.size()]));
+        changes.put("base", base);
 
         this.organisationCurrencyRepository.deleteAll();
         this.organisationCurrencyRepository.save(allowedCurrencies);

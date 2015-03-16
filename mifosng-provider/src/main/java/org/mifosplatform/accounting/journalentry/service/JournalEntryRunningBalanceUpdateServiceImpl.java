@@ -242,14 +242,14 @@ public class JournalEntryRunningBalanceUpdateServiceImpl implements JournalEntry
     private static final class GLJournalEntryMapper implements RowMapper<JournalEntryData> {
 
         public String officeRunningBalanceSchema() {
-            return "select je.id as id,je.account_id as glAccountId,je.type_enum as entryType,je.amount as amount, "
+            return "select je.id as id,je.account_id as glAccountId,je.type_enum as entryType,je.amount as amount,je.exchange_rate as exchangeRate, "
                     + "glAccount.classification_enum as classification,je.office_id as officeId "
                     + "from acc_gl_journal_entry je , acc_gl_account glAccount " + "where je.account_id = glAccount.id "
                     + "and je.office_id=? and je.entry_date >= ? order by je.entry_date,je.id";
         }
 
         public String organizationRunningBalanceSchema() {
-            return "select je.id as id,je.account_id as glAccountId," + "je.type_enum as entryType,je.amount as amount, "
+            return "select je.id as id,je.account_id as glAccountId," + "je.type_enum as entryType,je.amount as amount,je.exchange_rate as exchangeRate, "
                     + "glAccount.classification_enum as classification,je.office_id as officeId  "
                     + "from acc_gl_journal_entry je , acc_gl_account glAccount " + "where je.account_id = glAccount.id "
                     + "and je.entry_date >= ? order by je.entry_date,je.id";
@@ -264,10 +264,11 @@ public class JournalEntryRunningBalanceUpdateServiceImpl implements JournalEntry
             final int accountTypeId = JdbcSupport.getInteger(rs, "classification");
             final EnumOptionData accountType = AccountingEnumerations.gLAccountType(accountTypeId);
             final BigDecimal amount = rs.getBigDecimal("amount");
+            final BigDecimal exchangeRate = rs.getBigDecimal("exchangeRate");
             final int entryTypeId = JdbcSupport.getInteger(rs, "entryType");
             final EnumOptionData entryType = AccountingEnumerations.journalEntryType(entryTypeId);
 
-            return new JournalEntryData(id, officeId, null, null, glAccountId, null, accountType, null, entryType, amount, null, null,
+            return new JournalEntryData(id, officeId, null, null, glAccountId, null, accountType, null, entryType, amount, exchangeRate, null, null,
                     null, null, null, null, null, null, null, null, null, null, null, null, null);
         }
     }

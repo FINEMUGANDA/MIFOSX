@@ -36,6 +36,9 @@ public class OrganisationCurrency extends AbstractPersistable<Long> {
     @Column(name = "display_symbol", nullable = true, length = 10)
     private final String displaySymbol;
 
+    @Column(name = "base", nullable = true)
+    private Boolean base;
+
     protected OrganisationCurrency() {
         this.code = null;
         this.name = null;
@@ -43,19 +46,34 @@ public class OrganisationCurrency extends AbstractPersistable<Long> {
         this.inMultiplesOf = null;
         this.nameCode = null;
         this.displaySymbol = null;
+        this.base = false;
     }
 
     public OrganisationCurrency(final String code, final String name, final int decimalPlaces, final Integer inMultiplesOf,
-            final String nameCode, final String displaySymbol) {
+                                final String nameCode, final String displaySymbol) {
+        this(code, name, decimalPlaces, inMultiplesOf, nameCode, displaySymbol, false);
+    }
+
+    public OrganisationCurrency(final String code, final String name, final int decimalPlaces, final Integer inMultiplesOf,
+            final String nameCode, final String displaySymbol, final Boolean base) {
         this.code = code;
         this.name = name;
         this.decimalPlaces = decimalPlaces;
         this.inMultiplesOf = inMultiplesOf;
         this.nameCode = nameCode;
         this.displaySymbol = displaySymbol;
+        this.base = base;
     }
     
     public final String getCode() {
     	return code;
+    }
+
+    public Boolean isBase() {
+        return base;
+    }
+
+    public void setBase(Boolean base) {
+        this.base = base;
     }
 }

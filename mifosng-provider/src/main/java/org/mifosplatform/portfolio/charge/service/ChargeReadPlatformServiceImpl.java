@@ -181,7 +181,7 @@ public class ChargeReadPlatformServiceImpl implements ChargeReadPlatformService 
      */
     private Object[] processChargeExclusionsForLoans(ChargeTimeType[] excludeChargeTimes, StringBuilder excludeClause, Object[] params) {
         if (excludeChargeTimes != null && excludeChargeTimes.length > 0) {
-            excludeClause = excludeClause.append(" and c.charge_time_enum not in(?) ");
+            excludeClause = excludeClause.append(" and c.charge_time_enum not in(");
             StringBuilder sb = new StringBuilder();
             for (int i = 0; i < excludeChargeTimes.length; i++) {
                 if (i != 0) {
@@ -189,8 +189,8 @@ public class ChargeReadPlatformServiceImpl implements ChargeReadPlatformService 
                 }
                 sb.append(excludeChargeTimes[i].getValue());
             }
-            params = Arrays.copyOf(params, params.length + 1);
-            params[params.length - 1] = sb.toString();
+            excludeClause.append(sb);
+            excludeClause.append(") ");
         }
         return params;
     }

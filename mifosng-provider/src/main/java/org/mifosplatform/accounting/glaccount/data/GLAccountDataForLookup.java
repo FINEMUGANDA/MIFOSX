@@ -11,11 +11,14 @@ public class GLAccountDataForLookup {
     @SuppressWarnings("unused")
     private final String name;
     @SuppressWarnings("unused")
+    private final String currencyCode;
+    @SuppressWarnings("unused")
     private final String glCode;
 
-    public GLAccountDataForLookup(final Long id, final String name, final String glCode) {
+    public GLAccountDataForLookup(final Long id, final String name, final String currencyCode, final String glCode) {
         this.id = id;
         this.name = name;
+        this.currencyCode = currencyCode;
         this.glCode = glCode;
     }
 

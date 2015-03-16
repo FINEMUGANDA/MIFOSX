@@ -33,6 +33,7 @@ public class JournalEntryData {
     private final LocalDate transactionDate;
     private final EnumOptionData entryType;
     private final BigDecimal amount;
+    private final BigDecimal exchangeRate;
     @SuppressWarnings("unused")
     private final CurrencyData currency;
     @SuppressWarnings("unused")
@@ -67,7 +68,7 @@ public class JournalEntryData {
 
     public JournalEntryData(final Long id, final Long officeId, final String officeName, final String glAccountName,
             final Long glAccountId, final String glAccountCode, final EnumOptionData glAccountClassification,
-            final LocalDate transactionDate, final EnumOptionData entryType, final BigDecimal amount, final String transactionId,
+            final LocalDate transactionDate, final EnumOptionData entryType, final BigDecimal amount, final BigDecimal exchangeRate, final String transactionId,
             final Boolean manualEntry, final EnumOptionData entityType, final Long entityId, final Long createdByUserId,
             final LocalDate createdDate, final String createdByUserName, final String comments, final Boolean reversed,
             final String referenceNumber, final BigDecimal officeRunningBalance, final BigDecimal organizationRunningBalance,
@@ -82,6 +83,7 @@ public class JournalEntryData {
         this.transactionDate = transactionDate;
         this.entryType = entryType;
         this.amount = amount;
+        this.exchangeRate = exchangeRate;
         this.transactionId = transactionId;
         this.manualEntry = manualEntry;
         this.entityType = entityType;

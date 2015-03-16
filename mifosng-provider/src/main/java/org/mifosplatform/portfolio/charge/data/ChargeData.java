@@ -226,4 +226,12 @@ public class ChargeData implements Comparable<ChargeData>, Serializable {
         }
         return isOverdueInstallmentCharge;
     }
+
+    public boolean isOverdueMaturityDateCharge(){
+        boolean isOverdueMaturityDateCharge = false;
+        if(this.chargeTimeType != null){
+            isOverdueMaturityDateCharge = ChargeTimeType.fromInt(this.chargeTimeType.getId().intValue()).isOverdueMaturityDate();
+        }
+        return isOverdueMaturityDateCharge;
+    }
 }

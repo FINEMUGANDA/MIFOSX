@@ -14,4 +14,6 @@ public interface CurrencyReadPlatformService {
     Collection<CurrencyData> retrieveAllowedCurrencies();
 
     Collection<CurrencyData> retrieveAllPlatformCurrencies();
+
+    String retrieveBasePlatformCurrency();
 }

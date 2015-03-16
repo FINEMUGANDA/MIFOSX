@@ -12,7 +12,7 @@ import java.util.Set;
  * Enum of all parameters passed in while creating/updating a GL Account
  ***/
 public enum GLAccountJsonInputParams {
-    ID("id"), NAME("name"), PARENT_ID("parentId"), GL_CODE("glCode"), DISABLED("disabled"), MANUAL_ENTRIES_ALLOWED("manualEntriesAllowed"), TYPE(
+    ID("id"), NAME("name"), PARENT_ID("parentId"), CURRENCY_CODE("currencyCode"), GL_CODE("glCode"), DISABLED("disabled"), MANUAL_ENTRIES_ALLOWED("manualEntriesAllowed"), TYPE(
             "type"), USAGE("usage"), DESCRIPTION("description"), TAGID("tagId");
 
     private final String value;

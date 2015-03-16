@@ -16,7 +16,7 @@ public class JournalEntryInvalidException extends AbstractPlatformDomainRuleExce
 
     /*** enum of reasons for invalid Journal Entry **/
     public static enum GL_JOURNAL_ENTRY_INVALID_REASON {
-        FUTURE_DATE, ACCOUNTING_CLOSED, NO_DEBITS_OR_CREDITS, DEBIT_CREDIT_SUM_MISMATCH_WITH_AMOUNT, DEBIT_CREDIT_SUM_MISMATCH, DEBIT_CREDIT_ACCOUNT_OR_AMOUNT_EMPTY, GL_ACCOUNT_DISABLED, GL_ACCOUNT_MANUAL_ENTRIES_NOT_PERMITTED, INVALID_DEBIT_OR_CREDIT_ACCOUNTS;
+        FUTURE_DATE, ACCOUNTING_CLOSED, NO_DEBITS_OR_CREDITS, DEBIT_CREDIT_SUM_MISMATCH_WITH_AMOUNT, DEBIT_CREDIT_SUM_MISMATCH, DEBIT_CREDIT_ACCOUNT_OR_AMOUNT_EMPTY, GL_ACCOUNT_DISABLED, GL_ACCOUNT_MANUAL_ENTRIES_NOT_PERMITTED, INVALID_DEBIT_OR_CREDIT_ACCOUNTS, TOO_MANY_DEBIT_OR_CREDIT_CURRENCIES, TOO_MANY_DEBIT_CURRENCIES, TOO_MANY_CREDIT_CURRENCIES, HOME_CURRENCY_MISSING;
 
         public String errorMessage() {
             if (name().toString().equalsIgnoreCase("FUTURE_DATE")) {
@@ -35,6 +35,14 @@ public class JournalEntryInvalidException extends AbstractPlatformDomainRuleExce
                 return "Target account has been disabled";
             } else if (name().toString().equalsIgnoreCase("INVALID_DEBIT_OR_CREDIT_ACCOUNTS")) {
                 return "Invalid debit or credit accounts are passed";
+            } else if (name().toString().equalsIgnoreCase("TOO_MANY_DEBIT_OR_CREDIT_CURRENCIES")) {
+                return "Two many currencies in this transaction (max. 2)";
+            } else if (name().toString().equalsIgnoreCase("TOO_MANY_DEBIT_CURRENCIES")) {
+                return "Debit can only contain one currency";
+            } else if (name().toString().equalsIgnoreCase("TOO_MANY_CREDIT_CURRENCIES")) {
+                return "Credit can only contain one currency";
+            } else if (name().toString().equalsIgnoreCase("HOME_CURRENCY_MISSING")) {
+                return "At least one account currency must be the home currency";
             } else if (name().toString().equalsIgnoreCase("GL_ACCOUNT_MANUAL_ENTRIES_NOT_PERMITTED")) { return "Target account does not allow maual adjustments"; }
             return name().toString();
         }

@@ -6,11 +6,7 @@
 package org.mifosplatform.accounting.journalentry.service;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import org.apache.commons.lang.StringUtils;
 import org.joda.time.LocalDate;
@@ -44,9 +40,7 @@ import org.mifosplatform.infrastructure.core.data.DataValidatorBuilder;
 import org.mifosplatform.infrastructure.core.exception.PlatformApiDataValidationException;
 import org.mifosplatform.infrastructure.core.exception.PlatformDataIntegrityException;
 import org.mifosplatform.infrastructure.security.service.PlatformSecurityContext;
-import org.mifosplatform.organisation.office.domain.Office;
-import org.mifosplatform.organisation.office.domain.OfficeRepository;
-import org.mifosplatform.organisation.office.domain.OrganisationCurrencyRepositoryWrapper;
+import org.mifosplatform.organisation.office.domain.*;
 import org.mifosplatform.organisation.office.exception.OfficeNotFoundException;
 import org.mifosplatform.portfolio.paymentdetail.domain.PaymentDetail;
 import org.mifosplatform.portfolio.paymentdetail.service.PaymentDetailWritePlatformService;
@@ -73,6 +67,7 @@ public class JournalEntryWritePlatformServiceJpaRepositoryImpl implements Journa
     private final JournalEntryCommandFromApiJsonDeserializer fromApiJsonDeserializer;
     private final AccountingRuleRepository accountingRuleRepository;
     private final GLAccountReadPlatformService glAccountReadPlatformService;
+    private final OrganisationCurrencyRepository organisationCurrencyRepo;
     private final OrganisationCurrencyRepositoryWrapper organisationCurrencyRepository;
     private final PlatformSecurityContext context;
     private final PaymentDetailWritePlatformService paymentDetailWritePlatformService;
@@ -85,6 +80,7 @@ public class JournalEntryWritePlatformServiceJpaRepositoryImpl implements Journa
             final AccountingProcessorForLoanFactory accountingProcessorForLoanFactory,
             final AccountingProcessorForSavingsFactory accountingProcessorForSavingsFactory,
             final GLAccountReadPlatformService glAccountReadPlatformService,
+            final OrganisationCurrencyRepository organisationCurrencyRepo,
             final OrganisationCurrencyRepositoryWrapper organisationCurrencyRepository, final PlatformSecurityContext context,
             final PaymentDetailWritePlatformService paymentDetailWritePlatformService) {
         this.glClosureRepository = glClosureRepository;
@@ -97,6 +93,7 @@ public class JournalEntryWritePlatformServiceJpaRepositoryImpl implements Journa
         this.helper = accountingProcessorHelper;
         this.accountingRuleRepository = accountingRuleRepository;
         this.glAccountReadPlatformService = glAccountReadPlatformService;
+        this.organisationCurrencyRepo = organisationCurrencyRepo;
         this.organisationCurrencyRepository = organisationCurrencyRepository;
         this.context = context;
         this.paymentDetailWritePlatformService = paymentDetailWritePlatformService;
@@ -115,7 +112,6 @@ public class JournalEntryWritePlatformServiceJpaRepositoryImpl implements Journa
             if (office == null) { throw new OfficeNotFoundException(officeId); }
 
             final Long accountRuleId = command.longValueOfParameterNamed(JournalEntryJsonInputParams.ACCOUNTING_RULE.getValue());
-            final String currencyCode = command.stringValueOfParameterNamed(JournalEntryJsonInputParams.CURRENCY_CODE.getValue());
 
             validateBusinessRulesForJournalEntries(journalEntryCommand);
 
@@ -128,56 +124,51 @@ public class JournalEntryWritePlatformServiceJpaRepositoryImpl implements Journa
             final String transactionId = generateTransactionId(officeId);
             final String referenceNumber = command.stringValueOfParameterNamed(JournalEntryJsonInputParams.REFERENCE_NUMBER.getValue());
 
+            BigDecimal[] exchangeRates = calculateExchangeRate(journalEntryCommand.getCredits(), journalEntryCommand.getDebits());
+            BigDecimal creditExchangeRate = exchangeRates[0];
+            BigDecimal debitExchangeRate = exchangeRates[1];
+
             if (accountRuleId != null) {
 
                 final AccountingRule accountingRule = this.accountingRuleRepository.findOne(accountRuleId);
                 if (accountingRule == null) { throw new AccountingRuleNotFoundException(accountRuleId); }
 
                 if (accountingRule.getAccountToCredit() == null) {
-                    if (journalEntryCommand.getCredits() == null) { throw new JournalEntryInvalidException(
-                            GL_JOURNAL_ENTRY_INVALID_REASON.NO_DEBITS_OR_CREDITS, null, null, null); }
+                    if (journalEntryCommand.getCredits() == null) {
+                        throw new JournalEntryInvalidException(GL_JOURNAL_ENTRY_INVALID_REASON.NO_DEBITS_OR_CREDITS, null, null, null);
+                    }
                     if (journalEntryCommand.getDebits() != null) {
-                        checkDebitOrCreditAccountsAreValid(accountingRule, journalEntryCommand.getCredits(),
-                                journalEntryCommand.getDebits());
+                        checkDebitOrCreditAccountsAreValid(accountingRule, journalEntryCommand.getCredits(), journalEntryCommand.getDebits());
                         checkDebitAndCreditAmounts(journalEntryCommand.getCredits(), journalEntryCommand.getDebits());
                     }
 
-                    saveAllDebitOrCreditEntries(journalEntryCommand, office, paymentDetail, currencyCode, transactionDate,
-                            journalEntryCommand.getCredits(), transactionId, JournalEntryType.CREDIT, referenceNumber);
+                    saveAllDebitOrCreditEntries(journalEntryCommand, office, paymentDetail, creditExchangeRate, transactionDate, journalEntryCommand.getCredits(), transactionId, JournalEntryType.CREDIT, referenceNumber);
                 } else {
                     final GLAccount creditAccountHead = accountingRule.getAccountToCredit();
                     validateGLAccountForTransaction(creditAccountHead);
                     validateDebitOrCreditArrayForExistingGLAccount(creditAccountHead, journalEntryCommand.getCredits());
-                    saveAllDebitOrCreditEntries(journalEntryCommand, office, paymentDetail, currencyCode, transactionDate,
-                            journalEntryCommand.getCredits(), transactionId, JournalEntryType.CREDIT, referenceNumber);
+                    saveAllDebitOrCreditEntries(journalEntryCommand, office, paymentDetail, creditExchangeRate, transactionDate, journalEntryCommand.getCredits(), transactionId, JournalEntryType.CREDIT, referenceNumber);
                 }
 
                 if (accountingRule.getAccountToDebit() == null) {
-                    if (journalEntryCommand.getDebits() == null) { throw new JournalEntryInvalidException(
-                            GL_JOURNAL_ENTRY_INVALID_REASON.NO_DEBITS_OR_CREDITS, null, null, null); }
+                    if (journalEntryCommand.getDebits() == null) {
+                        throw new JournalEntryInvalidException(GL_JOURNAL_ENTRY_INVALID_REASON.NO_DEBITS_OR_CREDITS, null, null, null);
+                    }
                     if (journalEntryCommand.getCredits() != null) {
-                        checkDebitOrCreditAccountsAreValid(accountingRule, journalEntryCommand.getCredits(),
-                                journalEntryCommand.getDebits());
+                        checkDebitOrCreditAccountsAreValid(accountingRule, journalEntryCommand.getCredits(), journalEntryCommand.getDebits());
                         checkDebitAndCreditAmounts(journalEntryCommand.getCredits(), journalEntryCommand.getDebits());
                     }
 
-                    saveAllDebitOrCreditEntries(journalEntryCommand, office, paymentDetail, currencyCode, transactionDate,
-                            journalEntryCommand.getDebits(), transactionId, JournalEntryType.DEBIT, referenceNumber);
+                    saveAllDebitOrCreditEntries(journalEntryCommand, office, paymentDetail, debitExchangeRate, transactionDate, journalEntryCommand.getDebits(), transactionId, JournalEntryType.DEBIT, referenceNumber);
                 } else {
                     final GLAccount debitAccountHead = accountingRule.getAccountToDebit();
                     validateGLAccountForTransaction(debitAccountHead);
                     validateDebitOrCreditArrayForExistingGLAccount(debitAccountHead, journalEntryCommand.getDebits());
-                    saveAllDebitOrCreditEntries(journalEntryCommand, office, paymentDetail, currencyCode, transactionDate,
-                            journalEntryCommand.getDebits(), transactionId, JournalEntryType.DEBIT, referenceNumber);
+                    saveAllDebitOrCreditEntries(journalEntryCommand, office, paymentDetail, debitExchangeRate, transactionDate, journalEntryCommand.getDebits(), transactionId, JournalEntryType.DEBIT, referenceNumber);
                 }
             } else {
-
-                saveAllDebitOrCreditEntries(journalEntryCommand, office, paymentDetail, currencyCode, transactionDate,
-                        journalEntryCommand.getDebits(), transactionId, JournalEntryType.DEBIT, referenceNumber);
-
-                saveAllDebitOrCreditEntries(journalEntryCommand, office, paymentDetail, currencyCode, transactionDate,
-                        journalEntryCommand.getCredits(), transactionId, JournalEntryType.CREDIT, referenceNumber);
-
+                saveAllDebitOrCreditEntries(journalEntryCommand, office, paymentDetail, debitExchangeRate, transactionDate, journalEntryCommand.getDebits(), transactionId, JournalEntryType.DEBIT, referenceNumber);
+                saveAllDebitOrCreditEntries(journalEntryCommand, office, paymentDetail, creditExchangeRate, transactionDate, journalEntryCommand.getCredits(), transactionId, JournalEntryType.CREDIT, referenceNumber);
             }
 
             return new CommandProcessingResultBuilder().withCommandId(command.commandId()).withOfficeId(officeId)
@@ -240,22 +231,140 @@ public class JournalEntryWritePlatformServiceJpaRepositoryImpl implements Journa
         }
     }
 
+    private BigDecimal[] calculateExchangeRate(final SingleDebitOrCreditEntryCommand[] credits, final SingleDebitOrCreditEntryCommand[] debits) {
+        BigDecimal creditsSum = BigDecimal.ZERO;
+        BigDecimal debitsSum = BigDecimal.ZERO;
+
+        BigDecimal creditExchangeRate = null;
+        BigDecimal debitExchangeRate = null;
+
+        OrganisationCurrency baseCurrency = organisationCurrencyRepo.findFirstByBase(true);
+
+        boolean creditIsHome = false;
+        boolean debitIsHome = false;
+
+        GLAccount glAccount = this.glAccountRepository.findOne(credits[0].getGlAccountId());
+
+        if(baseCurrency.getCode().equals(glAccount.getCurrencyCode())) {
+            creditIsHome = true;
+            creditExchangeRate = BigDecimal.ONE;
+        }
+
+        for (final SingleDebitOrCreditEntryCommand creditEntryCommand : credits) {
+            if (creditEntryCommand.getAmount() == null || creditEntryCommand.getGlAccountId() == null) {
+                //creditExchangeRate = BigDecimal.ONE;
+                break;
+            }
+
+            creditsSum = creditsSum.add(creditEntryCommand.getAmount());
+        }
+
+        glAccount = this.glAccountRepository.findOne(debits[0].getGlAccountId());
+
+        if(baseCurrency.getCode().equals(glAccount.getCurrencyCode())) {
+            debitIsHome = true;
+            debitExchangeRate = BigDecimal.ONE;
+        }
+
+        for (final SingleDebitOrCreditEntryCommand debitEntryCommand : debits) {
+            if (debitEntryCommand.getAmount() == null || debitEntryCommand.getGlAccountId() == null) {
+                //debitExchangeRate = BigDecimal.ONE;
+                break;
+            }
+
+            debitsSum = debitsSum.add(debitEntryCommand.getAmount());
+        }
+
+        if(creditIsHome) {
+            debitExchangeRate = creditsSum.divide(debitsSum, JournalEntry.EXCHANGE_RATE_SCALE, BigDecimal.ROUND_HALF_EVEN);
+        } else if(debitIsHome) {
+            creditExchangeRate = debitsSum.divide(creditsSum, JournalEntry.EXCHANGE_RATE_SCALE, BigDecimal.ROUND_HALF_EVEN);
+        } else {
+            creditExchangeRate = debitsSum.divide(creditsSum, JournalEntry.EXCHANGE_RATE_SCALE, BigDecimal.ROUND_HALF_EVEN);
+            debitExchangeRate = creditsSum.divide(debitsSum, JournalEntry.EXCHANGE_RATE_SCALE, BigDecimal.ROUND_HALF_EVEN);
+        }
+
+        return new BigDecimal[]{creditExchangeRate, debitExchangeRate};
+    }
+
     private void checkDebitAndCreditAmounts(final SingleDebitOrCreditEntryCommand[] credits, final SingleDebitOrCreditEntryCommand[] debits) {
         // sum of all debits must be = sum of all credits
         BigDecimal creditsSum = BigDecimal.ZERO;
         BigDecimal debitsSum = BigDecimal.ZERO;
+
+        Set<String> currencies = new HashSet<>();
+        Set<String> currenciesDebit = new HashSet<>();
+        Set<String> currenciesCredit = new HashSet<>();
+
+        Map<Long, GLAccount> accounts = new HashMap<>();
+
         for (final SingleDebitOrCreditEntryCommand creditEntryCommand : credits) {
             if (creditEntryCommand.getAmount() == null || creditEntryCommand.getGlAccountId() == null) { throw new JournalEntryInvalidException(
                     GL_JOURNAL_ENTRY_INVALID_REASON.DEBIT_CREDIT_ACCOUNT_OR_AMOUNT_EMPTY, null, null, null); }
             creditsSum = creditsSum.add(creditEntryCommand.getAmount());
+
+            if(!accounts.containsKey(creditEntryCommand.getGlAccountId())) {
+                accounts.put(creditEntryCommand.getGlAccountId(), this.glAccountRepository.findOne(creditEntryCommand.getGlAccountId()));
+            }
+
+            GLAccount glAccount = accounts.get(creditEntryCommand.getGlAccountId());
+
+            if(!currenciesCredit.contains(glAccount.getCurrencyCode())) {
+                currenciesCredit.add(glAccount.getCurrencyCode());
+            }
+            if(!currencies.contains(glAccount.getCurrencyCode())) {
+                currencies.add(glAccount.getCurrencyCode());
+            }
+            if(currenciesCredit.size()>1) {
+                throw new JournalEntryInvalidException(GL_JOURNAL_ENTRY_INVALID_REASON.TOO_MANY_CREDIT_CURRENCIES, null, null, null);
+            }
         }
         for (final SingleDebitOrCreditEntryCommand debitEntryCommand : debits) {
             if (debitEntryCommand.getAmount() == null || debitEntryCommand.getGlAccountId() == null) { throw new JournalEntryInvalidException(
                     GL_JOURNAL_ENTRY_INVALID_REASON.DEBIT_CREDIT_ACCOUNT_OR_AMOUNT_EMPTY, null, null, null); }
             debitsSum = debitsSum.add(debitEntryCommand.getAmount());
+
+            if(!accounts.containsKey(debitEntryCommand.getGlAccountId())) {
+                accounts.put(debitEntryCommand.getGlAccountId(), this.glAccountRepository.findOne(debitEntryCommand.getGlAccountId()));
+            }
+
+            GLAccount glAccount = accounts.get(debitEntryCommand.getGlAccountId());
+
+            if(!currenciesDebit.contains(glAccount.getCurrencyCode())) {
+                currenciesDebit.add(glAccount.getCurrencyCode());
+            }
+            if(!currencies.contains(glAccount.getCurrencyCode())) {
+                currencies.add(glAccount.getCurrencyCode());
+            }
+            if(currenciesDebit.size()>1) {
+                throw new JournalEntryInvalidException(GL_JOURNAL_ENTRY_INVALID_REASON.TOO_MANY_DEBIT_CURRENCIES, null, null, null);
+            }
         }
-        if (creditsSum.compareTo(debitsSum) != 0) { throw new JournalEntryInvalidException(
-                GL_JOURNAL_ENTRY_INVALID_REASON.DEBIT_CREDIT_SUM_MISMATCH, null, null, null); }
+
+        if(currencies.size()>2) {
+            throw new JournalEntryInvalidException(GL_JOURNAL_ENTRY_INVALID_REASON.TOO_MANY_DEBIT_OR_CREDIT_CURRENCIES, null, null, null);
+        }
+
+        // NOTE: check for home currency only if more than 1 currencies involved in transaction; use case: transfer USD to USD account
+        if(currencies.size()>1) {
+            OrganisationCurrency baseCurrency = organisationCurrencyRepo.findFirstByBase(true);
+
+            if(baseCurrency==null || (!currenciesCredit.contains(baseCurrency.getCode()) && !currenciesDebit.contains(baseCurrency.getCode())) ) {
+                throw new JournalEntryInvalidException(GL_JOURNAL_ENTRY_INVALID_REASON.HOME_CURRENCY_MISSING, null, null, null);
+            }
+        }
+
+        BigDecimal exchangeRate = debitsSum.divide(creditsSum, JournalEntry.EXCHANGE_RATE_SCALE, BigDecimal.ROUND_HALF_EVEN);
+
+        logger.info("################### ACCOUNTING (EXCHANGE RATE) - rate: {} - compare to: {} - #{}", exchangeRate, exchangeRate.compareTo(BigDecimal.ONE), currencies.size());
+
+        if (currencies.size()==1) {
+            if (creditsSum.compareTo(debitsSum) != 0) {
+                throw new JournalEntryInvalidException(GL_JOURNAL_ENTRY_INVALID_REASON.DEBIT_CREDIT_SUM_MISMATCH, null, null, null);
+            }
+        } else {
+            // TODO: implement validation for automatic exchange rates
+        }
     }
 
     private void validateGLAccountForTransaction(final GLAccount creditOrDebitAccountHead) {
@@ -296,12 +405,12 @@ public class JournalEntryWritePlatformServiceJpaRepositoryImpl implements Journa
             if (journalEntry.isDebitEntry()) {
                 reversalJournalEntry = JournalEntry.createNew(journalEntry.getOffice(), journalEntry.getPaymentDetails(),
                         journalEntry.getGlAccount(), journalEntry.getCurrencyCode(), reversalTransactionId, manualEntry,
-                        journalEntry.getTransactionDate(), JournalEntryType.CREDIT, journalEntry.getAmount(), reversalComment, null, null,
+                        journalEntry.getTransactionDate(), JournalEntryType.CREDIT, journalEntry.getAmount(), journalEntry.getExchangeRate(), reversalComment, null, null,
                         journalEntry.getReferenceNumber(), journalEntry.getLoanTransaction(), journalEntry.getSavingsTransaction());
             } else {
                 reversalJournalEntry = JournalEntry.createNew(journalEntry.getOffice(), journalEntry.getPaymentDetails(),
                         journalEntry.getGlAccount(), journalEntry.getCurrencyCode(), reversalTransactionId, manualEntry,
-                        journalEntry.getTransactionDate(), JournalEntryType.DEBIT, journalEntry.getAmount(), reversalComment, null, null,
+                        journalEntry.getTransactionDate(), JournalEntryType.DEBIT, journalEntry.getAmount(), journalEntry.getExchangeRate(), reversalComment, null, null,
                         journalEntry.getReferenceNumber(), journalEntry.getLoanTransaction(), journalEntry.getSavingsTransaction());
             }
             // save the reversal entry
@@ -386,7 +495,7 @@ public class JournalEntryWritePlatformServiceJpaRepositoryImpl implements Journa
     }
 
     private void saveAllDebitOrCreditEntries(final JournalEntryCommand command, final Office office, final PaymentDetail paymentDetail,
-            final String currencyCode, final Date transactionDate,
+            final BigDecimal exchangeRate, final Date transactionDate,
             final SingleDebitOrCreditEntryCommand[] singleDebitOrCreditEntryCommands, final String transactionId,
             final JournalEntryType type, final String referenceNumber) {
         final boolean manualEntry = true;
@@ -401,11 +510,13 @@ public class JournalEntryWritePlatformServiceJpaRepositoryImpl implements Journa
                 comments = singleDebitOrCreditEntryCommand.getComments();
             }
 
-            /** Validate current code is appropriate **/
-            this.organisationCurrencyRepository.findOneWithNotFoundDetection(currencyCode);
+            logger.info("################### ACCOUNTING: {} - {} - {}", glAccount.getName(), glAccount.getType(), glAccount.getCurrencyCode());
 
-            final JournalEntry glJournalEntry = JournalEntry.createNew(office, paymentDetail, glAccount, currencyCode, transactionId,
-                    manualEntry, transactionDate, type, singleDebitOrCreditEntryCommand.getAmount(), comments, null, null, referenceNumber,
+            /** Validate current code is appropriate **/
+            this.organisationCurrencyRepository.findOneWithNotFoundDetection(glAccount.getCurrencyCode());
+
+            final JournalEntry glJournalEntry = JournalEntry.createNew(office, paymentDetail, glAccount, glAccount.getCurrencyCode(), transactionId,
+                    manualEntry, transactionDate, type, singleDebitOrCreditEntryCommand.getAmount(), exchangeRate, comments, null, null, referenceNumber,
                     null, null);
             this.glJournalEntryRepository.saveAndFlush(glJournalEntry);
         }

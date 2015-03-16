@@ -58,6 +58,7 @@ public class PermissionExpressionService {
 
             Map<String, Object> vars = new HashMap<>();
             vars.put("command", command);
+            vars.put("appUser", user);
 
             // mvel
             Boolean result = false;

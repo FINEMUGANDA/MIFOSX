@@ -25,6 +25,7 @@ public class GLAccountData {
     private final Long id;
     private final String name;
     private final Long parentId;
+    private final String currencyCode;
     private final String glCode;
     private final Boolean disabled;
     private final Boolean manualEntriesAllowed;
@@ -49,12 +50,13 @@ public class GLAccountData {
     final Collection<CodeValueData> allowedIncomeTagOptions;
     final Collection<CodeValueData> allowedExpensesTagOptions;
 
-    public GLAccountData(final Long id, final String name, final Long parentId, final String glCode, final boolean disabled,
+    public GLAccountData(final Long id, final String name, final Long parentId, final String currencyCode, final String glCode, final boolean disabled,
             final boolean manualEntriesAllowed, final EnumOptionData type, final EnumOptionData usage, final String description,
             final String nameDecorated, final CodeValueData tagId, final Long organizationRunningBalance) {
         this.id = id;
         this.name = name;
         this.parentId = parentId;
+        this.currencyCode = currencyCode;
         this.glCode = glCode;
         this.disabled = disabled;
         this.manualEntriesAllowed = manualEntriesAllowed;
@@ -88,6 +90,7 @@ public class GLAccountData {
         this.id = accountData.id;
         this.name = accountData.name;
         this.parentId = accountData.parentId;
+        this.currencyCode = accountData.currencyCode;
         this.glCode = accountData.glCode;
         this.disabled = accountData.disabled;
         this.manualEntriesAllowed = accountData.manualEntriesAllowed;
@@ -115,6 +118,7 @@ public class GLAccountData {
         final Long id = null;
         final String name = null;
         final Long parentId = null;
+        final String currencyCode = null; // TODO: put default currency
         final String glCode = null;
         final boolean disabled = false;
         final boolean manualEntriesAllowed = true;
@@ -130,14 +134,15 @@ public class GLAccountData {
         final CodeValueData tagId = null;
         final Long organizationRunningBalance = null;
 
-        return new GLAccountData(id, name, parentId, glCode, disabled, manualEntriesAllowed, type, usage, description, nameDecorated,
+        return new GLAccountData(id, name, parentId, currencyCode, glCode, disabled, manualEntriesAllowed, type, usage, description, nameDecorated,
                 tagId, organizationRunningBalance);
     }
 
-    public GLAccountData(final Long id, final String name, final String glCode) {
+    public GLAccountData(final Long id, final String name, final String currencyCode, final String glCode) {
         this.id = id;
         this.name = name;
         this.parentId = null;
+        this.currencyCode = currencyCode;
         this.glCode = glCode;
         this.disabled = null;
         this.manualEntriesAllowed = null;
