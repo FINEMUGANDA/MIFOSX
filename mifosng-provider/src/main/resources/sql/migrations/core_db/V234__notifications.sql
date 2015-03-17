@@ -15,26 +15,23 @@ CREATE TABLE notification_log
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
-INSERT IGNORE INTO `mifostenant-default`.job (name, display_name, cron_expression, create_time, task_priority, group_name, previous_run_start_time, next_run_time, job_key, initializing_errorlog, is_active, currently_running, updates_allowed, scheduler_group, is_misfired) VALUES ('Follow up Email Notification', 'Follow up Email Notification', '0 0 6 1/1 * ? *', '2014-03-07 18:29:14', 5, null, '2015-03-01 16:30:00', '2015-03-05 16:30:00', 'Follow up Email NotificationJobDetail1 _ DEFAULT', null, 1, 0, 1, 0, 0);
-INSERT IGNORE INTO `mifostenant-default`.job (name, display_name, cron_expression, create_time, task_priority, group_name, previous_run_start_time, next_run_time, job_key, initializing_errorlog, is_active, currently_running, updates_allowed, scheduler_group, is_misfired) VALUES ('Payment Reminder Email Notification', 'Payment Reminder Email Notification', '0 0 6 1/1 * ? *', '2014-03-07 18:29:14', 5, null, '2015-03-01 16:30:00', '2015-03-05 16:30:00', 'Payment Reminder Email NotificationJobDetail1 _ DEFAULT', null, 1, 0, 1, 0, 0);
-INSERT IGNORE INTO `mifostenant-default`.job (name, display_name, cron_expression, create_time, task_priority, group_name, previous_run_start_time, next_run_time, job_key, initializing_errorlog, is_active, currently_running, updates_allowed, scheduler_group, is_misfired) VALUES ('Follow up SMS Notification', 'Follow up SMS Notification', '0 0 6 1/1 * ? *', '2014-03-07 18:29:14', 5, null, '2015-03-01 16:30:00', '2015-03-05 16:30:00', 'Follow up SMS NotificationJobDetail1 _ DEFAULT', null, 1, 0, 1, 0, 0);
-INSERT IGNORE INTO `mifostenant-default`.job (name, display_name, cron_expression, create_time, task_priority, group_name, previous_run_start_time, next_run_time, job_key, initializing_errorlog, is_active, currently_running, updates_allowed, scheduler_group, is_misfired) VALUES ('Payment Reminder SMS Notification', 'Payment Reminder SMS Notification', '0 0 6 1/1 * ? *', '2014-03-07 18:29:14', 5, null, '2015-03-01 16:30:00', '2015-03-05 16:30:00', 'Payment Reminder SMS NotificationJobDetail1 _ DEFAULT', null, 1, 0, 1, 0, 0);
-
-INSERT IGNORE INTO `mifostenant-default`.c_external_service (name, value) VALUES ('email_host', 'smtp.gmail.com');
-INSERT IGNORE INTO `mifostenant-default`.c_external_service (name, value) VALUES ('email_auth_username', 'support@cloudmicrofinance.com');
-INSERT IGNORE INTO `mifostenant-default`.c_external_service (name, value) VALUES ('email_auth_password', '');
-INSERT IGNORE INTO `mifostenant-default`.c_external_service (name, value) VALUES ('email_starttls', 'true');
-INSERT IGNORE INTO `mifostenant-default`.c_external_service (name, value) VALUES ('email_sender_name', 'Support FINEM (U) LTD');
-INSERT IGNORE INTO `mifostenant-default`.c_external_service (name, value) VALUES ('email_subject', 'FINEM LTD - Notification');
-INSERT IGNORE INTO `mifostenant-default`.c_external_service (name, value) VALUES ('email_debug', 'false');
-
-INSERT IGNORE INTO `mifostenant-default`.c_external_service (name, value) VALUES ('sms_auth_username', 'FINEM');
-INSERT IGNORE INTO `mifostenant-default`.c_external_service (name, value) VALUES ('sms_auth_password', '');
-INSERT IGNORE INTO `mifostenant-default`.c_external_service (name, value) VALUES ('sms_outbound_max_per_day', '-1');
-INSERT IGNORE INTO `mifostenant-default`.c_external_service (name, value) VALUES ('sms_sender_name', 'FINEM');
-INSERT IGNORE INTO `mifostenant-default`.c_external_service (name, value) VALUES ('sms_sender_address', 'FINEM');
-INSERT IGNORE INTO `mifostenant-default`.c_external_service (name, value) VALUES ('sms_notify_url', null);
-INSERT IGNORE INTO `mifostenant-default`.c_external_service (name, value) VALUES ('sms_debug', 'false');
-INSERT IGNORE INTO `mifostenant-default`.c_external_service (name, value) VALUES ('sms_debug_phone', '');
-
-INSERT IGNORE INTO `mifostenant-default`.c_configuration (name, value, enabled, description) VALUES ('notification-payment-reminder-days-in-advance', 5, 0, 'How many days in advance should we notify the clients.');
+INSERT INTO `mifostenant-default`.job (name, display_name, cron_expression, create_time, task_priority, group_name, previous_run_start_time, next_run_time, job_key, initializing_errorlog, is_active, currently_running, updates_allowed, scheduler_group, is_misfired)
+  SELECT * FROM (SELECT 'Follow up Email Notification', 'Follow up Email Notification' as a, '0 0 6 1/1 * ? *', '2014-03-07 18:29:14', 5, null, '2015-03-01 16:30:00', '2015-03-05 16:30:00', 'Follow up Email NotificationJobDetail1 _ DEFAULT', null as b, 1 as c, 0 as d, 1 as e, 0 as f, 0 as g) AS tmp
+  WHERE NOT EXISTS (
+      SELECT name FROM `mifostenant-default`.job WHERE name = 'Follow up Email Notification'
+  ) LIMIT 1;
+INSERT INTO `mifostenant-default`.job (name, display_name, cron_expression, create_time, task_priority, group_name, previous_run_start_time, next_run_time, job_key, initializing_errorlog, is_active, currently_running, updates_allowed, scheduler_group, is_misfired)
+  SELECT * FROM (SELECT 'Payment Reminder Email Notification', 'Payment Reminder Email Notification' as a, '0 0 6 1/1 * ? *', '2014-03-07 18:29:14', 5, null, '2015-03-01 16:30:00', '2015-03-05 16:30:00', 'Payment Reminder Email NotificationJobDetail1 _ DEFAULT', null as b, 1 as c, 0 as d, 1 as e, 0 as f, 0 as g) AS tmp
+  WHERE NOT EXISTS (
+      SELECT name FROM `mifostenant-default`.job WHERE name = 'Payment Reminder Email Notification'
+  ) LIMIT 1;
+INSERT INTO `mifostenant-default`.job (name, display_name, cron_expression, create_time, task_priority, group_name, previous_run_start_time, next_run_time, job_key, initializing_errorlog, is_active, currently_running, updates_allowed, scheduler_group, is_misfired)
+  SELECT * FROM (SELECT 'Follow up SMS Notification', 'Follow up SMS Notification' as a, '0 0 6 1/1 * ? *', '2014-03-07 18:29:14', 5, null, '2015-03-01 16:30:00', '2015-03-05 16:30:00', 'Follow up SMS NotificationJobDetail1 _ DEFAULT', null as b, 1 as c, 0 as d, 1 as e, 0 as f, 0 as g) AS tmp
+  WHERE NOT EXISTS (
+      SELECT name FROM `mifostenant-default`.job WHERE name = 'Follow up SMS Notification'
+  ) LIMIT 1;
+INSERT INTO `mifostenant-default`.job (name, display_name, cron_expression, create_time, task_priority, group_name, previous_run_start_time, next_run_time, job_key, initializing_errorlog, is_active, currently_running, updates_allowed, scheduler_group, is_misfired)
+  SELECT * FROM (SELECT 'Payment Reminder SMS Notification', 'Payment Reminder SMS Notification' as a, '0 0 6 1/1 * ? *', '2014-03-07 18:29:14', 5, null, '2015-03-01 16:30:00', '2015-03-05 16:30:00', 'Payment Reminder SMS NotificationJobDetail1 _ DEFAULT', null as b, 1 as c, 0 as d, 1 as e, 0 as f, 0 as g) AS tmp
+  WHERE NOT EXISTS (
+      SELECT name FROM `mifostenant-default`.job WHERE name = 'Payment Reminder SMS Notification'
+  ) LIMIT 1;

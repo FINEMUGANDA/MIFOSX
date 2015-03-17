@@ -6,4 +6,8 @@ INSERT IGNORE INTO `mifostenant-default`.c_external_service (name, value) VALUES
 INSERT IGNORE INTO `mifostenant-default`.c_external_service (name, value) VALUES ('email_subject', 'FINEM LTD - Notification');
 INSERT IGNORE INTO `mifostenant-default`.c_external_service (name, value) VALUES ('email_debug', 'false');
 
-INSERT IGNORE INTO `mifostenant-default`.c_configuration (name, value, enabled, description) VALUES ('notification-payment-reminder-days-in-advance', 5, 0, 'How many days in advance should we notify the clients.');
+INSERT INTO `mifostenant-default`.c_configuration (name, value, enabled, description)
+  SELECT * FROM (SELECT 'notification-payment-reminder-days-in-advance', 5, 0, 'How many days in advance should we notify the clients.') AS tmp
+  WHERE NOT EXISTS (
+      SELECT name FROM `mifostenant-default`.c_configuration WHERE name = 'notification-payment-reminder-days-in-advance'
+  ) LIMIT 1;
