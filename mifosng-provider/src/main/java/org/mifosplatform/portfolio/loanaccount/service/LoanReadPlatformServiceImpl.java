@@ -1480,18 +1480,15 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService {
     }
 
     @Override
-    public Collection<OverdueLoanScheduleData> retrieveAllLoansWithOverdueMaturityDate(final Long penaltyWaitPeriod) {
+    public Collection<OverdueLoanScheduleData> retrieveAllLoansWithOverdueMaturityDate() {
         final OverdueMaturityDateLoanScheduleMapper rm = new OverdueMaturityDateLoanScheduleMapper();
         final String sql = "select " + rm.schema() + " where "
-                    + " (DATE_SUB(CURDATE(),INTERVAL ? DAY) > ml.maturedon_date and (mlc.due_for_collection_as_of_date is null or DATE_SUB(CURDATE(),INTERVAL ? DAY) > mlc.due_for_collection_as_of_date))"
-                    + " and mc.charge_applies_to_enum =1"
+                    + " CURDATE() > ml.maturedon_date"
+                    + " and mc.charge_applies_to_enum = 1"
                     + " and mc.charge_time_enum = 12"
                     + " and ml.loan_status_id IN (300, 800, 900)"
                     + " group by ls.loan_id";
-//        final String sql = "select " + rm.schema() + " where DATE_SUB(CURDATE(),INTERVAL ? DAY) > ls.duedate "
-//                + " and ls.completed_derived <> 1 and mc.charge_applies_to_enum =1 "
-//                + " and mc.charge_time_enum = 12 and ml.loan_status_id IN (300, 800, 900) ";
-        return this.jdbcTemplate.query(sql, rm, new Object[] { penaltyWaitPeriod, penaltyWaitPeriod });
+        return this.jdbcTemplate.query(sql, rm);
     }
 
     @SuppressWarnings("deprecation")

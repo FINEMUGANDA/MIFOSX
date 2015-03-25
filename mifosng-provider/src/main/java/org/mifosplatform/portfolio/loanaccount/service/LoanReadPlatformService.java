@@ -76,7 +76,7 @@ public interface LoanReadPlatformService {
      */
     Collection<OverdueLoanScheduleData> retrieveAllLoansWithOverdueInstallments(final Long penaltyWaitPeriod);
 
-    Collection<OverdueLoanScheduleData> retrieveAllLoansWithOverdueMaturityDate(final Long penaltyWaitPeriod);
+    Collection<OverdueLoanScheduleData> retrieveAllLoansWithOverdueMaturityDate();
 
     Integer retriveLoanCounter(Long groupId, Integer loanType, Long productId);
 

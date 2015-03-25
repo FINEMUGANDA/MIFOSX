@@ -1,7 +1,3 @@
---
--- Table structure for table `m_permission_expression`
---
-
 DROP TABLE IF EXISTS `m_permission_expression`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
@@ -19,4 +15,8 @@ CREATE TABLE `m_permission_expression` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
-INSERT INTO `mifostenant-default`.m_permission (grouping, code, entity_name, action_name, can_maker_checker) VALUES ('authorisation', 'EXPRESSIONS_ROLE', 'ROLE', 'PERMISSION_EXPRESSIONS', 0);
+INSERT INTO `mifostenant-default`.m_permission (grouping, code, entity_name, action_name, can_maker_checker)
+SELECT * FROM (SELECT 'authorisation', 'EXPRESSIONS_ROLE', 'ROLE', 'PERMISSION_EXPRESSIONS', 0) AS tmp
+WHERE NOT EXISTS (
+    SELECT action_name FROM `mifostenant-default`.m_permission WHERE action_name = 'PERMISSION_EXPRESSIONS'
+) LIMIT 1;
