@@ -32,7 +32,7 @@ public final class UserDataValidator {
      * The parameters supported for this command.
      */
     private final Set<String> supportedParameters = new HashSet<>(Arrays.asList("username", "firstname", "lastname", "password",
-            "repeatPassword", "email", "officeId", "notSelectedRoles", "roles", "sendPasswordToEmail", "staffId"));
+            "repeatPassword", "email", "officeId", "notSelectedRoles", "roles", "sendPasswordToEmail", "resetPassword", "staffId"));
 
     private final FromJsonHelper fromApiJsonHelper;
 
