@@ -5,20 +5,19 @@
  */
 package org.mifosplatform.useradministration.service;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
+import org.apache.commons.lang.RandomStringUtils;
 import org.mifosplatform.commands.service.CommandWrapperBuilder;
 import org.mifosplatform.infrastructure.core.api.JsonCommand;
 import org.mifosplatform.infrastructure.core.data.ApiParameterError;
 import org.mifosplatform.infrastructure.core.data.CommandProcessingResult;
 import org.mifosplatform.infrastructure.core.data.CommandProcessingResultBuilder;
+import org.mifosplatform.infrastructure.core.domain.EmailDetail;
 import org.mifosplatform.infrastructure.core.exception.PlatformApiDataValidationException;
 import org.mifosplatform.infrastructure.core.exception.PlatformDataIntegrityException;
 import org.mifosplatform.infrastructure.core.service.PlatformEmailSendException;
+import org.mifosplatform.infrastructure.core.service.PlatformEmailService;
+import org.mifosplatform.infrastructure.security.domain.BasicPasswordEncodablePlatformUser;
+import org.mifosplatform.infrastructure.security.domain.PlatformUser;
 import org.mifosplatform.infrastructure.security.service.PlatformPasswordEncoder;
 import org.mifosplatform.infrastructure.security.service.PlatformSecurityContext;
 import org.mifosplatform.organisation.office.domain.Office;
@@ -27,13 +26,7 @@ import org.mifosplatform.organisation.office.exception.OfficeNotFoundException;
 import org.mifosplatform.organisation.staff.domain.Staff;
 import org.mifosplatform.organisation.staff.domain.StaffRepositoryWrapper;
 import org.mifosplatform.useradministration.api.AppUserApiConstant;
-import org.mifosplatform.useradministration.domain.AppUser;
-import org.mifosplatform.useradministration.domain.AppUserPreviousPassword;
-import org.mifosplatform.useradministration.domain.AppUserPreviousPasswordRepository;
-import org.mifosplatform.useradministration.domain.AppUserRepository;
-import org.mifosplatform.useradministration.domain.Role;
-import org.mifosplatform.useradministration.domain.RoleRepository;
-import org.mifosplatform.useradministration.domain.UserDomainService;
+import org.mifosplatform.useradministration.domain.*;
 import org.mifosplatform.useradministration.exception.PasswordPreviouslyUsedException;
 import org.mifosplatform.useradministration.exception.RoleNotFoundException;
 import org.mifosplatform.useradministration.exception.UserNotFoundException;
@@ -49,6 +42,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.ObjectUtils;
 
+import java.util.*;
+
 @Service
 public class AppUserWritePlatformServiceJpaRepositoryImpl implements AppUserWritePlatformService {
 
@@ -63,12 +58,15 @@ public class AppUserWritePlatformServiceJpaRepositoryImpl implements AppUserWrit
     private final UserDataValidator fromApiJsonDeserializer;
     private final AppUserPreviousPasswordRepository appUserPreviewPasswordRepository;
     private final StaffRepositoryWrapper staffRepositoryWrapper;
+    private final PlatformPasswordEncoder applicationPasswordEncoder;
+    private final PlatformEmailService emailService;
 
     @Autowired
     public AppUserWritePlatformServiceJpaRepositoryImpl(final PlatformSecurityContext context, final AppUserRepository appUserRepository,
             final UserDomainService userDomainService, final OfficeRepository officeRepository, final RoleRepository roleRepository,
             final PlatformPasswordEncoder platformPasswordEncoder, final UserDataValidator fromApiJsonDeserializer,
-            final AppUserPreviousPasswordRepository appUserPreviewPasswordRepository, final StaffRepositoryWrapper staffRepositoryWrapper) {
+            final AppUserPreviousPasswordRepository appUserPreviewPasswordRepository, final StaffRepositoryWrapper staffRepositoryWrapper, final PlatformPasswordEncoder applicationPasswordEncoder,
+                                                        final PlatformEmailService emailService) {
         this.context = context;
         this.appUserRepository = appUserRepository;
         this.userDomainService = userDomainService;
@@ -78,6 +76,8 @@ public class AppUserWritePlatformServiceJpaRepositoryImpl implements AppUserWrit
         this.fromApiJsonDeserializer = fromApiJsonDeserializer;
         this.appUserPreviewPasswordRepository = appUserPreviewPasswordRepository;
         this.staffRepositoryWrapper = staffRepositoryWrapper;
+        this.applicationPasswordEncoder = applicationPasswordEncoder;
+        this.emailService = emailService;
     }
 
     @Transactional
@@ -150,6 +150,15 @@ public class AppUserWritePlatformServiceJpaRepositoryImpl implements AppUserWrit
 
             if (userToUpdate == null) { throw new UserNotFoundException(userId); }
 
+            final Boolean resetPassword = command.booleanObjectValueOfParameterNamed("resetPassword");
+
+            final String unencodedPassword = RandomStringUtils.randomAlphanumeric(16);
+
+            if(resetPassword!=null && resetPassword) {
+                final PlatformUser dummyPlatformUser = new BasicPasswordEncodablePlatformUser(userToUpdate.getId(), "", unencodedPassword);
+                userToUpdate.updatePassword(platformPasswordEncoder.encode(dummyPlatformUser));
+            }
+
             final AppUserPreviousPassword currentPasswordToSaveAsPreview = getCurrentPasswordToSaveAsPreview(userToUpdate, command);
 
             final Map<String, Object> changes = userToUpdate.update(command, this.platformPasswordEncoder);
@@ -185,6 +194,12 @@ public class AppUserWritePlatformServiceJpaRepositoryImpl implements AppUserWrit
                     this.appUserPreviewPasswordRepository.save(currentPasswordToSaveAsPreview);
                 }
 
+            }
+
+            if(resetPassword!=null && resetPassword) {
+                final EmailDetail emailDetail = new EmailDetail(userToUpdate.getOffice().getName(), userToUpdate.getFirstname(), userToUpdate.getEmail(), userToUpdate.getUsername());
+
+                this.emailService.sendToUserAccount(emailDetail, unencodedPassword);
             }
 
             return new CommandProcessingResultBuilder() //
