@@ -594,7 +594,7 @@ public class Loan extends AbstractPersistable<Long> {
      * @return
      */
     public LoanTransaction handleChargeAppliedTransaction(final LoanCharge loanCharge, final LocalDate suppliedTransactionDate,
-            final AppUser currentUser) {
+            final AppUser currentUser, LoanTransaction transaction) {
         final Money chargeAmount = loanCharge.getAmount(getCurrency());
         Money feeCharges = chargeAmount;
         Money penaltyCharges = Money.zero(loanCurrency());
@@ -618,14 +618,25 @@ public class Loan extends AbstractPersistable<Long> {
             }
         }
 
-        final LoanTransaction applyLoanChargeTransaction = LoanTransaction.accrueLoanCharge(this, getOffice(), chargeAmount,
-                transactionDate, feeCharges, penaltyCharges, DateUtils.getLocalDateTimeOfTenant(), currentUser);
         Integer installmentNumber = null;
-        final LoanChargePaidBy loanChargePaidBy = new LoanChargePaidBy(applyLoanChargeTransaction, loanCharge, loanCharge.getAmount(
-                getCurrency()).getAmount(), installmentNumber);
-        applyLoanChargeTransaction.getLoanChargesPaid().add(loanChargePaidBy);
-        this.loanTransactions.add(applyLoanChargeTransaction);
-        return applyLoanChargeTransaction;
+        if (transaction != null) {
+            final LoanChargePaidBy loanChargePaidBy = new LoanChargePaidBy(transaction, loanCharge, loanCharge.getAmount(
+                    getCurrency()).getAmount(), installmentNumber);
+            transaction.getLoanChargesPaid().add(loanChargePaidBy);
+            Money zero = Money.zero(getCurrency());
+            transaction.updateComponentsAndTotal(zero, zero, feeCharges, penaltyCharges);
+            return transaction;
+        } else {
+            final LoanTransaction applyLoanChargeTransaction = LoanTransaction.accrueLoanCharge(this, getOffice(), chargeAmount,
+                    transactionDate, feeCharges, penaltyCharges, DateUtils.getLocalDateTimeOfTenant(), currentUser);
+
+            final LoanChargePaidBy loanChargePaidBy = new LoanChargePaidBy(applyLoanChargeTransaction, loanCharge, loanCharge.getAmount(
+                    getCurrency()).getAmount(), installmentNumber);
+            applyLoanChargeTransaction.getLoanChargesPaid().add(loanChargePaidBy);
+
+            this.loanTransactions.add(applyLoanChargeTransaction);
+            return applyLoanChargeTransaction;
+        }
     }
 
     private void handleChargePaidTransaction(final LoanCharge charge, final LoanTransaction chargesPayment,
@@ -1141,7 +1152,7 @@ public class Loan extends AbstractPersistable<Long> {
                     Money chargeAmount = loanCharge.getAmount(getCurrency());
                     if (chargeAmount.isNotEqualTo(loanTransaction.getAmount(getCurrency()))) {
                         loanTransaction.reverse();
-                        handleChargeAppliedTransaction(loanCharge, loanTransaction.getTransactionDate(), currentUser);
+                        handleChargeAppliedTransaction(loanCharge, loanTransaction.getTransactionDate(), currentUser, null);
                     }
 
                 }
@@ -2041,7 +2052,7 @@ public class Loan extends AbstractPersistable<Long> {
     }
 
     public ChangedTransactionDetail disburse(final AppUser currentUser, final JsonCommand command, final Map<String, Object> actualChanges,
-            final ScheduleGeneratorDTO scheduleGeneratorDTO) {
+            final ScheduleGeneratorDTO scheduleGeneratorDTO, LoanTransaction disbursementTransaction) {
 
         final LoanStatus statusEnum = this.loanLifecycleStateMachine.transition(LoanEvent.LOAN_DISBURSED,
                 LoanStatus.fromInt(this.loanStatus));
@@ -2073,7 +2084,7 @@ public class Loan extends AbstractPersistable<Long> {
         updateLoanRepaymentPeriodsDerivedFields(actualDisbursementDate);
         updateLoanSummaryDerivedFields();
         LocalDateTime createdDate = DateUtils.getLocalDateTimeOfTenant();
-        handleDisbursementTransaction(actualDisbursementDate, createdDate, currentUser);
+        handleDisbursementTransaction(actualDisbursementDate, createdDate, currentUser, disbursementTransaction);
 
         final Money interestApplied = Money.of(getCurrency(), this.summary.getTotalInterestCharged());
 
@@ -2084,9 +2095,14 @@ public class Loan extends AbstractPersistable<Long> {
          **/
 
         if (isNoneOrCashOrUpfrontAccrualAccountingEnabledOnLoanProduct()) {
-            final LoanTransaction interestAppliedTransaction = LoanTransaction.accrueInterest(getOffice(), this, interestApplied,
-                    actualDisbursementDate, createdDate, currentUser);
-            this.loanTransactions.add(interestAppliedTransaction);
+            Money zero = Money.zero(getCurrency());
+            if (disbursementTransaction != null) {
+                disbursementTransaction.updateComponentsAndTotal(zero, interestApplied, zero, zero);
+            } else {
+                final LoanTransaction interestAppliedTransaction = LoanTransaction.accrueInterest(getOffice(), this, interestApplied,
+                        actualDisbursementDate, createdDate, currentUser);
+                this.loanTransactions.add(interestAppliedTransaction);
+            }
         }
 
         return reprocessTransactionForDisbursement();
@@ -2342,7 +2358,7 @@ public class Loan extends AbstractPersistable<Long> {
         return loanSchedule;
     }
 
-    private void handleDisbursementTransaction(final LocalDate disbursedOn, final LocalDateTime createdDate, final AppUser currentUser) {
+    private void handleDisbursementTransaction(final LocalDate disbursedOn, final LocalDateTime createdDate, final AppUser currentUser, LoanTransaction disbursementTransaction) {
 
         // add repayment transaction to track incoming money from client to mfi
         // for (charges due at time of disbursement)
@@ -2368,9 +2384,15 @@ public class Loan extends AbstractPersistable<Long> {
                             && !charge.getChargePaymentMode().isPaymentModeAccountTransfer()) {
                         charge.markAsFullyPaid();
                         // Add "Loan Charge Paid By" details to this transaction
-                        final LoanChargePaidBy loanChargePaidBy = new LoanChargePaidBy(chargesPayment, charge, charge.amount(),
-                                installmentNumber);
-                        chargesPayment.getLoanChargesPaid().add(loanChargePaidBy);
+                        if (disbursementTransaction != null) {
+                            final LoanChargePaidBy loanChargePaidBy = new LoanChargePaidBy(disbursementTransaction, charge, charge.amount(),
+                                    installmentNumber);
+                            disbursementTransaction.getLoanChargesPaid().add(loanChargePaidBy);
+                        } else {
+                            final LoanChargePaidBy loanChargePaidBy = new LoanChargePaidBy(chargesPayment, charge, charge.amount(),
+                                    installmentNumber);
+                            chargesPayment.getLoanChargesPaid().add(loanChargePaidBy);
+                        }
                         disbursentMoney = disbursentMoney.plus(charge.amount());
                     }
                 } else {
@@ -2379,15 +2401,19 @@ public class Loan extends AbstractPersistable<Long> {
                      * None or Cash based accounting is enabled
                      **/
                     if (isNoneOrCashOrUpfrontAccrualAccountingEnabledOnLoanProduct()) {
-                        handleChargeAppliedTransaction(charge, disbursedOn, currentUser);
+                        handleChargeAppliedTransaction(charge, disbursedOn, currentUser, disbursementTransaction);
                     }
                 }
             }
             if (disbursentMoney.isGreaterThanZero()) {
                 final Money zero = Money.zero(getCurrency());
-                chargesPayment.updateComponentsAndTotal(zero, zero, disbursentMoney, zero);
-                chargesPayment.updateLoan(this);
-                this.loanTransactions.add(chargesPayment);
+                if (disbursementTransaction != null) {
+                    disbursementTransaction.updateComponentsAndTotal(zero, zero, disbursentMoney, zero);
+                } else {
+                    chargesPayment.updateComponentsAndTotal(zero, zero, disbursentMoney, zero);
+                    chargesPayment.updateLoan(this);
+                    this.loanTransactions.add(chargesPayment);
+                }
                 updateLoanOutstandingBalaces();
             }
         }
