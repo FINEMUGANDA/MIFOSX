@@ -619,7 +619,7 @@ public class AccountingProcessorHelper {
                 loanInfo = "(#" + loan.getAccountNumber() + ")";
             }
             if (loanTransaction.isDisbursement()) {
-                result = "Loan Disbursement" + loanInfo;
+                result = "Loan Disbursement - Outstanding Principle" + loanInfo;
             } else if (loanTransaction.isAnyTypeOfRepayment()) {
                 result = "Loan Repayment" + loanInfo;
             } else if (loanTransaction.isAccrual()) {
