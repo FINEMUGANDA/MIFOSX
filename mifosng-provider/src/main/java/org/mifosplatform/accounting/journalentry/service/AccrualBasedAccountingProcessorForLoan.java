@@ -42,6 +42,7 @@ public class AccrualBasedAccountingProcessorForLoan implements AccountingProcess
             /** Handle Disbursements **/
             if (loanTransactionDTO.getTransactionType().isDisbursement()) {
                 createJournalEntriesForDisbursements(loanDTO, loanTransactionDTO, office);
+                createJournalEntriesForAccruals(loanDTO, loanTransactionDTO, office);
             }
 
             /*** Handle Accruals ***/
@@ -101,7 +102,11 @@ public class AccrualBasedAccountingProcessorForLoan implements AccountingProcess
         // transaction properties
         final String transactionId = loanTransactionDTO.getTransactionId();
         final Date transactionDate = loanTransactionDTO.getTransactionDate();
-        final BigDecimal disbursalAmount = loanTransactionDTO.getAmount();
+
+        BigDecimal disbursalAmount = loanTransactionDTO.getPrincipal();
+        if (disbursalAmount == null) {
+            disbursalAmount = loanTransactionDTO.getAmount();
+        }
         final boolean isReversed = loanTransactionDTO.isReversed();
         final Long paymentTypeId = loanTransactionDTO.getPaymentTypeId();
 

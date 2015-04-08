@@ -616,10 +616,10 @@ public class AccountingProcessorHelper {
             String loanInfo = "";
             Loan loan = loanTransaction.getLoan();
             if (loan != null) {
-                loanInfo = "(#" + loan.getAccountNumber() + ")";
+                loanInfo = " (#" + loan.getAccountNumber() + ")";
             }
             if (loanTransaction.isDisbursement()) {
-                result = "Loan Disbursement - Outstanding Principle" + loanInfo;
+                result = "Loan Disbursement" + loanInfo;
             } else if (loanTransaction.isAnyTypeOfRepayment()) {
                 result = "Loan Repayment" + loanInfo;
             } else if (loanTransaction.isAccrual()) {
