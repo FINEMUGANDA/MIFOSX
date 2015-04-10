@@ -5,6 +5,7 @@
  */
 package org.mifosplatform.portfolio.financialyear.data;
 
+import org.joda.time.LocalDate;
 import org.mifosplatform.infrastructure.codes.data.CodeValueData;
 import org.mifosplatform.organisation.monetary.data.CurrencyData;
 
@@ -20,15 +21,15 @@ public class FinancialYearData {
     private final Long id;
     private final Integer startYear;
     private final Integer endYear;
-    private final Date startDate;
-    private final Date endDate;
+    private final LocalDate startDate;
+    private final LocalDate endDate;
     private final Boolean current;
 
-    public static FinancialYearData instance(final Long id, final Integer startYear, final Integer endYear, final Date startDate, final Date endDate, final Boolean current) {
+    public static FinancialYearData instance(final Long id, final Integer startYear, final Integer endYear, final LocalDate startDate, final LocalDate endDate, final Boolean current) {
         return new FinancialYearData(id, startYear, endYear, startDate, endDate, current);
     }
 
-    public FinancialYearData(Long id, Integer startYear, Integer endYear, Date startDate, Date endDate, Boolean current) {
+    public FinancialYearData(Long id, Integer startYear, Integer endYear, LocalDate startDate, LocalDate endDate, Boolean current) {
         this.id = id;
         this.startYear = startYear;
         this.endYear = endYear;

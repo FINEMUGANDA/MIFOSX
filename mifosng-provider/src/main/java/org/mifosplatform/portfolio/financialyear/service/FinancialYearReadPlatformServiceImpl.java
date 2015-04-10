@@ -5,6 +5,7 @@
  */
 package org.mifosplatform.portfolio.financialyear.service;
 
+import org.joda.time.LocalDate;
 import org.mifosplatform.infrastructure.codes.data.CodeValueData;
 import org.mifosplatform.infrastructure.core.domain.JdbcSupport;
 import org.mifosplatform.infrastructure.core.service.RoutingDataSource;
@@ -55,8 +56,8 @@ public class FinancialYearReadPlatformServiceImpl implements FinancialYearReadPl
 
             final Integer startYear = rs.getInt("startYear");
             final Integer endYear = rs.getInt("endYear");
-            final Date startDate = rs.getDate("startDate");
-            final Date endDate = rs.getDate("endDate");
+            final LocalDate startDate = JdbcSupport.getLocalDate(rs, "startDate");
+            final LocalDate endDate = JdbcSupport.getLocalDate(rs, "endDate");
             final boolean current = rs.getBoolean("current");
 
             return FinancialYearData.instance(id, startYear, endYear, startDate, endDate, current);
