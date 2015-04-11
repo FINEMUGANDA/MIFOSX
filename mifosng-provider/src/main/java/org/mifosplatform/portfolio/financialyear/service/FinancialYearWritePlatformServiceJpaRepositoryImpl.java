@@ -53,6 +53,9 @@ public class FinancialYearWritePlatformServiceJpaRepositoryImpl implements Finan
 
             final FinancialYear financialYear = FinancialYear.fromJson(command);
 
+            if(financialYear.isCurrent()) {
+                this.financialYearRepository.setAllCurrent(false);
+            }
             this.financialYearRepository.save(financialYear);
 
             return new CommandProcessingResultBuilder() //

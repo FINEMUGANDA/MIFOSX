@@ -7,8 +7,14 @@ package org.mifosplatform.portfolio.financialyear.domain;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
 
 public interface FinancialYearRepository extends JpaRepository<FinancialYear, Long>, JpaSpecificationExecutor<FinancialYear> {
 
     FinancialYear findById(Long id);
+
+    @Modifying
+    @Query("update FinancialYear fy set fy.current = ?1")
+    int setAllCurrent(boolean current);
 }

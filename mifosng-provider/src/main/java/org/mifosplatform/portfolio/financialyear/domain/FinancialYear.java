@@ -112,6 +112,10 @@ public class FinancialYear extends AbstractPersistable<Long> {
         return actualChanges;
     }
 
+    public boolean isCurrent() {
+        return current;
+    }
+
     @Override
     public boolean equals(final Object obj) {
         if (obj == null) { return false; }
