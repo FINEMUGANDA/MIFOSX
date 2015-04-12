@@ -15,6 +15,10 @@ public interface FinancialYearRepository extends JpaRepository<FinancialYear, Lo
     FinancialYear findById(Long id);
 
     @Modifying
+    @Query("update FinancialYear fy set fy.current = ?1 WHERE fy.id <> ?2")
+    int setAllCurrent(boolean current, long id);
+
+    @Modifying
     @Query("update FinancialYear fy set fy.current = ?1")
     int setAllCurrent(boolean current);
 }

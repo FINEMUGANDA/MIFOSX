@@ -58,7 +58,7 @@ public class FinancialYearAssembler {
                     final LocalDate startDate = this.fromApiJsonHelper.extractLocalDateNamed("startDate", financialYearItemElement);
                     final LocalDate endDate = this.fromApiJsonHelper.extractLocalDateNamed("endDate", financialYearItemElement);
                     final boolean isCurrent = this.fromApiJsonHelper.extractBooleanNamed("isCurrent", financialYearItemElement);
-                    final boolean closed = this.fromApiJsonHelper.extractBooleanNamed("closed", financialYearItemElement);
+                    final boolean closed = this.fromApiJsonHelper.extractBooleanNamed("isClosed", financialYearItemElement);
 
                     if (id == null) {
                         financialYears.add(FinancialYear.from(startYear, endYear, startDate.toDate(), endDate.toDate(), isCurrent, closed));
