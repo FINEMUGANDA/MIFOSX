@@ -40,6 +40,7 @@ import org.mifosplatform.infrastructure.core.service.RoutingDataSource;
 import org.mifosplatform.infrastructure.security.service.PlatformSecurityContext;
 import org.mifosplatform.organisation.office.domain.*;
 import org.mifosplatform.organisation.office.exception.OfficeNotFoundException;
+import org.mifosplatform.portfolio.financialyear.domain.FinancialYearRepository;
 import org.mifosplatform.portfolio.paymentdetail.domain.PaymentDetail;
 import org.mifosplatform.portfolio.paymentdetail.service.PaymentDetailWritePlatformService;
 import org.mifosplatform.useradministration.domain.AppUser;
@@ -64,6 +65,7 @@ public class JournalEntryWritePlatformServiceJpaRepositoryImpl implements Journa
     private final GLAccountRepository glAccountRepository;
     private final JournalEntryRepository glJournalEntryRepository;
     private final OfficeRepository officeRepository;
+    private final FinancialYearRepository financialYearRepository;
     private final AccountingProcessorForLoanFactory accountingProcessorForLoanFactory;
     private final AccountingProcessorForSavingsFactory accountingProcessorForSavingsFactory;
     private final AccountingProcessorHelper helper;
@@ -79,7 +81,7 @@ public class JournalEntryWritePlatformServiceJpaRepositoryImpl implements Journa
     @Autowired
     public JournalEntryWritePlatformServiceJpaRepositoryImpl(final GLClosureRepository glClosureRepository,
             final JournalEntryRepository glJournalEntryRepository, final OfficeRepository officeRepository,
-            final GLAccountRepository glAccountRepository, final JournalEntryCommandFromApiJsonDeserializer fromApiJsonDeserializer,
+            final GLAccountRepository glAccountRepository, final FinancialYearRepository financialYearRepository, final JournalEntryCommandFromApiJsonDeserializer fromApiJsonDeserializer,
             final AccountingProcessorHelper accountingProcessorHelper, final AccountingRuleRepository accountingRuleRepository,
             final AccountingProcessorForLoanFactory accountingProcessorForLoanFactory,
             final AccountingProcessorForSavingsFactory accountingProcessorForSavingsFactory,
@@ -92,6 +94,7 @@ public class JournalEntryWritePlatformServiceJpaRepositoryImpl implements Journa
         this.glJournalEntryRepository = glJournalEntryRepository;
         this.fromApiJsonDeserializer = fromApiJsonDeserializer;
         this.glAccountRepository = glAccountRepository;
+        this.financialYearRepository = financialYearRepository;
         this.accountingProcessorForLoanFactory = accountingProcessorForLoanFactory;
         this.accountingProcessorForSavingsFactory = accountingProcessorForSavingsFactory;
         this.helper = accountingProcessorHelper;
@@ -508,6 +511,17 @@ public class JournalEntryWritePlatformServiceJpaRepositoryImpl implements Journa
         if (latestGLClosure != null) {
             if (latestGLClosure.getClosingDate().after(transactionDate) || latestGLClosure.getClosingDate().equals(transactionDate)) { throw new JournalEntryInvalidException(
                     GL_JOURNAL_ENTRY_INVALID_REASON.ACCOUNTING_CLOSED, latestGLClosure.getClosingDate(), null, null); }
+        }
+
+        // check financial year
+        final AppUser user = this.context.authenticatedUser();
+        if(user.hasNotPermissionForAnyOf("ALL_FUNCTIONS", "ALL_FUNCTIONS_READ", "BACKDATE_JOURNALENTRY") && financialYearRepository.countActiveFinancialYearFor(entryLocalDate.toDate())==0) {
+            throw new JournalEntryInvalidException(GL_JOURNAL_ENTRY_INVALID_REASON.OUTSIDE_FINANCIALYEAR, transactionDate, null, null);
+        } else {
+            Boolean closed = financialYearRepository.isFinancialYearClosed(entryLocalDate.toDate());
+            if(closed==null || Boolean.FALSE.equals(closed)) {
+                throw new JournalEntryInvalidException(GL_JOURNAL_ENTRY_INVALID_REASON.FINANCIALYEAR_CLOSED, transactionDate, null, null);
+            }
         }
 
         /*** check if credits and debits are valid **/
