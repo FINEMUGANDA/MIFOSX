@@ -85,7 +85,7 @@ public class FinancialYearWritePlatformServiceJpaRepositoryImpl implements Finan
             final Map<String, Object> changes = financialYearForUpdate.update(command);
 
             if (!changes.isEmpty()) {
-                if(financialYearForUpdate.isCurrent()) {
+                if(financialYearCommand.isCurrent()) {
                     this.financialYearRepository.setAllCurrent(false);
                 }
                 this.financialYearRepository.saveAndFlush(financialYearForUpdate);
