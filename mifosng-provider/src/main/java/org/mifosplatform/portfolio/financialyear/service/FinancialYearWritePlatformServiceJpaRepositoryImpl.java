@@ -86,7 +86,7 @@ public class FinancialYearWritePlatformServiceJpaRepositoryImpl implements Finan
 
             if (!changes.isEmpty()) {
                 if(financialYearCommand.isCurrent()) {
-                    this.financialYearRepository.setAllCurrent(false);
+                    this.financialYearRepository.setAllCurrent(false, financialYearId);
                 }
                 this.financialYearRepository.save(financialYearForUpdate);
             }
