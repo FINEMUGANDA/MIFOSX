@@ -133,6 +133,22 @@ public class FinancialYear extends AbstractPersistable<Long> {
         return closed;
     }
 
+    public Integer getStartYear() {
+        return startYear;
+    }
+
+    public Integer getEndYear() {
+        return endYear;
+    }
+
+    public Date getStartDate() {
+        return startDate;
+    }
+
+    public Date getEndDate() {
+        return endDate;
+    }
+
     @Override
     public boolean equals(final Object obj) {
         if (obj == null) { return false; }

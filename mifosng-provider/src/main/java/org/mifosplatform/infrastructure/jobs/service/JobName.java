@@ -29,7 +29,8 @@ public enum JobName {
     FOLLOW_UP_EMAIL_NOTIFICATION("Follow up Email Notification"),
     PAYMENT_REMINDER_EMAIL_NOTIFICATION("Payment Reminder Email Notification"),
     FOLLOW_UP_SMS_NOTIFICATION("Follow up SMS Notification"),
-    PAYMENT_REMINDER_SMS_NOTIFICATION("Payment Reminder SMS Notification");
+    PAYMENT_REMINDER_SMS_NOTIFICATION("Payment Reminder SMS Notification"),
+    CREATE_NEW_FINANCIALYEAR("Create New Financial Year");
 
     private final String name;
 

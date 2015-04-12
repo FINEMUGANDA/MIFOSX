@@ -5,10 +5,13 @@
  */
 package org.mifosplatform.portfolio.financialyear.service;
 
+import org.joda.time.LocalDate;
 import org.mifosplatform.infrastructure.core.api.JsonCommand;
 import org.mifosplatform.infrastructure.core.data.CommandProcessingResult;
 import org.mifosplatform.infrastructure.core.data.CommandProcessingResultBuilder;
 import org.mifosplatform.infrastructure.core.exception.PlatformDataIntegrityException;
+import org.mifosplatform.infrastructure.jobs.annotation.CronTarget;
+import org.mifosplatform.infrastructure.jobs.service.JobName;
 import org.mifosplatform.infrastructure.security.service.PlatformSecurityContext;
 import org.mifosplatform.portfolio.financialyear.command.FinancialYearCommand;
 import org.mifosplatform.portfolio.financialyear.domain.FinancialYear;
@@ -19,9 +22,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Map;
 
 @Service
@@ -125,4 +130,25 @@ public class FinancialYearWritePlatformServiceJpaRepositoryImpl implements Finan
         logger.error(dve.getMessage(), dve);
     }
 
+
+    @Transactional
+    @Override
+    @CronTarget(jobName = JobName.CREATE_NEW_FINANCIALYEAR)
+    public void createNewFinancialYear() {
+        try {
+            List<FinancialYear> years = this.financialYearRepository.getLast(new LocalDate().toDate());
+
+            if(years==null || years.isEmpty()) {
+                List<FinancialYear> result = this.financialYearRepository.getLast();
+                if(result!=null && !result.isEmpty()) {
+                    this.financialYearRepository.setAllCurrent(false);
+                    FinancialYear last = result.get(0);
+                    FinancialYear fy = FinancialYear.from(last.getEndYear(), last.getEndYear() + 1, new LocalDate(last.getEndDate()).minusDays(1).toDate(), new LocalDate(last.getEndDate()).plusYears(1).toDate(), true, false);
+                    this.financialYearRepository.saveAndFlush(fy);
+                }
+            }
+        } catch (EmptyResultDataAccessException e) {
+            logger.debug("No results found for updation of running balance ");
+        }
+    }
 }

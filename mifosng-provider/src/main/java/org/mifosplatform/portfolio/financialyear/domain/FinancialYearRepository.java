@@ -10,6 +10,9 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 
+import java.util.Date;
+import java.util.List;
+
 public interface FinancialYearRepository extends JpaRepository<FinancialYear, Long>, JpaSpecificationExecutor<FinancialYear> {
 
     FinancialYear findById(Long id);
@@ -21,4 +24,10 @@ public interface FinancialYearRepository extends JpaRepository<FinancialYear, Lo
     @Modifying
     @Query("update FinancialYear fy set fy.current = ?1")
     int setAllCurrent(boolean current);
+
+    @Query("SELECT fy FROM FinancialYear fy ORDER BY fy.endDate DESC")
+    List<FinancialYear> getLast();
+
+    @Query("SELECT fy FROM FinancialYear fy WHERE fy.endDate > ?1 ORDER BY fy.endDate DESC")
+    List<FinancialYear> getLast(Date now);
 }

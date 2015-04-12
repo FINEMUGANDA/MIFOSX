@@ -15,4 +15,6 @@ public interface FinancialYearWritePlatformService {
     CommandProcessingResult updateFinancialYear(Long collateralId, JsonCommand command);
 
     CommandProcessingResult deleteFinancialYear(Long collateralId, Long commandId);
+
+    void createNewFinancialYear();
 }
