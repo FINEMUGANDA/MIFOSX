@@ -12,7 +12,6 @@ import org.mifosplatform.infrastructure.core.exception.PlatformApiDataValidation
 import org.mifosplatform.portfolio.financialyear.api.FinancialYearApiConstants.FINANCIAL_YEAR_JSON_INPUT_PARAMS;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 /**
@@ -25,13 +24,15 @@ public class FinancialYearCommand {
     private LocalDate startDate;
     private LocalDate endDate;
     private Boolean current;
+    private Boolean closed;
 
-    public FinancialYearCommand(Integer startYear, Integer endYear, LocalDate startDate, LocalDate endDate, Boolean current) {
+    public FinancialYearCommand(Integer startYear, Integer endYear, LocalDate startDate, LocalDate endDate, Boolean current, Boolean closed) {
         this.startYear = startYear;
         this.endYear = endYear;
         this.startDate = startDate;
         this.endDate = endDate;
         this.current = current;
+        this.closed = closed;
     }
 
     public Integer getStartYear() {
@@ -54,6 +55,10 @@ public class FinancialYearCommand {
         return current;
     }
 
+    public Boolean isClosed() {
+        return closed;
+    }
+
     public void validateForCreate() {
         final List<ApiParameterError> dataValidationErrors = new ArrayList<>();
 
@@ -71,6 +76,7 @@ public class FinancialYearCommand {
             baseDataValidator.reset().parameter(FINANCIAL_YEAR_JSON_INPUT_PARAMS.END_DATE.getValue()).value(this.endDate).notNull().ignoreIfNull().validateDateAfter(startDate).validateDateBetween(startDate, endDate);
         }
         baseDataValidator.reset().parameter(FINANCIAL_YEAR_JSON_INPUT_PARAMS.CURRENT.getValue()).value(this.current).notNull().ignoreIfNull().validateForBooleanValue();
+        baseDataValidator.reset().parameter(FINANCIAL_YEAR_JSON_INPUT_PARAMS.CLOSED.getValue()).value(this.closed).notNull().ignoreIfNull().validateForBooleanValue();
 
         if (!dataValidationErrors.isEmpty()) {
             throw new PlatformApiDataValidationException("validation.msg.validation.errors.exist",
@@ -95,6 +101,7 @@ public class FinancialYearCommand {
             baseDataValidator.reset().parameter(FINANCIAL_YEAR_JSON_INPUT_PARAMS.END_DATE.getValue()).value(this.endDate).notNull().ignoreIfNull().validateDateAfter(startDate).validateDateBetween(startDate, endDate);
         }
         baseDataValidator.reset().parameter(FINANCIAL_YEAR_JSON_INPUT_PARAMS.CURRENT.getValue()).value(this.current).notNull().ignoreIfNull().validateForBooleanValue();
+        baseDataValidator.reset().parameter(FINANCIAL_YEAR_JSON_INPUT_PARAMS.CLOSED.getValue()).value(this.closed).notNull().ignoreIfNull().validateForBooleanValue();
 
         if (!dataValidationErrors.isEmpty()) {
             throw new PlatformApiDataValidationException("validation.msg.validation.errors.exist",

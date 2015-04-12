@@ -16,7 +16,7 @@ public class FinancialYearApiConstants {
      * Enum of all parameters passed in while creating/updating a collateral
      ***/
     public static enum FINANCIAL_YEAR_JSON_INPUT_PARAMS {
-        FINANCIAL_YEAR_ID("financialYearId"), START_YEAR("startYear"), END_YEAR("endYear"), START_DATE("startDate"), END_DATE("endDate"), CURRENT("current"), CLOSED("current");
+        FINANCIAL_YEAR_ID("financialYearId"), START_YEAR("startYear"), END_YEAR("endYear"), START_DATE("startDate"), END_DATE("endDate"), CURRENT("current"), CLOSED("closed");
 
         private final String value;
 

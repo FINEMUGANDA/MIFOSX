@@ -59,7 +59,8 @@ public final class FinancialYearCommandFromApiJsonDeserializer extends AbstractF
         final LocalDate startDate = this.fromApiJsonHelper.extractLocalDateNamed(FINANCIAL_YEAR_JSON_INPUT_PARAMS.START_DATE.getValue(), element);
         final LocalDate endDate = this.fromApiJsonHelper.extractLocalDateNamed(FINANCIAL_YEAR_JSON_INPUT_PARAMS.END_DATE.getValue(), element);
         final Boolean current = this.fromApiJsonHelper.extractBooleanNamed(FINANCIAL_YEAR_JSON_INPUT_PARAMS.CURRENT.getValue(), element);
+        final Boolean closed = this.fromApiJsonHelper.extractBooleanNamed(FINANCIAL_YEAR_JSON_INPUT_PARAMS.CLOSED.getValue(), element);
 
-        return new FinancialYearCommand(startYear, endYear, startDate, endDate, current);
+        return new FinancialYearCommand(startYear, endYear, startDate, endDate, current, closed);
     }
 }
