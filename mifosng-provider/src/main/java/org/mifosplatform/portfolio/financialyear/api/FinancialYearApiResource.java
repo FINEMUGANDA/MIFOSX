@@ -33,7 +33,7 @@ import java.util.Set;
 @Scope("singleton")
 public class FinancialYearApiResource {
 
-    private static final Set<String> RESPONSE_DATA_PARAMETERS = new HashSet<>(Arrays.asList("id", "startYear", "endYear", "startDate", "endDate", "current"));
+    private static final Set<String> RESPONSE_DATA_PARAMETERS = new HashSet<>(Arrays.asList("id", "startYear", "endYear", "startDate", "endDate", "current", "closed"));
 
     private final String resourceNameForPermission = "FINANCIALYEAR";
 

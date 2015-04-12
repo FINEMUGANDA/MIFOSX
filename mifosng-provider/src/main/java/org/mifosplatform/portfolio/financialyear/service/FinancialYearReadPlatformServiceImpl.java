@@ -42,7 +42,7 @@ public class FinancialYearReadPlatformServiceImpl implements FinancialYearReadPl
 
     private static final class FinancialYearMapper implements RowMapper<FinancialYearData> {
 
-        private final StringBuilder sqlBuilder = new StringBuilder("fy.id as id, fy.start_year as startYear, fy.end_year as endYear, fy.start_date as startDate, fy.end_date as endDate, fy.current as current FROM m_financial_year fy");
+        private final StringBuilder sqlBuilder = new StringBuilder("fy.id as id, fy.start_year as startYear, fy.end_year as endYear, fy.start_date as startDate, fy.end_date as endDate, fy.current as current , fy.closed as closed FROM m_financial_year fy");
 
         public String schema() {
             return this.sqlBuilder.toString();
@@ -59,8 +59,9 @@ public class FinancialYearReadPlatformServiceImpl implements FinancialYearReadPl
             final LocalDate startDate = JdbcSupport.getLocalDate(rs, "startDate");
             final LocalDate endDate = JdbcSupport.getLocalDate(rs, "endDate");
             final boolean current = rs.getBoolean("current");
+            final boolean closed = rs.getBoolean("closed");
 
-            return FinancialYearData.instance(id, startYear, endYear, startDate, endDate, current);
+            return FinancialYearData.instance(id, startYear, endYear, startDate, endDate, current, closed);
         }
     }
 

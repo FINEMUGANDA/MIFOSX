@@ -24,23 +24,25 @@ public class FinancialYearData {
     private final LocalDate startDate;
     private final LocalDate endDate;
     private final Boolean current;
+    private final Boolean closed;
 
-    public static FinancialYearData instance(final Long id, final Integer startYear, final Integer endYear, final LocalDate startDate, final LocalDate endDate, final Boolean current) {
-        return new FinancialYearData(id, startYear, endYear, startDate, endDate, current);
+    public static FinancialYearData instance(final Long id, final Integer startYear, final Integer endYear, final LocalDate startDate, final LocalDate endDate, final Boolean current, final Boolean closed) {
+        return new FinancialYearData(id, startYear, endYear, startDate, endDate, current, closed);
     }
 
-    public FinancialYearData(Long id, Integer startYear, Integer endYear, LocalDate startDate, LocalDate endDate, Boolean current) {
+    public FinancialYearData(Long id, Integer startYear, Integer endYear, LocalDate startDate, LocalDate endDate, Boolean current, Boolean closed) {
         this.id = id;
         this.startYear = startYear;
         this.endYear = endYear;
         this.startDate = startDate;
         this.endDate = endDate;
         this.current = current;
+        this.closed = closed;
     }
 
     public FinancialYearData template(final FinancialYearData financialYearData) {
         return new FinancialYearData(financialYearData.id, financialYearData.startYear, financialYearData.endYear, financialYearData.startDate,
-                financialYearData.endDate, financialYearData.current);
+                financialYearData.endDate, financialYearData.current, financialYearData.closed);
     }
 
 }

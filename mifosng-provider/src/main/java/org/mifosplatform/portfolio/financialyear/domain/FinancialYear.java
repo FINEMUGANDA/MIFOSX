@@ -38,20 +38,24 @@ public class FinancialYear extends AbstractPersistable<Long> {
     @Column(name = "current", nullable = false)
     private boolean current = false;
 
+    @Column(name = "closed", nullable = false)
+    private boolean closed = false;
+
     protected FinancialYear() {
         //
     }
 
-    private FinancialYear(Integer startYear, Integer endYear, Date startDate, Date endDate, boolean current) {
+    private FinancialYear(Integer startYear, Integer endYear, Date startDate, Date endDate, boolean current, boolean closed) {
         this.startYear = startYear;
         this.endYear = endYear;
         this.startDate = startDate;
         this.endDate = endDate;
         this.current = current;
+        this.closed = closed;
     }
 
-    public static FinancialYear from(Integer startYear, Integer endYear, Date startDate, Date endDate, boolean isCurrent) {
-        return new FinancialYear(startYear, endYear, startDate, endDate, isCurrent);
+    public static FinancialYear from(Integer startYear, Integer endYear, Date startDate, Date endDate, boolean isCurrent, boolean closed) {
+        return new FinancialYear(startYear, endYear, startDate, endDate, isCurrent, closed);
     }
     public static FinancialYear fromJson(final JsonCommand command) {
         Integer startYear = command.integerValueOfParameterNamed(FINANCIAL_YEAR_JSON_INPUT_PARAMS.START_YEAR.getValue());
@@ -59,15 +63,17 @@ public class FinancialYear extends AbstractPersistable<Long> {
         LocalDate startDate = command.localDateValueOfParameterNamed(FINANCIAL_YEAR_JSON_INPUT_PARAMS.START_DATE.getValue());
         LocalDate endDate = command.localDateValueOfParameterNamed(FINANCIAL_YEAR_JSON_INPUT_PARAMS.END_DATE.getValue());
         boolean current = command.booleanPrimitiveValueOfParameterNamed(FINANCIAL_YEAR_JSON_INPUT_PARAMS.CURRENT.getValue());
-        return new FinancialYear(startYear, endYear, startDate.toDate(), endDate.toDate(), current);
+        boolean closed = command.booleanPrimitiveValueOfParameterNamed(FINANCIAL_YEAR_JSON_INPUT_PARAMS.CLOSED.getValue());
+        return new FinancialYear(startYear, endYear, startDate.toDate(), endDate.toDate(), current, closed);
     }
 
-    public void assembleFrom(Integer startYear, Integer endYear, Date startDate, Date endDate, boolean isCurrent) {
+    public void assembleFrom(Integer startYear, Integer endYear, Date startDate, Date endDate, boolean isCurrent, boolean closed) {
         this.startYear = startYear;
         this.endYear = endYear;
         this.startDate = startDate;
         this.endDate = endDate;
         this.current = isCurrent;
+        this.closed = closed;
     }
 
     public Map<String, Object> update(final JsonCommand command) {
@@ -109,11 +115,22 @@ public class FinancialYear extends AbstractPersistable<Long> {
             this.current = newValue;
         }
 
+        final String closedParamName = FINANCIAL_YEAR_JSON_INPUT_PARAMS.CLOSED.getValue();
+        if (command.isChangeInBooleanParameterNamed(closedParamName, this.closed)) {
+            final boolean newValue = command.booleanPrimitiveValueOfParameterNamed(closedParamName);
+            actualChanges.put(closedParamName, newValue);
+            this.closed = newValue;
+        }
+
         return actualChanges;
     }
 
     public boolean isCurrent() {
         return current;
+    }
+
+    public boolean isClosed() {
+        return closed;
     }
 
     @Override
@@ -129,6 +146,7 @@ public class FinancialYear extends AbstractPersistable<Long> {
                 .append(this.startDate, rhs.startDate)
                 .append(this.endDate, rhs.endDate)
                 .append(this.current, rhs.current)
+                .append(this.closed, rhs.closed)
                 .isEquals();
     }
 
@@ -141,6 +159,7 @@ public class FinancialYear extends AbstractPersistable<Long> {
                 .append(this.startDate)
                 .append(this.endDate)
                 .append(this.current)
+                .append(this.closed)
                 .toHashCode();
     }
 }
