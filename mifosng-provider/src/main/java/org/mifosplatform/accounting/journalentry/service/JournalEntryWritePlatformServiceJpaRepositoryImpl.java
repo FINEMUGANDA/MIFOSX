@@ -426,6 +426,11 @@ public class JournalEntryWritePlatformServiceJpaRepositoryImpl implements Journa
 
         validateCommentForReversal(reversalComment);
 
+        // check financial year
+        for (final JournalEntry journalEntry : journalEntries) {
+            validateFinancialYear(journalEntry.getTransactionDate());
+        }
+
         for (final JournalEntry journalEntry : journalEntries) {
             JournalEntry reversalJournalEntry;
             if (useDefaultComment) {
@@ -514,15 +519,7 @@ public class JournalEntryWritePlatformServiceJpaRepositoryImpl implements Journa
         }
 
         // check financial year
-        final AppUser user = this.context.authenticatedUser();
-        if(user.hasNotPermissionForAnyOf("ALL_FUNCTIONS", "ALL_FUNCTIONS_READ", "BACKDATE_JOURNALENTRY") && financialYearRepository.countActiveFinancialYearFor(entryLocalDate.toDate())==0) {
-            throw new JournalEntryInvalidException(GL_JOURNAL_ENTRY_INVALID_REASON.OUTSIDE_FINANCIALYEAR, transactionDate, null, null);
-        } else {
-            Boolean closed = financialYearRepository.isFinancialYearClosed(entryLocalDate.toDate());
-            if(closed==null || Boolean.FALSE.equals(closed)) {
-                throw new JournalEntryInvalidException(GL_JOURNAL_ENTRY_INVALID_REASON.FINANCIALYEAR_CLOSED, transactionDate, null, null);
-            }
-        }
+        validateFinancialYear(transactionDate);
 
         /*** check if credits and debits are valid **/
         final SingleDebitOrCreditEntryCommand[] credits = command.getCredits();
@@ -533,6 +530,18 @@ public class JournalEntryWritePlatformServiceJpaRepositoryImpl implements Journa
                 GL_JOURNAL_ENTRY_INVALID_REASON.NO_DEBITS_OR_CREDITS, null, null, null); }
 
         checkDebitAndCreditAmounts(credits, debits);
+    }
+
+    private void validateFinancialYear(Date date) {
+        final AppUser user = this.context.authenticatedUser();
+        if(user.hasNotPermissionForAnyOf("ALL_FUNCTIONS", "ALL_FUNCTIONS_READ", "BACKDATE_JOURNALENTRY") && financialYearRepository.countActiveFinancialYearFor(date)==0) {
+            throw new JournalEntryInvalidException(GL_JOURNAL_ENTRY_INVALID_REASON.OUTSIDE_FINANCIALYEAR, date, null, null);
+        } else {
+            Boolean closed = financialYearRepository.isFinancialYearClosed(date);
+            if(closed==null || Boolean.FALSE.equals(closed)) {
+                throw new JournalEntryInvalidException(GL_JOURNAL_ENTRY_INVALID_REASON.FINANCIALYEAR_CLOSED, date, null, null);
+            }
+        }
     }
 
     private void saveAllDebitOrCreditEntries(final JournalEntryCommand command, final Office office, final PaymentDetail paymentDetail,
