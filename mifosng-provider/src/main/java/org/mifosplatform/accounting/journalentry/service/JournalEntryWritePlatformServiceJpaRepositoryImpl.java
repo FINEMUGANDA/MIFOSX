@@ -538,7 +538,7 @@ public class JournalEntryWritePlatformServiceJpaRepositoryImpl implements Journa
             throw new JournalEntryInvalidException(GL_JOURNAL_ENTRY_INVALID_REASON.OUTSIDE_FINANCIALYEAR, date, null, null);
         } else {
             Boolean closed = financialYearRepository.isFinancialYearClosed(date);
-            if(closed==null || Boolean.FALSE.equals(closed)) {
+            if(closed==null || Boolean.TRUE.equals(closed)) {
                 throw new JournalEntryInvalidException(GL_JOURNAL_ENTRY_INVALID_REASON.FINANCIALYEAR_CLOSED, date, null, null);
             }
         }
