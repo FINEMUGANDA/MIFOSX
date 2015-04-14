@@ -538,7 +538,7 @@ public class JournalEntryWritePlatformServiceJpaRepositoryImpl implements Journa
             throw new JournalEntryInvalidException(GL_JOURNAL_ENTRY_INVALID_REASON.OUTSIDE_FINANCIALYEAR, date, null, null);
         } else {
             Boolean closed = financialYearRepository.isFinancialYearClosed(date);
-            if(closed==null || Boolean.TRUE.equals(closed)) {
+            if(Boolean.TRUE.equals(closed)) {
                 throw new JournalEntryInvalidException(GL_JOURNAL_ENTRY_INVALID_REASON.FINANCIALYEAR_CLOSED, date, null, null);
             }
         }
@@ -559,8 +559,6 @@ public class JournalEntryWritePlatformServiceJpaRepositoryImpl implements Journa
             if (!StringUtils.isBlank(singleDebitOrCreditEntryCommand.getComments())) {
                 comments = singleDebitOrCreditEntryCommand.getComments();
             }
-
-            logger.info("################### ACCOUNTING: {} - {} - {}", glAccount.getName(), glAccount.getType(), glAccount.getCurrencyCode());
 
             /** Validate current code is appropriate **/
             this.organisationCurrencyRepository.findOneWithNotFoundDetection(glAccount.getCurrencyCode());
