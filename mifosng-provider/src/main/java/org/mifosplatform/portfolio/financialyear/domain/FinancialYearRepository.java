@@ -31,9 +31,9 @@ public interface FinancialYearRepository extends JpaRepository<FinancialYear, Lo
     @Query("SELECT fy FROM FinancialYear fy WHERE fy.endDate > ?1 ORDER BY fy.endDate DESC")
     List<FinancialYear> getLast(Date now);
 
-    @Query("SELECT COUNT(fy) FROM FinancialYear fy WHERE  ?1 >= fy.startDate AND  ?1<= fy.endDate AND fy.current=true AND fy.closed=false")
+    @Query("SELECT COUNT(fy) FROM FinancialYear fy WHERE  ?1 >= fy.startDate AND  ?1 <= fy.endDate AND fy.current=true AND fy.closed=false")
     int countActiveFinancialYearFor(Date d);
 
-    @Query("SELECT fy.closed FROM FinancialYear fy WHERE  ?1 >= fy.startDate AND  ?1<= fy.endDate AND fy.current=true")
+    @Query("SELECT fy.closed FROM FinancialYear fy WHERE  ?1 >= fy.startDate AND  ?1 <= fy.endDate AND fy.current=true")
     Boolean isFinancialYearClosed(Date d);
 }
