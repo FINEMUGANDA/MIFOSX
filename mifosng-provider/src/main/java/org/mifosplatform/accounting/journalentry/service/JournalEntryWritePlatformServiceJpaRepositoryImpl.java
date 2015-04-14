@@ -40,6 +40,7 @@ import org.mifosplatform.infrastructure.core.service.RoutingDataSource;
 import org.mifosplatform.infrastructure.security.service.PlatformSecurityContext;
 import org.mifosplatform.organisation.office.domain.*;
 import org.mifosplatform.organisation.office.exception.OfficeNotFoundException;
+import org.mifosplatform.portfolio.financialyear.domain.FinancialYearRepository;
 import org.mifosplatform.portfolio.paymentdetail.domain.PaymentDetail;
 import org.mifosplatform.portfolio.paymentdetail.service.PaymentDetailWritePlatformService;
 import org.mifosplatform.useradministration.domain.AppUser;
@@ -64,6 +65,7 @@ public class JournalEntryWritePlatformServiceJpaRepositoryImpl implements Journa
     private final GLAccountRepository glAccountRepository;
     private final JournalEntryRepository glJournalEntryRepository;
     private final OfficeRepository officeRepository;
+    private final FinancialYearRepository financialYearRepository;
     private final AccountingProcessorForLoanFactory accountingProcessorForLoanFactory;
     private final AccountingProcessorForSavingsFactory accountingProcessorForSavingsFactory;
     private final AccountingProcessorHelper helper;
@@ -79,7 +81,7 @@ public class JournalEntryWritePlatformServiceJpaRepositoryImpl implements Journa
     @Autowired
     public JournalEntryWritePlatformServiceJpaRepositoryImpl(final GLClosureRepository glClosureRepository,
             final JournalEntryRepository glJournalEntryRepository, final OfficeRepository officeRepository,
-            final GLAccountRepository glAccountRepository, final JournalEntryCommandFromApiJsonDeserializer fromApiJsonDeserializer,
+            final GLAccountRepository glAccountRepository, final FinancialYearRepository financialYearRepository, final JournalEntryCommandFromApiJsonDeserializer fromApiJsonDeserializer,
             final AccountingProcessorHelper accountingProcessorHelper, final AccountingRuleRepository accountingRuleRepository,
             final AccountingProcessorForLoanFactory accountingProcessorForLoanFactory,
             final AccountingProcessorForSavingsFactory accountingProcessorForSavingsFactory,
@@ -92,6 +94,7 @@ public class JournalEntryWritePlatformServiceJpaRepositoryImpl implements Journa
         this.glJournalEntryRepository = glJournalEntryRepository;
         this.fromApiJsonDeserializer = fromApiJsonDeserializer;
         this.glAccountRepository = glAccountRepository;
+        this.financialYearRepository = financialYearRepository;
         this.accountingProcessorForLoanFactory = accountingProcessorForLoanFactory;
         this.accountingProcessorForSavingsFactory = accountingProcessorForSavingsFactory;
         this.helper = accountingProcessorHelper;
@@ -423,6 +426,11 @@ public class JournalEntryWritePlatformServiceJpaRepositoryImpl implements Journa
 
         validateCommentForReversal(reversalComment);
 
+        // check financial year
+        for (final JournalEntry journalEntry : journalEntries) {
+            validateFinancialYear(journalEntry.getTransactionDate());
+        }
+
         for (final JournalEntry journalEntry : journalEntries) {
             JournalEntry reversalJournalEntry;
             if (useDefaultComment) {
@@ -510,6 +518,9 @@ public class JournalEntryWritePlatformServiceJpaRepositoryImpl implements Journa
                     GL_JOURNAL_ENTRY_INVALID_REASON.ACCOUNTING_CLOSED, latestGLClosure.getClosingDate(), null, null); }
         }
 
+        // check financial year
+        validateFinancialYear(transactionDate);
+
         /*** check if credits and debits are valid **/
         final SingleDebitOrCreditEntryCommand[] credits = command.getCredits();
         final SingleDebitOrCreditEntryCommand[] debits = command.getDebits();
@@ -519,6 +530,18 @@ public class JournalEntryWritePlatformServiceJpaRepositoryImpl implements Journa
                 GL_JOURNAL_ENTRY_INVALID_REASON.NO_DEBITS_OR_CREDITS, null, null, null); }
 
         checkDebitAndCreditAmounts(credits, debits);
+    }
+
+    private void validateFinancialYear(Date date) {
+        final AppUser user = this.context.authenticatedUser();
+        if(user.hasNotPermissionForAnyOf("ALL_FUNCTIONS", "ALL_FUNCTIONS_READ", "BACKDATE_JOURNALENTRY") && financialYearRepository.countActiveFinancialYearFor(date)==0) {
+            throw new JournalEntryInvalidException(GL_JOURNAL_ENTRY_INVALID_REASON.OUTSIDE_FINANCIALYEAR, date, null, null);
+        } else {
+            Boolean closed = financialYearRepository.isFinancialYearClosed(date);
+            if(Boolean.TRUE.equals(closed)) {
+                throw new JournalEntryInvalidException(GL_JOURNAL_ENTRY_INVALID_REASON.FINANCIALYEAR_CLOSED, date, null, null);
+            }
+        }
     }
 
     private void saveAllDebitOrCreditEntries(final JournalEntryCommand command, final Office office, final PaymentDetail paymentDetail,
@@ -536,8 +559,6 @@ public class JournalEntryWritePlatformServiceJpaRepositoryImpl implements Journa
             if (!StringUtils.isBlank(singleDebitOrCreditEntryCommand.getComments())) {
                 comments = singleDebitOrCreditEntryCommand.getComments();
             }
-
-            logger.info("################### ACCOUNTING: {} - {} - {}", glAccount.getName(), glAccount.getType(), glAccount.getCurrencyCode());
 
             /** Validate current code is appropriate **/
             this.organisationCurrencyRepository.findOneWithNotFoundDetection(glAccount.getCurrencyCode());

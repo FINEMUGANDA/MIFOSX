@@ -799,7 +799,7 @@ public class DataValidatorBuilder {
                 final StringBuilder validationErrorCode = new StringBuilder("validation.msg.").append(this.resource).append(".")
                         .append(this.parameter).append(".is.less.than.date");
                 final StringBuilder defaultEnglishMessage = new StringBuilder("The ").append(this.parameter)
-                        .append(" must be greter than provided date").append(date);
+                        .append(" must be greater than provided date").append(date);
                 final ApiParameterError error = ApiParameterError.parameterError(validationErrorCode.toString(),
                         defaultEnglishMessage.toString(), this.parameter, dateVal, date);
                 this.dataValidationErrors.add(error);
@@ -844,4 +844,22 @@ public class DataValidatorBuilder {
         return this;
     }
 
+    public DataValidatorBuilder validateDateBetween(final LocalDate startDate, final LocalDate endDate) {
+        if (this.value == null && this.ignoreNullValue) { return this; }
+
+        if (this.value != null && startDate != null && endDate != null) {
+            final LocalDate dateVal = (LocalDate) this.value;
+
+            if (dateVal.isBefore(startDate) || endDate.isBefore(dateVal)) {
+                final StringBuilder validationErrorCode = new StringBuilder("validation.msg.").append(this.resource).append(".")
+                        .append(this.parameter).append(".is.greater.than.date");
+                final StringBuilder defaultEnglishMessage = new StringBuilder("The ").append(this.parameter)
+                        .append(" must be between ").append(startDate).append(" and ").append(endDate);
+                final ApiParameterError error = ApiParameterError.parameterError(validationErrorCode.toString(),
+                        defaultEnglishMessage.toString(), this.parameter, dateVal, startDate, endDate);
+                this.dataValidationErrors.add(error);
+            }
+        }
+        return this;
+    }
 }

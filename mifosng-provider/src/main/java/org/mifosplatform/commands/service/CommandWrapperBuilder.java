@@ -2210,4 +2210,28 @@ public class CommandWrapperBuilder {
         this.href = "/refundByTransfer";
         return this;
     }
+
+    public CommandWrapperBuilder createFinancialYear() {
+        this.actionName = "CREATE";
+        this.entityName = "FINANCIALYEAR";
+        this.entityId = null;
+        this.href = "/financial_years";
+        return this;
+    }
+
+    public CommandWrapperBuilder updateFinancialYear(final Long financialYearId) {
+        this.actionName = "UPDATE";
+        this.entityName = "FINANCIALYEAR";
+        this.entityId = financialYearId;
+        this.href = "/financial_years/" + financialYearId;
+        return this;
+    }
+
+    public CommandWrapperBuilder deleteFinancialYear(final Long financialYearId) {
+        this.actionName = "DELETE";
+        this.entityName = "FINANCIALYEAR";
+        this.entityId = financialYearId;
+        this.href = "/financial_years/" + financialYearId;
+        return this;
+    }
 }

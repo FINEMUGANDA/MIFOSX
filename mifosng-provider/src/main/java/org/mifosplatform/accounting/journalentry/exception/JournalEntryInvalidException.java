@@ -16,7 +16,7 @@ public class JournalEntryInvalidException extends AbstractPlatformDomainRuleExce
 
     /*** enum of reasons for invalid Journal Entry **/
     public static enum GL_JOURNAL_ENTRY_INVALID_REASON {
-        FUTURE_DATE, ACCOUNTING_CLOSED, NO_DEBITS_OR_CREDITS, DEBIT_CREDIT_SUM_MISMATCH_WITH_AMOUNT, DEBIT_CREDIT_SUM_MISMATCH, DEBIT_CREDIT_ACCOUNT_OR_AMOUNT_EMPTY, GL_ACCOUNT_DISABLED, GL_ACCOUNT_MANUAL_ENTRIES_NOT_PERMITTED, INVALID_DEBIT_OR_CREDIT_ACCOUNTS, TOO_MANY_DEBIT_OR_CREDIT_CURRENCIES, TOO_MANY_DEBIT_CURRENCIES, TOO_MANY_CREDIT_CURRENCIES, HOME_CURRENCY_MISSING, EXCHANGE_RATE_MISSING;
+        FUTURE_DATE, ACCOUNTING_CLOSED, NO_DEBITS_OR_CREDITS, DEBIT_CREDIT_SUM_MISMATCH_WITH_AMOUNT, DEBIT_CREDIT_SUM_MISMATCH, DEBIT_CREDIT_ACCOUNT_OR_AMOUNT_EMPTY, GL_ACCOUNT_DISABLED, GL_ACCOUNT_MANUAL_ENTRIES_NOT_PERMITTED, INVALID_DEBIT_OR_CREDIT_ACCOUNTS, TOO_MANY_DEBIT_OR_CREDIT_CURRENCIES, TOO_MANY_DEBIT_CURRENCIES, TOO_MANY_CREDIT_CURRENCIES, HOME_CURRENCY_MISSING, EXCHANGE_RATE_MISSING, OUTSIDE_FINANCIALYEAR, FINANCIALYEAR_CLOSED;
 
         public String errorMessage() {
             if (name().toString().equalsIgnoreCase("FUTURE_DATE")) {
@@ -45,6 +45,10 @@ public class JournalEntryInvalidException extends AbstractPlatformDomainRuleExce
                 return "At least one account currency must be the home currency";
             } else if (name().toString().equalsIgnoreCase("EXCHANGE_RATE_MISSING")) {
                 return "Exchange rate for one of the currencies is missing";
+            } else if (name().toString().equalsIgnoreCase("OUTSIDE_FINANCIALYEAR")) {
+                return "Transaction date must be within financial year";
+            } else if (name().toString().equalsIgnoreCase("FINANCIALYEAR_CLOSED")) {
+                return "Financial year is closed";
             } else if (name().toString().equalsIgnoreCase("GL_ACCOUNT_MANUAL_ENTRIES_NOT_PERMITTED")) { return "Target account does not allow maual adjustments"; }
             return name().toString();
         }

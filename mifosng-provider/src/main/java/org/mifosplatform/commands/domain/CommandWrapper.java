@@ -960,4 +960,7 @@ public class CommandWrapper {
         return this.actionName.equalsIgnoreCase("UNDOREFUND") && this.entityName.equalsIgnoreCase("LOAN");
     }
 
+    public boolean isFinancialYearResource() {
+        return this.entityName.equalsIgnoreCase("FINANCIALYEAR");
+    }
 }
