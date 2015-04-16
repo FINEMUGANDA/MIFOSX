@@ -16,6 +16,8 @@ import org.mifosplatform.infrastructure.security.service.PlatformSecurityContext
 import org.mifosplatform.portfolio.financialyear.command.FinancialYearCommand;
 import org.mifosplatform.portfolio.financialyear.domain.FinancialYear;
 import org.mifosplatform.portfolio.financialyear.domain.FinancialYearRepository;
+import org.mifosplatform.portfolio.financialyear.exception.FinancialYearCannotBeClosedException;
+import org.mifosplatform.portfolio.financialyear.exception.FinancialYearCannotBeUpdatedException;
 import org.mifosplatform.portfolio.financialyear.exception.FinancialYearNotFoundException;
 import org.mifosplatform.portfolio.financialyear.serialization.FinancialYearCommandFromApiJsonDeserializer;
 import org.slf4j.Logger;
@@ -80,6 +82,10 @@ public class FinancialYearWritePlatformServiceJpaRepositoryImpl implements Finan
         this.context.authenticatedUser();
         final FinancialYearCommand financialYearCommand = this.financialYearCommandFromApiJsonDeserializer.commandFromApiJson(command.json());
         financialYearCommand.validateForUpdate();
+
+        if(financialYearCommand.isClosed() && this.context.authenticatedUser().hasNotPermissionForAnyOf("ALL_FUNCTIONS", "CLOSE_FINANCIALYEAR")) {
+            throw new FinancialYearCannotBeClosedException(FinancialYearCannotBeClosedException.FINANCIALYEAR_CLOSE_REASON.HAS_NO_FINANCIAL_YEAR_CLOSE_PERMISSION, financialYearId);
+        }
 
         try {
             final FinancialYear financialYearForUpdate = this.financialYearRepository.findOne(financialYearId);
