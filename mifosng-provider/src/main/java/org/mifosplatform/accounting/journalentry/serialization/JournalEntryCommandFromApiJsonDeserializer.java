@@ -76,7 +76,7 @@ public final class JournalEntryCommandFromApiJsonDeserializer extends AbstractFr
                 element);
         final String bankNumber = this.fromApiJsonHelper.extractStringNamed(JournalEntryJsonInputParams.BANK_NUMBER.getValue(), element);
         final String routingCode = this.fromApiJsonHelper.extractStringNamed(JournalEntryJsonInputParams.ROUTING_CODE.getValue(), element);
-        final boolean opening = this.fromApiJsonHelper.extractBooleanNamed(JournalEntryJsonInputParams.OPENING.getValue(), element);
+        final Boolean opening = this.fromApiJsonHelper.extractBooleanNamed(JournalEntryJsonInputParams.OPENING.getValue(), element);
 
         SingleDebitOrCreditEntryCommand[] credits = null;
         SingleDebitOrCreditEntryCommand[] debits = null;
