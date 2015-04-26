@@ -10,6 +10,7 @@ import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.joda.time.LocalDate;
 import org.mifosplatform.infrastructure.core.api.JsonCommand;
 import org.mifosplatform.portfolio.financialyear.api.FinancialYearApiConstants.FINANCIAL_YEAR_JSON_INPUT_PARAMS;
+import org.mifosplatform.portfolio.financialyear.exception.FinancialYearCannotBeUpdatedException;
 import org.springframework.data.jpa.domain.AbstractPersistable;
 
 import javax.persistence.*;
@@ -77,6 +78,9 @@ public class FinancialYear extends AbstractPersistable<Long> {
     }
 
     public Map<String, Object> update(final JsonCommand command) {
+        if(this.closed) {
+            throw new FinancialYearCannotBeUpdatedException(FinancialYearCannotBeUpdatedException.FINANCIALYEAR_CANNOT_BE_UPDATED_REASON.FINANCIALYEAR_CLOSED, getId());
+        }
 
         final Map<String, Object> actualChanges = new LinkedHashMap<>(5);
 
