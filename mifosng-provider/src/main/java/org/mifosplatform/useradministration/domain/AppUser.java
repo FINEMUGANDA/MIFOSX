@@ -63,6 +63,9 @@ public class AppUser extends AbstractPersistable<Long> implements PlatformUser {
     @Column(name = "is_deleted", nullable = false)
     private boolean deleted;
 
+    @Column(name = "login_failures", nullable = false)
+    private Integer loginFailures;
+
     @ManyToOne
     @JoinColumn(name = "office_id", nullable = false)
     private Office office;
@@ -319,6 +322,10 @@ public class AppUser extends AbstractPersistable<Long> implements PlatformUser {
 
     public String getEmail() {
         return this.email;
+    }
+
+    public Integer getLoginFailures() {
+        return loginFailures;
     }
 
     public Set<Role> getRoles() {
