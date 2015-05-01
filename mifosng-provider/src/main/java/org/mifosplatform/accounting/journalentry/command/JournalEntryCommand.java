@@ -14,11 +14,14 @@ import org.mifosplatform.accounting.journalentry.api.JournalEntryJsonInputParams
 import org.mifosplatform.infrastructure.core.data.ApiParameterError;
 import org.mifosplatform.infrastructure.core.data.DataValidatorBuilder;
 import org.mifosplatform.infrastructure.core.exception.PlatformApiDataValidationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Immutable command for adding an accounting closure
  */
 public class JournalEntryCommand {
+    private static final Logger logger = LoggerFactory.getLogger(JournalEntryCommand.class);
 
     private final Long officeId;
     private final LocalDate transactionDate;
@@ -38,6 +41,7 @@ public class JournalEntryCommand {
     private final String bankNumber;
     @SuppressWarnings("unused")
     private final String routingCode;
+    private final Boolean opening;
 
     private final SingleDebitOrCreditEntryCommand[] credits;
     private final SingleDebitOrCreditEntryCommand[] debits;
@@ -45,7 +49,7 @@ public class JournalEntryCommand {
     public JournalEntryCommand(final Long officeId, final String currencyCode, final LocalDate transactionDate, final String comments,
             final SingleDebitOrCreditEntryCommand[] credits, final SingleDebitOrCreditEntryCommand[] debits, final String referenceNumber,
             final Long accountingRuleId, final BigDecimal amount, final Long paymentTypeId, final String accountNumber,
-            final String checkNumber, final String receiptNumber, final String bankNumber, final String routingCode) {
+            final String checkNumber, final String receiptNumber, final String bankNumber, final String routingCode, final Boolean opening) {
         this.officeId = officeId;
         this.currencyCode = currencyCode;
         this.transactionDate = transactionDate;
@@ -61,7 +65,7 @@ public class JournalEntryCommand {
         this.receiptNumber = receiptNumber;
         this.bankNumber = bankNumber;
         this.routingCode = routingCode;
-
+        this.opening = opening;
     }
 
     public void validateForCreate() {
@@ -84,10 +88,23 @@ public class JournalEntryCommand {
 
         baseDataValidator.reset().parameter("paymentTypeId").value(this.paymentTypeId).ignoreIfNull().longGreaterThanZero();
 
+        baseDataValidator.reset().parameter(JournalEntryJsonInputParams.OPENING.getValue()).value(this.opening).ignoreIfNull();
+
+        logger.info("################### OPENING: accounting rule {}", this.accountingRuleId);
+        logger.info("################### OPENING: validation errors {}", dataValidationErrors.isEmpty());
+        logger.info("################### OPENING: {} - {}", this.opening, !Boolean.TRUE.equals(this.opening));
+        logger.info("################### OPENING: credit #{}", this.credits.length);
+        logger.info("################### OPENING: debit #{}", this.debits.length);
+
+
         // validation for credit array elements
         if (this.credits != null) {
             if (this.credits.length == 0) {
-                validateSingleDebitOrCredit(baseDataValidator, "credits", 0, new SingleDebitOrCreditEntryCommand(null, null, null, null));
+                if (!Boolean.TRUE.equals(this.opening)) {
+                    logger.info("################### OPENING: (cr) before");
+                    validateSingleDebitOrCredit(baseDataValidator, "credits", 0, new SingleDebitOrCreditEntryCommand(null, null, null, null));
+                    logger.info("################### OPENING: (cr) after");
+                }
             } else {
                 int i = 0;
                 for (final SingleDebitOrCreditEntryCommand credit : this.credits) {
@@ -100,7 +117,11 @@ public class JournalEntryCommand {
         // validation for debit array elements
         if (this.debits != null) {
             if (this.debits.length == 0) {
-                validateSingleDebitOrCredit(baseDataValidator, "debits", 0, new SingleDebitOrCreditEntryCommand(null, null, null, null));
+                if (!Boolean.TRUE.equals(this.opening)) {
+                    logger.info("################### OPENING: (de) before");
+                    validateSingleDebitOrCredit(baseDataValidator, "debits", 0, new SingleDebitOrCreditEntryCommand(null, null, null, null));
+                    logger.info("################### OPENING: (de) after");
+                }
             } else {
                 int i = 0;
                 for (final SingleDebitOrCreditEntryCommand debit : this.debits) {
@@ -110,6 +131,8 @@ public class JournalEntryCommand {
             }
         }
         baseDataValidator.reset().parameter("amount").value(this.amount).ignoreIfNull().zeroOrPositiveAmount();
+
+        logger.info("################### OPENING: validation errors {}", dataValidationErrors.isEmpty());
 
         if (!dataValidationErrors.isEmpty()) { throw new PlatformApiDataValidationException("validation.msg.validation.errors.exist",
                 "Validation errors exist.", dataValidationErrors); }
@@ -156,4 +179,7 @@ public class JournalEntryCommand {
         return this.accountingRuleId;
     }
 
+    public Boolean isOpening() {
+        return opening;
+    }
 }
