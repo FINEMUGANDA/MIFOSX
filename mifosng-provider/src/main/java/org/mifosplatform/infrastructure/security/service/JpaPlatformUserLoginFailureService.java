@@ -16,6 +16,7 @@ import org.mifosplatform.useradministration.domain.AppUserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.LockedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -95,7 +96,8 @@ public class JpaPlatformUserLoginFailureService implements PlatformUserLoginFail
             } catch (Exception e) {
                 logger.warn(e.toString(), e);
             }
-            logger.info("##################### FAIL send email! {}", username);
+
+            throw new LockedException("User " + username + " has been locked after " + limit + " failed login attempts.");
         }
     }
 
