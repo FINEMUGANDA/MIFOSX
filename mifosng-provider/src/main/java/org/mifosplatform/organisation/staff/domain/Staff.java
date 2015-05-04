@@ -9,17 +9,11 @@ import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import javax.persistence.Table;
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
-import javax.persistence.UniqueConstraint;
+import javax.persistence.*;
 
 import org.apache.commons.lang.StringUtils;
 import org.joda.time.LocalDate;
+import org.mifosplatform.infrastructure.codes.domain.CodeValue;
 import org.mifosplatform.infrastructure.core.api.JsonCommand;
 import org.mifosplatform.infrastructure.core.data.EnumOptionData;
 import org.mifosplatform.organisation.office.domain.Office;
@@ -43,6 +37,9 @@ public class Staff extends AbstractPersistable<Long> {
     @Column(name = "mobile_no", length = 50, nullable = false, unique = true)
     private String mobileNo;
 
+    @Column(name = "mobile_no2", length = 50, nullable = false, unique = true)
+    private String mobileNo2;
+
     @Column(name = "external_id", length = 100, nullable = true, unique = true)
     private String externalId;
 
@@ -63,11 +60,38 @@ public class Staff extends AbstractPersistable<Long> {
     @Temporal(TemporalType.DATE)
     private Date joiningDate;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "gender_cv_id", nullable = true)
+    private CodeValue gender;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "marital_status_cv_id", nullable = true)
+    private CodeValue maritalStatus;
+
+    @Column(name = "children", nullable = true)
+    private Integer children;
+
+    @Column(name = "address", nullable = true)
+    private String address;
+
+    @Column(name = "email", nullable = true)
+    private String email;
+
+    @Column(name = "emergency_contact_name", nullable = true)
+    private String emergencyContactName;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "emergency_contact_relation_cv_id", nullable = true)
+    private CodeValue emergencyContactRelation;
+
+    @Column(name = "emergency_contact_mobile_no", length = 50, nullable = true)
+    private String emergencyContactMobileNo;
+
     @ManyToOne
     @JoinColumn(name = "organisational_role_parent_staff_id", nullable = true)
     private Staff organisationalRoleParentStaff;
 
-    public static Staff fromJson(final Office staffOffice, final JsonCommand command) {
+    public static Staff fromJson(final Office staffOffice, final CodeValue gender, final CodeValue maritalStatus, final CodeValue emergencyContactRelation, final JsonCommand command) {
 
         final String firstnameParamName = "firstname";
         final String firstname = command.stringValueOfParameterNamed(firstnameParamName);
@@ -81,11 +105,29 @@ public class Staff extends AbstractPersistable<Long> {
         final String mobileNoParamName = "mobileNo";
         final String mobileNo = command.stringValueOfParameterNamedAllowingNull(mobileNoParamName);
 
+        final String mobileNo2ParamName = "mobileNo2";
+        final String mobileNo2 = command.stringValueOfParameterNamedAllowingNull(mobileNo2ParamName);
+
         final String isLoanOfficerParamName = "isLoanOfficer";
         final boolean isLoanOfficer = command.booleanPrimitiveValueOfParameterNamed(isLoanOfficerParamName);
 
         final String isActiveParamName = "isActive";
         final Boolean isActive = command.booleanObjectValueOfParameterNamed(isActiveParamName);
+
+        final String addressParamName = "address";
+        final String address = command.stringValueOfParameterNamedAllowingNull(addressParamName);
+
+        final String childrenParamName = "children";
+        final Integer children = command.integerValueOfParameterNamedDefaultToNullIfZero(childrenParamName);
+
+        final String emailParamName = "email";
+        final String email = command.stringValueOfParameterNamedAllowingNull(emailParamName);
+
+        final String emergencyContactNameParamName = "emergencyContactName";
+        final String emergencyContactName = command.stringValueOfParameterNamedAllowingNull(emergencyContactNameParamName);
+
+        final String emergencyContactMobileNoParamName = "emergencyContactMobileNo";
+        final String emergencyContactMobileNo = command.stringValueOfParameterNamedAllowingNull(emergencyContactMobileNoParamName);
 
         LocalDate joiningDate = null;
 
@@ -94,20 +136,29 @@ public class Staff extends AbstractPersistable<Long> {
             joiningDate = command.localDateValueOfParameterNamed(joiningDateParamName);
         }
 
-        return new Staff(staffOffice, firstname, lastname, externalId, mobileNo, isLoanOfficer, isActive, joiningDate);
+        return new Staff(staffOffice, firstname, lastname, externalId, mobileNo, mobileNo2, isLoanOfficer, isActive, joiningDate, gender, maritalStatus, address, children, email, emergencyContactName, emergencyContactMobileNo, emergencyContactRelation);
     }
 
     protected Staff() {
         //
     }
 
-    private Staff(final Office staffOffice, final String firstname, final String lastname, final String externalId, final String mobileNo,
-            final boolean isLoanOfficer, final Boolean isActive, final LocalDate joiningDate) {
+    private Staff(final Office staffOffice, final String firstname, final String lastname, final String externalId, final String mobileNo, final String mobileNo2,
+            final boolean isLoanOfficer, final Boolean isActive, final LocalDate joiningDate, final CodeValue gender, final CodeValue maritalStatus, final String address, final Integer children, final String email, final String emergencyContactName, final String emergencyContactMobileNo, final CodeValue emergencyContactRelation) {
         this.office = staffOffice;
         this.firstname = StringUtils.defaultIfEmpty(firstname, null);
         this.lastname = StringUtils.defaultIfEmpty(lastname, null);
         this.externalId = StringUtils.defaultIfEmpty(externalId, null);
         this.mobileNo = StringUtils.defaultIfEmpty(mobileNo, null);
+        this.mobileNo2 = StringUtils.defaultIfEmpty(mobileNo2, null);
+        this.gender = gender;
+        this.maritalStatus = maritalStatus;
+        this.address = StringUtils.defaultIfEmpty(address, null);
+        this.children = children;
+        this.email = StringUtils.defaultIfEmpty(email, null);
+        this.emergencyContactName = StringUtils.defaultIfEmpty(emergencyContactName, null);
+        this.emergencyContactMobileNo = StringUtils.defaultIfEmpty(emergencyContactMobileNo, null);
+        this.emergencyContactRelation = emergencyContactRelation;
         this.loanOfficer = isLoanOfficer;
         this.active = (isActive == null) ? true : isActive;
         deriveDisplayName(firstname);
@@ -172,6 +223,13 @@ public class Staff extends AbstractPersistable<Long> {
             final String newValue = command.stringValueOfParameterNamed(mobileNoParamName);
             actualChanges.put(mobileNoParamName, newValue);
             this.mobileNo = StringUtils.defaultIfEmpty(newValue, null);
+        }
+
+        final String mobileNo2ParamName = "mobileNo2";
+        if (command.isChangeInStringParameterNamed(mobileNo2ParamName, this.mobileNo2)) {
+            final String newValue = command.stringValueOfParameterNamed(mobileNo2ParamName);
+            actualChanges.put(mobileNo2ParamName, newValue);
+            this.mobileNo2 = StringUtils.defaultIfEmpty(newValue, null);
         }
 
         final String isLoanOfficerParamName = "isLoanOfficer";
@@ -241,5 +299,33 @@ public class Staff extends AbstractPersistable<Long> {
 
     public Office office() {
         return this.office;
+    }
+
+    public void updateGender(CodeValue gender) {
+        this.gender = gender;
+    }
+
+    public void updateMaritalStatus(CodeValue maritalStatus) {
+        this.maritalStatus = maritalStatus;
+    }
+
+    public void updateEmergencyContactRelation(CodeValue emergencyContactRelation) {
+        this.emergencyContactRelation = emergencyContactRelation;
+    }
+
+    public Long genderId() {
+        Long id = null;
+        if (this.gender != null) {
+            id = this.gender.getId();
+        }
+        return id;
+    }
+
+    public Long maritalStatusId() {
+        Long id = null;
+        if (this.maritalStatus != null) {
+            id = this.maritalStatus.getId();
+        }
+        return id;
     }
 }

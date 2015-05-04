@@ -5,12 +5,9 @@
  */
 package org.mifosplatform.organisation.staff.service;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.Collection;
-
 import org.apache.commons.lang.StringUtils;
 import org.joda.time.LocalDate;
+import org.mifosplatform.infrastructure.codes.data.CodeValueData;
 import org.mifosplatform.infrastructure.core.domain.JdbcSupport;
 import org.mifosplatform.infrastructure.core.exception.UnrecognizedQueryParamException;
 import org.mifosplatform.infrastructure.core.service.RoutingDataSource;
@@ -22,6 +19,10 @@ import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Service;
+
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.Collection;
 
 @Service
 public class StaffReadPlatformServiceImpl implements StaffReadPlatformService {
@@ -42,8 +43,19 @@ public class StaffReadPlatformServiceImpl implements StaffReadPlatformService {
         public String schema() {
             return " s.id as id,s.office_id as officeId, o.name as officeName, s.firstname as firstname, s.lastname as lastname,"
                     + " s.display_name as displayName, s.is_loan_officer as isLoanOfficer, s.external_id as externalId, s.mobile_no as mobileNo,"
-            		+ " s.is_active as isActive, s.joining_date as joiningDate from m_staff s "
-                    + " join m_office o on o.id = s.office_id";
+                    + " s.mobile_no2 as mobileNo2, s.email as email, s.address as address, s.emergency_contact_name as emergencyContactName, s.emergency_contact_mobile_no as emergencyContactMobileNo, s.children as children,"
+            		+ " s.is_active as isActive, s.joining_date as joiningDate, "
+                    + " s.gender_cv_id as genderId, "
+                    + " cvgender.code_value as genderValue, "
+                    + " s.marital_status_cv_id as maritalStatusId, "
+                    + " cvmaritalstatus.code_value as maritalStatusValue, "
+                    + " s.emergency_contact_relation_cv_id as emergencyContactRelationId, "
+                    + " cvemergencyrelation.code_value as emergencyContactRelationValue "
+                    + " from m_staff s "
+                    + " join m_office o on o.id = s.office_id"
+                    + " left join m_code_value cvgender on cvgender.id = s.gender_cv_id"
+                    + " left join m_code_value cvmaritalstatus on cvmaritalstatus.id = s.marital_status_cv_id"
+                    + " left join m_code_value cvemergencyrelation on cvemergencyrelation.id = s.emergency_contact_relation_cv_id";
         }
 
         @Override
@@ -58,11 +70,29 @@ public class StaffReadPlatformServiceImpl implements StaffReadPlatformService {
             final String officeName = rs.getString("officeName");
             final String externalId = rs.getString("externalId");
             final String mobileNo = rs.getString("mobileNo");
+            final String mobileNo2 = rs.getString("mobileNo2");
+            final String email = rs.getString("email");
+            final String address = rs.getString("address");
+            final Integer children = rs.getInt("children");
+            final String emergencyContactName = rs.getString("emergencyContactName");
+            final String emergencyContactMobileNo = rs.getString("emergencyContactMobileNo");
             final boolean isActive = rs.getBoolean("isActive");
             final LocalDate joiningDate = JdbcSupport.getLocalDate(rs, "joiningDate");
 
+            final Long genderId = JdbcSupport.getLong(rs, "genderId");
+            final String genderValue = rs.getString("genderValue");
+            final CodeValueData gender = CodeValueData.instance(genderId, genderValue);
+
+            final Long maritalStatusId = JdbcSupport.getLong(rs, "maritalStatusId");
+            final String maritalStatusValue = rs.getString("maritalStatusValue");
+            final CodeValueData maritalStatus = CodeValueData.instance(maritalStatusId, maritalStatusValue);
+
+            final Long emergencyContactRelationId = JdbcSupport.getLong(rs, "emergencyContactRelationId");
+            final String emergencyContactRelationValue = rs.getString("emergencyContactRelationValue");
+            final CodeValueData emergencyContactRelation = CodeValueData.instance(emergencyContactRelationId, emergencyContactRelationValue);
+
             return StaffData.instance(id, firstname, lastname, displayName, officeId, officeName, isLoanOfficer, externalId, mobileNo,
-                    isActive, joiningDate);
+                    isActive, joiningDate, gender, maritalStatus, emergencyContactRelation, mobileNo2, email, address, children, emergencyContactName, emergencyContactMobileNo);
         }
     }
 
@@ -75,10 +105,20 @@ public class StaffReadPlatformServiceImpl implements StaffReadPlatformService {
             sqlBuilder.append("s.id as id, s.office_id as officeId, ohierarchy.name as officeName,");
             sqlBuilder.append("s.firstname as firstname, s.lastname as lastname,");
             sqlBuilder.append("s.display_name as displayName, s.is_loan_officer as isLoanOfficer, s.external_id as externalId, ");
-            sqlBuilder.append("s.mobile_no as mobileNo, s.is_active as isActive, s.joining_date as joiningDate ");
+            sqlBuilder.append("s.mobile_no as mobileNo, s.is_active as isActive, s.joining_date as joiningDate, ");
+            sqlBuilder.append("s.mobile_no2 as mobileNo2, s.email as email, s.address as address, s.emergency_contact_name as emergencyContactName, s.emergency_contact_mobile_no as emergencyContactMobileNo, s.children as children,");
+            sqlBuilder.append("s.gender_cv_id as genderId, ");
+            sqlBuilder.append("cvgender.code_value as genderValue, ");
+            sqlBuilder.append("s.marital_status_cv_id as maritalStatusId, ");
+            sqlBuilder.append("cvmaritalstatus.code_value as maritalStatusValue, ");
+            sqlBuilder.append("s.emergency_contact_relation_cv_id as emergencyContactRelationId, ");
+            sqlBuilder.append("cvemergencyrelation.code_value as emergencyContactRelationValue ");
             sqlBuilder.append("from m_office o ");
             sqlBuilder.append("join m_office ohierarchy on o.hierarchy like concat(ohierarchy.hierarchy, '%') ");
             sqlBuilder.append("join m_staff s on s.office_id = ohierarchy.id and s.is_active=1 ");
+            sqlBuilder.append("left join m_code_value cvgender on cvgender.id = s.gender_cv_id ");
+            sqlBuilder.append("left join m_code_value cvmaritalstatus on cvmaritalstatus.id = s.marital_status_cv_id ");
+            sqlBuilder.append("left join m_code_value cvemergencyrelation on cvemergencyrelation.id = s.emergency_contact_relation_cv_id ");
 
             if (loanOfficersOnly) {
                 sqlBuilder.append("and s.is_loan_officer is true ");
@@ -101,11 +141,29 @@ public class StaffReadPlatformServiceImpl implements StaffReadPlatformService {
             final boolean isLoanOfficer = rs.getBoolean("isLoanOfficer");
             final String externalId = rs.getString("externalId");
             final String mobileNo = rs.getString("mobileNo");
+            final String mobileNo2 = rs.getString("mobileNo2");
+            final String email = rs.getString("email");
+            final String address = rs.getString("address");
+            final Integer children = rs.getInt("children");
+            final String emergencyContactName = rs.getString("emergencyContactName");
+            final String emergencyContactMobileNo = rs.getString("emergencyContactMobileNo");
             final boolean isActive = rs.getBoolean("isActive");
             final LocalDate joiningDate = JdbcSupport.getLocalDate(rs, "joiningDate");
 
+            final Long genderId = JdbcSupport.getLong(rs, "genderId");
+            final String genderValue = rs.getString("genderValue");
+            final CodeValueData gender = CodeValueData.instance(genderId, genderValue);
+
+            final Long maritalStatusId = JdbcSupport.getLong(rs, "maritalStatusId");
+            final String maritalStatusValue = rs.getString("maritalStatusValue");
+            final CodeValueData maritalStatus = CodeValueData.instance(maritalStatusId, maritalStatusValue);
+
+            final Long emergencyContactRelationId = JdbcSupport.getLong(rs, "emergencyContactRelationId");
+            final String emergencyContactRelationValue = rs.getString("emergencyContactRelationValue");
+            final CodeValueData emergencyContactRelation = CodeValueData.instance(emergencyContactRelationId, emergencyContactRelationValue);
+
             return StaffData.instance(id, firstname, lastname, displayName, officeId, officeName, isLoanOfficer, externalId, mobileNo,
-                    isActive, joiningDate);
+                    isActive, joiningDate, gender, maritalStatus, emergencyContactRelation, mobileNo2, email, address, children, emergencyContactName, emergencyContactMobileNo);
         }
     }
 

@@ -5,10 +5,7 @@
  */
 package org.mifosplatform.organisation.staff.api;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
@@ -26,6 +23,9 @@ import javax.ws.rs.core.UriInfo;
 import org.mifosplatform.commands.domain.CommandWrapper;
 import org.mifosplatform.commands.service.CommandWrapperBuilder;
 import org.mifosplatform.commands.service.PortfolioCommandSourceWritePlatformService;
+import org.mifosplatform.infrastructure.codes.data.CodeValueData;
+import org.mifosplatform.infrastructure.codes.domain.CodeValue;
+import org.mifosplatform.infrastructure.codes.service.CodeValueReadPlatformService;
 import org.mifosplatform.infrastructure.core.api.ApiRequestParameterHelper;
 import org.mifosplatform.infrastructure.core.data.CommandProcessingResult;
 import org.mifosplatform.infrastructure.core.serialization.ApiRequestJsonSerializationSettings;
@@ -35,6 +35,7 @@ import org.mifosplatform.organisation.office.data.OfficeData;
 import org.mifosplatform.organisation.office.service.OfficeReadPlatformService;
 import org.mifosplatform.organisation.staff.data.StaffData;
 import org.mifosplatform.organisation.staff.service.StaffReadPlatformService;
+import org.mifosplatform.portfolio.client.api.ClientApiConstants;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
@@ -59,18 +60,20 @@ public class StaffApiResource {
     private final DefaultToApiJsonSerializer<StaffData> toApiJsonSerializer;
     private final ApiRequestParameterHelper apiRequestParameterHelper;
     private final PortfolioCommandSourceWritePlatformService commandsSourceWritePlatformService;
+    private final CodeValueReadPlatformService codeValueReadPlatformService;
 
     @Autowired
     public StaffApiResource(final PlatformSecurityContext context, final StaffReadPlatformService readPlatformService,
             final OfficeReadPlatformService officeReadPlatformService, final DefaultToApiJsonSerializer<StaffData> toApiJsonSerializer,
             final ApiRequestParameterHelper apiRequestParameterHelper,
-            final PortfolioCommandSourceWritePlatformService commandsSourceWritePlatformService) {
+            final PortfolioCommandSourceWritePlatformService commandsSourceWritePlatformService, final CodeValueReadPlatformService codeValueReadPlatformService) {
         this.context = context;
         this.readPlatformService = readPlatformService;
         this.officeReadPlatformService = officeReadPlatformService;
         this.toApiJsonSerializer = toApiJsonSerializer;
         this.apiRequestParameterHelper = apiRequestParameterHelper;
         this.commandsSourceWritePlatformService = commandsSourceWritePlatformService;
+        this.codeValueReadPlatformService = codeValueReadPlatformService;
     }
 
     @GET
@@ -120,8 +123,36 @@ public class StaffApiResource {
         StaffData staff = this.readPlatformService.retrieveStaff(staffId);
         if (settings.isTemplate()) {
             final Collection<OfficeData> allowedOffices = this.officeReadPlatformService.retrieveAllOfficesForDropdown();
-            staff = StaffData.templateData(staff, allowedOffices);
+            final List<CodeValueData> genderOptions = new ArrayList<>(
+                    this.codeValueReadPlatformService.retrieveCodeValuesByCode("Gender"));
+            final List<CodeValueData> maritalStatusOptions = new ArrayList<>(
+                    this.codeValueReadPlatformService.retrieveCodeValuesByCode("MaritalStatus"));
+            final List<CodeValueData> emergencyContactRelationOptions = new ArrayList<>(
+                    this.codeValueReadPlatformService.retrieveCodeValuesByCode("GuarantorRelationship"));
+            staff = StaffData.templateData(staff, allowedOffices, genderOptions, maritalStatusOptions, emergencyContactRelationOptions);
         }
+        return this.toApiJsonSerializer.serialize(settings, staff, this.RESPONSE_DATA_PARAMETERS);
+    }
+
+    @GET
+    @Path("template")
+    @Consumes({ MediaType.APPLICATION_JSON })
+    @Produces({ MediaType.APPLICATION_JSON })
+    public String template(@Context final UriInfo uriInfo) {
+
+        this.context.authenticatedUser().validateHasReadPermission(this.resourceNameForPermissions);
+
+        final ApiRequestJsonSerializationSettings settings = this.apiRequestParameterHelper.process(uriInfo.getQueryParameters());
+
+        final Collection<OfficeData> allowedOffices = this.officeReadPlatformService.retrieveAllOfficesForDropdown();
+        final List<CodeValueData> genderOptions = new ArrayList<>(
+                this.codeValueReadPlatformService.retrieveCodeValuesByCode("Gender"));
+        final List<CodeValueData> maritalStatusOptions = new ArrayList<>(
+                this.codeValueReadPlatformService.retrieveCodeValuesByCode("MaritalStatus"));
+        final List<CodeValueData> emergencyContactRelationOptions = new ArrayList<>(
+                this.codeValueReadPlatformService.retrieveCodeValuesByCode("GuarantorRelationship"));
+        StaffData staff = StaffData.templateData(allowedOffices, genderOptions, maritalStatusOptions, emergencyContactRelationOptions);
+
         return this.toApiJsonSerializer.serialize(settings, staff, this.RESPONSE_DATA_PARAMETERS);
     }
 

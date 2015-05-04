@@ -5,9 +5,9 @@
  */
 package org.mifosplatform.organisation.staff.service;
 
-import java.util.Map;
-
 import org.apache.commons.lang.StringUtils;
+import org.mifosplatform.infrastructure.codes.domain.CodeValue;
+import org.mifosplatform.infrastructure.codes.domain.CodeValueRepositoryWrapper;
 import org.mifosplatform.infrastructure.core.api.JsonCommand;
 import org.mifosplatform.infrastructure.core.data.CommandProcessingResult;
 import org.mifosplatform.infrastructure.core.data.CommandProcessingResultBuilder;
@@ -26,6 +26,8 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Map;
+
 @Service
 public class StaffWritePlatformServiceJpaRepositoryImpl implements StaffWritePlatformService {
 
@@ -34,13 +36,15 @@ public class StaffWritePlatformServiceJpaRepositoryImpl implements StaffWritePla
     private final StaffCommandFromApiJsonDeserializer fromApiJsonDeserializer;
     private final StaffRepository staffRepository;
     private final OfficeRepository officeRepository;
+    private final CodeValueRepositoryWrapper codeValueRepository;
 
     @Autowired
     public StaffWritePlatformServiceJpaRepositoryImpl(final StaffCommandFromApiJsonDeserializer fromApiJsonDeserializer,
-            final StaffRepository staffRepository, final OfficeRepository officeRepository) {
+            final StaffRepository staffRepository, final OfficeRepository officeRepository, final CodeValueRepositoryWrapper codeValueRepository) {
         this.fromApiJsonDeserializer = fromApiJsonDeserializer;
         this.staffRepository = staffRepository;
         this.officeRepository = officeRepository;
+        this.codeValueRepository = codeValueRepository;
     }
 
     @Transactional
@@ -55,7 +59,25 @@ public class StaffWritePlatformServiceJpaRepositoryImpl implements StaffWritePla
             final Office staffOffice = this.officeRepository.findOne(officeId);
             if (staffOffice == null) { throw new OfficeNotFoundException(officeId); }
 
-            final Staff staff = Staff.fromJson(staffOffice, command);
+            CodeValue gender = null;
+            final Long genderId = command.longValueOfParameterNamed("genderId");
+            if (genderId != null) {
+                gender = this.codeValueRepository.findOneByCodeNameAndIdWithNotFoundDetection("Gender", genderId);
+            }
+
+            CodeValue maritalStatus = null;
+            final Long maritalStatusId = command.longValueOfParameterNamed("maritalStatusId");
+            if (maritalStatusId != null) {
+                maritalStatus = this.codeValueRepository.findOneByCodeNameAndIdWithNotFoundDetection("MaritalStatus", maritalStatusId);
+            }
+
+            CodeValue emergencyRelation = null;
+            final Long emergencyRelationId = command.longValueOfParameterNamed("emergencyContactRelationId");
+            if (emergencyRelationId != null) {
+                emergencyRelation = this.codeValueRepository.findOneByCodeNameAndIdWithNotFoundDetection("GuarantorRelationship", emergencyRelationId);
+            }
+
+            final Staff staff = Staff.fromJson(staffOffice, gender, maritalStatus, emergencyRelation, command);
 
             this.staffRepository.save(staff);
 
@@ -87,6 +109,36 @@ public class StaffWritePlatformServiceJpaRepositoryImpl implements StaffWritePla
                 if (newOffice == null) { throw new OfficeNotFoundException(officeId); }
 
                 staffForUpdate.changeOffice(newOffice);
+            }
+
+            if (changesOnly.containsKey("genderId")) {
+
+                final Long newValue = command.longValueOfParameterNamed("genderId");
+                CodeValue gender = null;
+                if (newValue != null) {
+                    gender = this.codeValueRepository.findOneByCodeNameAndIdWithNotFoundDetection("Gender", newValue);
+                }
+                staffForUpdate.updateGender(gender);
+            }
+
+            if (changesOnly.containsKey("maritalStatusId")) {
+
+                final Long newValue = command.longValueOfParameterNamed("maritalStatusId");
+                CodeValue maritalStatus = null;
+                if (newValue != null) {
+                    maritalStatus = this.codeValueRepository.findOneByCodeNameAndIdWithNotFoundDetection("MaritalStatus", newValue);
+                }
+                staffForUpdate.updateMaritalStatus(maritalStatus);
+            }
+
+            if (changesOnly.containsKey("emergencyContactRelationId")) {
+
+                final Long newValue = command.longValueOfParameterNamed("emergencyContactRelationId");
+                CodeValue emergencyRelation = null;
+                if (newValue != null) {
+                    emergencyRelation = this.codeValueRepository.findOneByCodeNameAndIdWithNotFoundDetection("GuarantorRelationship", newValue); // TODO: maybe create separate code category for this
+                }
+                staffForUpdate.updateEmergencyContactRelation(emergencyRelation);
             }
 
             if (!changesOnly.isEmpty()) {
