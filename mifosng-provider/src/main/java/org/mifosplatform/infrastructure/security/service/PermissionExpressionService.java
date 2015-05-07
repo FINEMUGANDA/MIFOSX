@@ -83,8 +83,14 @@ public class PermissionExpressionService {
 
                         logger.debug("############ VALIDATE COMMAND RES: {}", resourceId);
                         logger.debug("############ VALIDATE COMMAND ENT: {}", command.entityName());
-                        Map<String, Object> resource = jdbcTemplate.query("SELECT * FROM m_" + command.entityName().toLowerCase() + " WHERE id=?", new Object[]{resourceId}, new ColumnMapRowMapper()).get(0);
-                        vars.put("resource", resource);
+
+                        if(resourceId!=null) {
+                            List<Map<String, Object>> resourceResult = jdbcTemplate.query("SELECT * FROM m_" + command.entityName().toLowerCase() + " WHERE id=?", new Object[]{resourceId}, new ColumnMapRowMapper());
+                            if(resourceResult!=null && !resourceResult.isEmpty()) {
+                                Map<String, Object> resource = resourceResult.get(0);
+                                vars.put("resource", resource);
+                            }
+                        }
                         // TODO: remove this
                         logger.debug("############ VALIDATE COMMAND VARS: {}", vars);
                     }
