@@ -5,46 +5,45 @@
  */
 package org.mifosplatform.infrastructure.jobs.api;
 
-import java.util.List;
-
-import javax.ws.rs.Consumes;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriInfo;
-
 import org.apache.commons.lang.StringUtils;
 import org.mifosplatform.commands.domain.CommandWrapper;
 import org.mifosplatform.commands.service.CommandWrapperBuilder;
 import org.mifosplatform.commands.service.PortfolioCommandSourceWritePlatformService;
 import org.mifosplatform.infrastructure.core.api.ApiRequestParameterHelper;
 import org.mifosplatform.infrastructure.core.data.CommandProcessingResult;
+import org.mifosplatform.infrastructure.core.domain.MifosPlatformTenant;
 import org.mifosplatform.infrastructure.core.exception.UnrecognizedQueryParamException;
 import org.mifosplatform.infrastructure.core.serialization.ApiRequestJsonSerializationSettings;
 import org.mifosplatform.infrastructure.core.serialization.ToApiJsonSerializer;
 import org.mifosplatform.infrastructure.core.service.Page;
+import org.mifosplatform.infrastructure.core.service.SearchParameters;
+import org.mifosplatform.infrastructure.core.service.ThreadLocalContextUtil;
 import org.mifosplatform.infrastructure.jobs.data.JobDetailData;
 import org.mifosplatform.infrastructure.jobs.data.JobDetailHistoryData;
 import org.mifosplatform.infrastructure.jobs.service.JobRegisterService;
 import org.mifosplatform.infrastructure.jobs.service.SchedulerJobRunnerReadService;
 import org.mifosplatform.infrastructure.security.exception.NoAuthorizationException;
 import org.mifosplatform.infrastructure.security.service.PlatformSecurityContext;
-import org.mifosplatform.infrastructure.core.service.SearchParameters;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
+import javax.ws.rs.*;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
+import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 
 @Path("/jobs")
 @Consumes({ MediaType.APPLICATION_JSON })
 @Produces({ MediaType.APPLICATION_JSON })
 @Component
 public class SchedulerJobApiResource {
+    private static final Logger logger = LoggerFactory.getLogger(SchedulerJobApiResource.class);
 
     private final SchedulerJobRunnerReadService schedulerJobRunnerReadService;
     private final JobRegisterService jobRegisterService;
@@ -53,6 +52,7 @@ public class SchedulerJobApiResource {
     private final ToApiJsonSerializer<JobDetailHistoryData> jobHistoryToApiJsonSerializer;
     private final PortfolioCommandSourceWritePlatformService commandsSourceWritePlatformService;
     private final PlatformSecurityContext context;
+    private final ScheduledExecutorService executorService = Executors.newScheduledThreadPool(1);
 
     @Autowired
     public SchedulerJobApiResource(final SchedulerJobRunnerReadService schedulerJobRunnerReadService,
@@ -114,6 +114,44 @@ public class SchedulerJobApiResource {
         Response response = Response.status(400).build();
         if (is(commandParam, SchedulerJobApiConstants.COMMAND_EXECUTE_JOB)) {
             this.jobRegisterService.executeJob(jobId);
+            response = Response.status(202).build();
+        } else {
+            throw new UnrecognizedQueryParamException(SchedulerJobApiConstants.COMMAND, commandParam);
+        }
+        return response;
+    }
+
+    @POST
+    @Path("batch")
+    public Response executeJobs(@QueryParam(SchedulerJobApiConstants.JOB_IDS) final List<Long> jobIds,
+                               @QueryParam(SchedulerJobApiConstants.COMMAND) final String commandParam) {
+        // check the logged in user have permissions to execute scheduler jobs
+        final boolean hasNotPermission = this.context.authenticatedUser().hasNotPermissionForAnyOf("ALL_FUNCTIONS", "EXECUTEJOB_SCHEDULER");
+        if (hasNotPermission) {
+            final String authorizationMessage = "User has no authority to execute scheduler jobs";
+            throw new NoAuthorizationException(authorizationMessage);
+        }
+        Response response = Response.status(400).build();
+        if (is(commandParam, SchedulerJobApiConstants.COMMAND_EXECUTE_JOB)) {
+            final String dataSourceContext = ThreadLocalContextUtil.getDataSourceContext();
+            final String authToken = ThreadLocalContextUtil.getAuthToken();
+            final MifosPlatformTenant tenant = ThreadLocalContextUtil.getTenant();
+            executorService.execute(new Runnable() {
+                @Override
+                public void run() {
+                    ThreadLocalContextUtil.setDataSourceContext(dataSourceContext);
+                    ThreadLocalContextUtil.setAuthToken(authToken);
+                    ThreadLocalContextUtil.setTenant(tenant);
+                    for(Long jobId : jobIds) {
+                        try {
+                            logger.info("Job batch execution ID: {}", jobId);
+                            jobRegisterService.executeJob(jobId);
+                        } catch (Exception e) {
+                            logger.warn(e.toString(), e);
+                        }
+                    }
+                }
+            });
             response = Response.status(202).build();
         } else {
             throw new UnrecognizedQueryParamException(SchedulerJobApiConstants.COMMAND, commandParam);
