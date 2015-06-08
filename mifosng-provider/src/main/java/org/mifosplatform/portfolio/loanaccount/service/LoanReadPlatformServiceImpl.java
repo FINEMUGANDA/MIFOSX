@@ -1579,11 +1579,14 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService {
                 .append(" where ((ls.fee_charges_amount <> if(ls.accrual_fee_charges_derived is null,0, ls.accrual_fee_charges_derived))")
                 .append(" or ( ls.penalty_charges_amount <> if(ls.accrual_penalty_charges_derived is null,0,ls.accrual_penalty_charges_derived))")
                 .append(" or ( ls.interest_amount <> if(ls.accrual_interest_derived is null,0,ls.accrual_interest_derived)))")
-                .append("  and loan.loan_status_id in ? and mpl.accounting_type=? and loan.is_npa=0 and ls.duedate <= CURDATE() order by loan.id,ls.duedate");
+                .append("  and loan.loan_status_id in (:active) and mpl.accounting_type=:type and loan.is_npa=0 and ls.duedate <= CURDATE() order by loan.id,ls.duedate");
 
         final Collection<Integer> loanStatuses = new ArrayList<>(Arrays.asList(LoanStatus.ACTIVE_IN_GOOD_STANDING.getValue(), LoanStatus.ACTIVE_IN_BAD_STANDING.getValue()));
+        Map<String, Object> paramMap = new HashMap<>(2);
+        paramMap.put("active", loanStatuses);
+        paramMap.put("type", AccountingRuleType.ACCRUAL_PERIODIC.getValue());
 
-        return this.jdbcTemplate.query(sqlBuilder.toString(), mapper, new Object[] { loanStatuses, AccountingRuleType.ACCRUAL_PERIODIC.getValue() });
+        return this.namedParameterJdbcTemplate.query(sqlBuilder.toString(), paramMap, mapper);
     }
 
     @Override
@@ -1597,7 +1600,7 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService {
                 .append(" where ((ls.fee_charges_amount <> if(ls.accrual_fee_charges_derived is null,0, ls.accrual_fee_charges_derived))")
                 .append(" or (ls.penalty_charges_amount <> if(ls.accrual_penalty_charges_derived is null,0,ls.accrual_penalty_charges_derived))")
                 .append(" or (ls.interest_amount <> if(ls.accrual_interest_derived is null,0,ls.accrual_interest_derived)))")
-                .append("  and loan.loan_status_id in :active and mpl.accounting_type=:type and loan.is_npa=0 and (ls.duedate <= :tilldate or (ls.duedate > :tilldate and ls.fromdate < :tilldate)) order by loan.id,ls.duedate");
+                .append("  and loan.loan_status_id in (:active) and mpl.accounting_type=:type and loan.is_npa=0 and (ls.duedate <= :tilldate or (ls.duedate > :tilldate and ls.fromdate < :tilldate)) order by loan.id,ls.duedate");
         Map<String, Object> paramMap = new HashMap<>(3);
         final Collection<Integer> loanStatuses = new ArrayList<>(Arrays.asList(LoanStatus.ACTIVE_IN_GOOD_STANDING.getValue(), LoanStatus.ACTIVE_IN_BAD_STANDING.getValue()));
         paramMap.put("active", loanStatuses);
@@ -1760,18 +1763,22 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService {
         sqlBuilder.append("SELECT ml.id FROM m_loan ml ");
         sqlBuilder.append(" INNER JOIN m_loan_repayment_schedule mr on mr.loan_id = ml.id ");
         sqlBuilder.append(" LEFT JOIN m_loan_disbursement_detail dd on dd.loan_id=ml.id and dd.disbursedon_date is null ");
-        sqlBuilder.append(" WHERE ml.loan_status_id in ? ");
+        sqlBuilder.append(" WHERE ml.loan_status_id in (:active) ");
         sqlBuilder.append(" and ml.interest_recalculation_enabled = 1 ");
         sqlBuilder.append(" and ml.is_npa = 0 ");
         sqlBuilder.append(" and ((");
         sqlBuilder.append(" mr.completed_derived is false ");
-        sqlBuilder.append(" and mr.duedate < ? )");
-        sqlBuilder.append(" or dd.expected_disburse_date < ? ) ");
+        sqlBuilder.append(" and mr.duedate < :duedate )");
+        sqlBuilder.append(" or dd.expected_disburse_date < :disburse_date ) ");
         sqlBuilder.append(" group by ml.id");
         try {
             final Collection<Integer> loanStatuses = new ArrayList<>(Arrays.asList(LoanStatus.ACTIVE_IN_GOOD_STANDING.getValue(), LoanStatus.ACTIVE_IN_BAD_STANDING.getValue()));
-            return this.jdbcTemplate.queryForList(sqlBuilder.toString(), Long.class,
-                    new Object[] { loanStatuses, formatter.print(LocalDate.now()), formatter.print(LocalDate.now()) });
+            Map<String, Object> paramMap = new HashMap<>(3);
+            paramMap.put("active", loanStatuses);
+            paramMap.put("duedate", formatter.print(LocalDate.now()));
+            paramMap.put("disburse_date", formatter.print(LocalDate.now()));
+
+            return this.namedParameterJdbcTemplate.queryForList(sqlBuilder.toString(), paramMap, Long.class);
         } catch (final EmptyResultDataAccessException e) {
             return null;
         }
