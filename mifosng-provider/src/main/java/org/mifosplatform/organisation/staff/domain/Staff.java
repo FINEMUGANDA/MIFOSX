@@ -211,11 +211,64 @@ public class Staff extends AbstractPersistable<Long> {
             deriveDisplayName(this.firstname);
         }
 
+        final String genderIdParamName = "genderId";
+        if (command.isChangeInLongParameterNamed(genderIdParamName, genderId())) {
+            final Long newValue = command.longValueOfParameterNamed(genderIdParamName);
+            actualChanges.put(genderIdParamName, newValue);
+        }
+
+        final String maritalStatusIdParamName = "maritalStatusId";
+        if (command.isChangeInLongParameterNamed(maritalStatusIdParamName, maritalStatusId())) {
+            final Long newValue = command.longValueOfParameterNamed(maritalStatusIdParamName);
+            actualChanges.put(maritalStatusIdParamName, newValue);
+        }
+
+        final String emergencyContactRelationIdParamName = "emergencyContactRelationId";
+        if (command.isChangeInLongParameterNamed(emergencyContactRelationIdParamName, emergencyContactRelationId())) {
+            final Long newValue = command.longValueOfParameterNamed(emergencyContactRelationIdParamName);
+            actualChanges.put(emergencyContactRelationIdParamName, newValue);
+        }
+
+        final String emailParamName = "email";
+        if (command.isChangeInStringParameterNamed(emailParamName, this.email)) {
+            final String newValue = command.stringValueOfParameterNamed(emailParamName);
+            actualChanges.put(emailParamName, newValue);
+            this.externalId = newValue;
+        }
+
         final String externalIdParamName = "externalId";
         if (command.isChangeInStringParameterNamed(externalIdParamName, this.externalId)) {
             final String newValue = command.stringValueOfParameterNamed(externalIdParamName);
             actualChanges.put(externalIdParamName, newValue);
             this.externalId = newValue;
+        }
+
+        final String childrenParamName = "children";
+        if (command.isChangeInIntegerParameterNamed(childrenParamName, this.children)) {
+            final Integer newValue = command.integerValueOfParameterNamed(childrenParamName);
+            actualChanges.put(childrenParamName, newValue);
+            this.children = newValue;
+        }
+
+        final String addressParamName = "address";
+        if (command.isChangeInStringParameterNamed(addressParamName, this.address)) {
+            final String newValue = command.stringValueOfParameterNamed(addressParamName);
+            actualChanges.put(addressParamName, newValue);
+            this.address = StringUtils.defaultIfEmpty(newValue, null);
+        }
+
+        final String emergencyContactNameParamName = "emergencyContactName";
+        if (command.isChangeInStringParameterNamed(emergencyContactNameParamName, this.emergencyContactName)) {
+            final String newValue = command.stringValueOfParameterNamed(emergencyContactNameParamName);
+            actualChanges.put(emergencyContactNameParamName, newValue);
+            this.emergencyContactName = StringUtils.defaultIfEmpty(newValue, null);
+        }
+
+        final String emergencyContactMobileNoParamName = "emergencyContactMobileNo";
+        if (command.isChangeInStringParameterNamed(emergencyContactMobileNoParamName, this.emergencyContactMobileNo)) {
+            final String newValue = command.stringValueOfParameterNamed(emergencyContactMobileNoParamName);
+            actualChanges.put(emergencyContactMobileNoParamName, newValue);
+            this.emergencyContactMobileNo = StringUtils.defaultIfEmpty(newValue, null);
         }
 
         final String mobileNoParamName = "mobileNo";
@@ -325,6 +378,14 @@ public class Staff extends AbstractPersistable<Long> {
         Long id = null;
         if (this.maritalStatus != null) {
             id = this.maritalStatus.getId();
+        }
+        return id;
+    }
+
+    public Long emergencyContactRelationId() {
+        Long id = null;
+        if (this.emergencyContactRelation != null) {
+            id = this.emergencyContactRelation.getId();
         }
         return id;
     }
