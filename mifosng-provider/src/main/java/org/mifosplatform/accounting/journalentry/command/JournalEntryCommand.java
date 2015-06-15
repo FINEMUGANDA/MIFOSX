@@ -178,8 +178,4 @@ public class JournalEntryCommand {
     public Long getAccountingRuleId() {
         return this.accountingRuleId;
     }
-
-    public Boolean isOpening() {
-        return opening;
-    }
 }
