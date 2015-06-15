@@ -121,7 +121,7 @@ public class JournalEntryWritePlatformServiceJpaRepositoryImpl implements Journa
 
             final Long accountRuleId = command.longValueOfParameterNamed(JournalEntryJsonInputParams.ACCOUNTING_RULE.getValue());
 
-            final Boolean opening = command.booleanObjectValueOfParameterNamed(JournalEntryJsonInputParams.OPENING.getValue());
+            //final Boolean opening = command.booleanObjectValueOfParameterNamed(JournalEntryJsonInputParams.OPENING.getValue());
 
             validateBusinessRulesForJournalEntries(journalEntryCommand);
 
@@ -137,13 +137,9 @@ public class JournalEntryWritePlatformServiceJpaRepositoryImpl implements Journa
             BigDecimal creditExchangeRate = BigDecimal.ONE;
             BigDecimal debitExchangeRate = BigDecimal.ONE;
 
-            if(!Boolean.TRUE.equals(opening)) {
-                BigDecimal[] exchangeRates = calculateExchangeRate(journalEntryCommand.getCredits(), journalEntryCommand.getDebits());
-                creditExchangeRate = exchangeRates[0];
-                debitExchangeRate = exchangeRates[1];
-            }
-
-            logger.info("################### OPENING: accounting rule {}", accountRuleId);
+            BigDecimal[] exchangeRates = calculateExchangeRate(journalEntryCommand.getCredits(), journalEntryCommand.getDebits());
+            creditExchangeRate = exchangeRates[0];
+            debitExchangeRate = exchangeRates[1];
 
             if (accountRuleId != null) {
 
@@ -152,7 +148,6 @@ public class JournalEntryWritePlatformServiceJpaRepositoryImpl implements Journa
 
                 if (accountingRule.getAccountToCredit() == null) {
                     if (journalEntryCommand.getCredits() == null) {
-                        logger.info("################### OPENING: accounting rule check 1");
                         throw new JournalEntryInvalidException(GL_JOURNAL_ENTRY_INVALID_REASON.NO_DEBITS_OR_CREDITS, null, null, null);
                     }
                     if (journalEntryCommand.getDebits() != null) {
@@ -170,7 +165,6 @@ public class JournalEntryWritePlatformServiceJpaRepositoryImpl implements Journa
 
                 if (accountingRule.getAccountToDebit() == null) {
                     if (journalEntryCommand.getDebits() == null) {
-                        logger.info("################### OPENING: accounting rule check 2");
                         throw new JournalEntryInvalidException(GL_JOURNAL_ENTRY_INVALID_REASON.NO_DEBITS_OR_CREDITS, null, null, null);
                     }
                     if (journalEntryCommand.getCredits() != null) {
@@ -537,13 +531,11 @@ public class JournalEntryWritePlatformServiceJpaRepositoryImpl implements Journa
         final SingleDebitOrCreditEntryCommand[] debits = command.getDebits();
 
         // atleast one debit or credit must be present
-        if ((credits == null || credits.length <= 0 || debits == null || debits.length <= 0) && !Boolean.TRUE.equals(command.isOpening())) {
-            logger.info("################### OPENING: accounting rule check 3");
+        //if ((credits == null || credits.length <= 0 || debits == null || debits.length <= 0) && !Boolean.TRUE.equals(command.isOpening())) {
+        if (credits == null || credits.length <= 0 || debits == null || debits.length <= 0) {
             throw new JournalEntryInvalidException(GL_JOURNAL_ENTRY_INVALID_REASON.NO_DEBITS_OR_CREDITS, null, null, null); }
 
-        if(!Boolean.TRUE.equals(command.isOpening())) {
-            checkDebitAndCreditAmounts(credits, debits);
-        }
+        checkDebitAndCreditAmounts(credits, debits);
     }
 
     private void validateFinancialYear(Date date) {
