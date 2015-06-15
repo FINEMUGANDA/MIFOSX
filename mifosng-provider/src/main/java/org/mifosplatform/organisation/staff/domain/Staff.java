@@ -233,7 +233,7 @@ public class Staff extends AbstractPersistable<Long> {
         if (command.isChangeInStringParameterNamed(emailParamName, this.email)) {
             final String newValue = command.stringValueOfParameterNamed(emailParamName);
             actualChanges.put(emailParamName, newValue);
-            this.externalId = newValue;
+            this.email = newValue;
         }
 
         final String externalIdParamName = "externalId";
