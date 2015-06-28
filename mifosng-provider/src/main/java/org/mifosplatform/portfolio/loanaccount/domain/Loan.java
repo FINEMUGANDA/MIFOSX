@@ -2864,6 +2864,7 @@ public class Loan extends AbstractPersistable<Long> {
         if (isOverPaid()) {
             // FIXME - kw - update account balance to negative amount.
             handleLoanOverpayment(loanLifecycleStateMachine);
+            //throw new InvalidLoanStateTransitionException("transaction", "loan.is.overpaid", "You can not enter more than the client's total Outstanding Amount. Please enter amount less than or equal to " + getTotalOverpaid() + " " + getCurrency().getCode());
         } else if (this.summary.isRepaidInFull(loanCurrency())) {
             handleLoanRepaymentInFull(transactionDate, loanLifecycleStateMachine);
         }
@@ -4847,8 +4848,6 @@ public class Loan extends AbstractPersistable<Long> {
     }
 
     /**
-     * @param loan
-     *            the Loan object
      * @return loan disbursement data
      **/
     public List<DisbursementData> getDisbursmentData() {
@@ -4877,8 +4876,8 @@ public class Loan extends AbstractPersistable<Long> {
     }
 
     /**
-     * @param loan
-     *            the Loan object
+     * @param applicationCurrency
+     *            the Currency
      * @return application terms of the Loan object
      **/
     @SuppressWarnings({ "unused" })
@@ -5033,6 +5032,10 @@ public class Loan extends AbstractPersistable<Long> {
 
     public BigDecimal getGuaranteeAmount() {
         return this.guaranteeAmountDerived == null ? BigDecimal.ZERO : this.guaranteeAmountDerived;
+    }
+
+    public void setLoanOfficer(Staff loanOfficer) {
+        this.loanOfficer = loanOfficer;
     }
 
     public ChangedTransactionDetail makeRefundForActiveLoan(final LoanTransaction loanTransaction,
