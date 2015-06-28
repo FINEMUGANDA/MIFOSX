@@ -338,6 +338,14 @@ public class ClientWritePlatformServiceJpaRepositoryImpl implements ClientWriteP
 
             if (!changes.isEmpty()) {
                 this.clientRepository.saveAndFlush(clientForUpdate);
+
+                if(changes.containsKey(ClientApiConstants.staffIdParamName)) {
+                    List<Loan> loans = loanRepository.findLoanByClientId(clientForUpdate.getId());
+                    for(Loan loan : loans) {
+                        loan.setLoanOfficer(clientForUpdate.getStaff());
+                    }
+                    loanRepository.save(loans);
+                }
             }
 
             return new CommandProcessingResultBuilder() //
