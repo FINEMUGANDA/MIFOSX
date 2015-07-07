@@ -960,10 +960,7 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService {
             final BigDecimal amount = rs.getBigDecimal("amount");
             final String dateFormat = "yyyy-MM-dd";
             final String maturityDate = rs.getString("maturityDate");
-            String dueDate = rs.getString("dueDate");
-            if (StringUtils.isEmpty(dueDate)) {
-                dueDate = maturityDate;
-            }
+            String dueDate = rs.getString("maturityDate");
             final String locale = "en_GB";
 
             final BigDecimal principalDue = JdbcSupport.getBigDecimalDefaultToZeroIfNull(rs, "principalDue");
