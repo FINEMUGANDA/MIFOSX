@@ -2715,6 +2715,15 @@ public class Loan extends AbstractPersistable<Long> {
             }
         }
 
+        if (loanTransaction.isRepayment()) {
+            Money totalOutstandingOnLoan = getLoanSummary().getTotalOutstanding(loanCurrency());
+            if (loanTransaction.getAmount(loanCurrency()).isGreaterThan(totalOutstandingOnLoan)) {
+                final String errorMessage = "The amount to repay cannot be greater than total amount outstanding on loan.";
+                throw new InvalidLoanStateTransitionException("repayment", "amount.exceeds.total.outstanding", errorMessage,
+                        loanTransaction.getAmount(loanCurrency()), totalOutstandingOnLoan.getAmount());
+            }
+        }
+
         if (this.loanProduct.isMultiDisburseLoan() && adjustedTransaction == null) {
             BigDecimal totalDisbursed = getDisbursedAmount();
             if (totalDisbursed.compareTo(this.summary.getTotalPrincipalRepaid()) < 0) {
@@ -2863,8 +2872,7 @@ public class Loan extends AbstractPersistable<Long> {
 
         if (isOverPaid()) {
             // FIXME - kw - update account balance to negative amount.
-            //handleLoanOverpayment(loanLifecycleStateMachine);
-            throw new InvalidLoanStateTransitionException("transaction", "loan.is.overpaid", "You can not enter more than the client's total Outstanding Amount. Please enter amount less than or equal to " + getTotalOverpaid() + " " + getCurrency().getCode());
+            handleLoanOverpayment(loanLifecycleStateMachine);
         } else if (this.summary.isRepaidInFull(loanCurrency())) {
             handleLoanRepaymentInFull(transactionDate, loanLifecycleStateMachine);
         }
