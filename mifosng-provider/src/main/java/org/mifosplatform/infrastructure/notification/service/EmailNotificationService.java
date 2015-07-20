@@ -74,7 +74,7 @@ public class EmailNotificationService extends AbstractNotificationService {
                     logger.error(e.toString(), e);
                 }
 
-                NotificationLog log = notificationLogRepository.save(new NotificationLog(NotificationType.EMAIL, email, new Date(), sent, messageId));
+                NotificationLog log = notificationLogRepository.save(new NotificationLog(NotificationType.EMAIL, email, new Date(), sent, "m_note", (Long)officer.get("note_id"), "", messageId));
 
                 if(sent) {
                     jdbcTemplate.update(updateNotes, log.getId(), officer.get("username"));
