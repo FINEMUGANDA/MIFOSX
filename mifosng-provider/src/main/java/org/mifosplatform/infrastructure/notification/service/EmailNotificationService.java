@@ -114,7 +114,8 @@ public class EmailNotificationService extends AbstractNotificationService {
         email.setAuthenticator(new DefaultAuthenticator(credentials.getAuthUsername(), credentials.getAuthPassword()));
         email.setDebug(credentials.isDebug());
         email.setHostName(credentials.getHost());
-        email.getMailSession().getProperties().put("mail.smtp.starttls.enable", credentials.isStartTls());
+        email.setStartTLSEnabled(credentials.isStartTls());
+        //email.getMailSession().getProperties().put(EmailConstants.MAIL_TRANSPORT_STARTTLS_ENABLE, credentials.isStartTls());
         email.setFrom(credentials.getAuthUsername(), credentials.getSenderName());
         email.setSubject(subject);
         email.setMsg(message);
