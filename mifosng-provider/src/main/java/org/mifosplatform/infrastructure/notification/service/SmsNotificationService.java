@@ -65,6 +65,8 @@ public class SmsNotificationService extends AbstractNotificationService {
 
             List<Map<String, Object>> clients = getPaymentReminderClients(daysInAdvance.getValue().intValue());
 
+            logger.info("=============== SMS JOB - clients:{} - date:{} - id:{} - days:{}", clients, dueDate, daysInAdvance.getId(), daysInAdvance.getValue());
+
             for(Map<String, Object> client : clients) {
                 boolean sent = false;
                 SendMessageResult result = null;
@@ -76,18 +78,22 @@ public class SmsNotificationService extends AbstractNotificationService {
                 message.append(String.format(template, client.get("firstname"), df.format(dueDate.toDate())));
 
                 try {
-                    logger.info("=============== SMS DESTINATION: {}", mobileNo);
+                    logger.info("=============== SMS DESTINATION: {} - {} - {} - {}", mobileNo, dueDate, daysInAdvance.getId(), daysInAdvance.getValue());
                     result = send(mobileNo, message.toString());
                     sent = true;
                 } catch (Exception e) {
                     logger.error(e.toString(), e);
                 }
 
-                SendMessageResultItem item = result.getSendMessageResults()[0];
+                if(result!=null) {
+                    SendMessageResultItem item = result.getSendMessageResults()[0];
 
-                notificationLogRepository.save(new NotificationLog(NotificationType.SMS, mobileNo, new Date(), sent, "m_loan_repayment_schedule", loanRepaymentScheduleId, item.getMessageStatus(), item.getMessageId()));
+                    notificationLogRepository.save(new NotificationLog(NotificationType.SMS, mobileNo, new Date(), sent, "m_loan_repayment_schedule", loanRepaymentScheduleId, item.getMessageStatus(), item.getMessageId()));
 
-                logger.info("############### SMS notification sent: {}", sent);
+                    logger.info("############### SMS notification sent: {}", sent);
+                } else {
+                    logger.warn("############### SMS notification not sent: {} ({})", mobileNo, sent);
+                }
             }
 
             running.set(false);
