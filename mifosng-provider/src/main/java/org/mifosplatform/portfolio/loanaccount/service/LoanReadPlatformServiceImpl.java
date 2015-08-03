@@ -93,6 +93,8 @@ import org.mifosplatform.portfolio.loanproduct.service.LoanProductReadPlatformSe
 import org.mifosplatform.portfolio.paymentdetail.PaymentDetailConstants;
 import org.mifosplatform.portfolio.paymentdetail.data.PaymentDetailData;
 import org.mifosplatform.useradministration.domain.AppUser;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.EmptyResultDataAccessException;
@@ -105,6 +107,7 @@ import org.springframework.util.CollectionUtils;
 
 @Service
 public class LoanReadPlatformServiceImpl implements LoanReadPlatformService {
+    private static final Logger logger = LoggerFactory.getLogger(LoanReadPlatformServiceImpl.class);
 
     private final JdbcTemplate jdbcTemplate;
     private final PlatformSecurityContext context;
@@ -352,28 +355,41 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService {
 
         // TODO - KW - OPTIMIZE - write simple sql query to fetch back date of
         // possible next transaction date.
+        logger.info("##################### DEBUG  1: {}", loanId);
         final Loan loan = this.loanRepository.findOne(loanId);
+        logger.info("##################### DEBUG  2: {}", loan);
         if (loan == null) { throw new LoanNotFoundException(loanId); }
 
         final MonetaryCurrency currency = loan.getCurrency();
+        logger.info("##################### DEBUG  3: {}", currency);
         final ApplicationCurrency applicationCurrency = this.applicationCurrencyRepository.findOneWithNotFoundDetection(currency);
+        logger.info("##################### DEBUG  4: {}", applicationCurrency);
 
         final CurrencyData currencyData = applicationCurrency.toData();
 
+        logger.info("##################### DEBUG  5: {}", currencyData);
         final LocalDate earliestUnpaidInstallmentDate = loan.possibleNextRepaymentDate();
+        logger.info("##################### DEBUG  6: {}", earliestUnpaidInstallmentDate);
 
         final LoanRepaymentScheduleInstallment loanRepaymentScheduleInstallment = loan.possibleNextRepaymentInstallment();
+        logger.info("##################### DEBUG  7: {}", loanRepaymentScheduleInstallment);
         final LoanTransactionEnumData transactionType = LoanEnumerations.transactionType(LoanTransactionType.REPAYMENT);
+        logger.info("##################### DEBUG  8: {}", transactionType);
         final Collection<CodeValueData> paymentOptions = this.codeValueReadPlatformService
                 .retrieveCodeValuesByCode(PaymentDetailConstants.paymentTypeCodeName);
+        logger.info("##################### DEBUG  9: {}", paymentOptions);
         final BigDecimal outstandingLoanBalance = null;
         final BigDecimal unrecognizedIncomePortion = null;
-        return new LoanTransactionData(null, null, null, transactionType, null, currencyData, earliestUnpaidInstallmentDate,
+
+        LoanTransactionData result = new LoanTransactionData(null, null, null, transactionType, null, currencyData, earliestUnpaidInstallmentDate,
                 loanRepaymentScheduleInstallment.getTotalOutstanding(currency).getAmount(), loanRepaymentScheduleInstallment
-                        .getPrincipalOutstanding(currency).getAmount(), loanRepaymentScheduleInstallment.getInterestOutstanding(currency)
-                        .getAmount(), loanRepaymentScheduleInstallment.getFeeChargesOutstanding(currency).getAmount(),
+                .getPrincipalOutstanding(currency).getAmount(), loanRepaymentScheduleInstallment.getInterestOutstanding(currency)
+                .getAmount(), loanRepaymentScheduleInstallment.getFeeChargesOutstanding(currency).getAmount(),
                 loanRepaymentScheduleInstallment.getPenaltyChargesOutstanding(currency).getAmount(), null, unrecognizedIncomePortion,
                 paymentOptions, null, null, null, outstandingLoanBalance, false);
+        logger.info("##################### DEBUG 10: {}", result);
+
+        return result;
     }
 
     @Override
