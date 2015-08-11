@@ -1,0 +1,1 @@
+INSERT INTO c_configuration (`name`, `description`) VALUES ('client-external-id', 'Enable external IDs for clients');
