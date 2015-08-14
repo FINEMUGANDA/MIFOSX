@@ -414,6 +414,9 @@ public class Loan extends AbstractPersistable<Long> {
         } else {
             this.accountNumber = accountNo;
         }
+        if(StringUtils.isEmpty(this.externalId) && !StringUtils.isEmpty(accountNo) && accountNo.length()>=5) {
+            this.externalId = accountNo.substring(accountNo.length()-5, accountNo.length());
+        }
         this.client = client;
         this.group = group;
         this.loanType = loanType;
@@ -1001,6 +1004,9 @@ public class Loan extends AbstractPersistable<Long> {
     public void updateAccountNo(final String newAccountNo) {
         this.accountNumber = newAccountNo;
         this.accountNumberRequiresAutoGeneration = false;
+        if(StringUtils.isEmpty(this.externalId) && !StringUtils.isEmpty(newAccountNo) && newAccountNo.length()>=5) {
+            this.externalId = newAccountNo.substring(newAccountNo.length()-5, newAccountNo.length());
+        }
     }
 
     public void updateFund(final Fund fund) {
