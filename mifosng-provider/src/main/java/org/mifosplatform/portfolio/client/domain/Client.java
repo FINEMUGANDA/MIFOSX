@@ -267,6 +267,9 @@ public final class Client extends AbstractPersistable<Long> {
         } else {
             this.accountNumber = accountNo;
         }
+        if(StringUtils.isEmpty(externalId) && !StringUtils.isEmpty(accountNumber) && accountNumber.length()>=5) {
+            this.externalId = accountNumber.substring(accountNumber.length()-5, accountNumber.length());
+        }
 
         this.submittedOnDate = submittedOnDate.toDate();
         this.submittedBy = currentUser;
@@ -366,6 +369,9 @@ public final class Client extends AbstractPersistable<Long> {
     public void updateAccountNo(final String accountIdentifier) {
         this.accountNumber = accountIdentifier;
         this.accountNumberRequiresAutoGeneration = false;
+        if(StringUtils.isEmpty(this.externalId) && !StringUtils.isEmpty(accountIdentifier) && accountIdentifier.length()>=5) {
+            this.externalId = accountIdentifier.substring(accountIdentifier.length()-5, accountIdentifier.length());
+        }
     }
 
     public void activate(final AppUser currentUser, final DateTimeFormatter formatter, final LocalDate activationLocalDate) {
