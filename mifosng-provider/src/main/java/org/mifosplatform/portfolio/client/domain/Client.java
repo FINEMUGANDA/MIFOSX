@@ -365,6 +365,10 @@ public final class Client extends AbstractPersistable<Long> {
 
     public void updateAccountNo(final String accountIdentifier) {
         this.accountNumber = accountIdentifier;
+        // TODO: make this configurable?
+        if(StringUtils.isEmpty(this.externalId) && accountIdentifier.length()>=5) {
+            this.externalId = accountIdentifier.substring(0, 5);
+        }
         this.accountNumberRequiresAutoGeneration = false;
     }
 
