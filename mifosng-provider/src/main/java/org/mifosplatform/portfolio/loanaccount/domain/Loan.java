@@ -414,9 +414,6 @@ public class Loan extends AbstractPersistable<Long> {
         } else {
             this.accountNumber = accountNo;
         }
-        if(StringUtils.isEmpty(this.externalId) && !StringUtils.isEmpty(accountNo) && accountNo.length()>=5) {
-            this.externalId = accountNo.substring(accountNo.length()-5, accountNo.length());
-        }
         this.client = client;
         this.group = group;
         this.loanType = loanType;

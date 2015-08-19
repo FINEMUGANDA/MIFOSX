@@ -267,9 +267,6 @@ public final class Client extends AbstractPersistable<Long> {
         } else {
             this.accountNumber = accountNo;
         }
-        if(StringUtils.isEmpty(externalId) && !StringUtils.isEmpty(accountNumber) && accountNumber.length()>=5) {
-            this.externalId = accountNumber.substring(accountNumber.length()-5, accountNumber.length());
-        }
 
         this.submittedOnDate = submittedOnDate.toDate();
         this.submittedBy = currentUser;
