@@ -18,6 +18,7 @@ public interface LoanApiConstants {
     public static final String approvedLoanAmountParameterName = "approvedLoanAmount";
     public static final String approvedOnDateParameterName = "approvedOnDate";
     public static final String noteParameterName = "note";
+    public static final String watchlist = "watchlist";
     public static final String localeParameterName = "locale";
     public static final String dateFormatParameterName = "dateFormat";
     public static final String rejectedOnDateParameterName = "rejectedOnDate";

@@ -1056,6 +1056,11 @@ public class LoanWritePlatformServiceJpaRepositoryImpl implements LoanWritePlatf
         checkClientOrGroupActive(loan);
         removeLoanCycle(loan);
 
+        if(command.hasParameter("watchlist")) {
+            changes.put("watchlist", command.booleanPrimitiveValueOfParameterNamed("watchlist"));
+            loan.setWatchlist(command.booleanPrimitiveValueOfParameterNamed("watchlist"));
+        }
+
         final List<Long> existingTransactionIds = new ArrayList<>();
         final List<Long> existingReversedTransactionIds = new ArrayList<>();
 
