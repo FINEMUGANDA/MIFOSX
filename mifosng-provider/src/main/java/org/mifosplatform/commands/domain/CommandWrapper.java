@@ -459,6 +459,14 @@ public class CommandWrapper {
         return this.actionName.equalsIgnoreCase("UNDOWRITEOFF") && this.entityName.equalsIgnoreCase("LOAN");
     }
 
+    public boolean isLoanWatch() {
+        return this.actionName.equalsIgnoreCase("WATCH") && this.entityName.equalsIgnoreCase("LOAN");
+    }
+
+    public boolean isLoanUnwatch() {
+        return this.actionName.equalsIgnoreCase("UNWATCH") && this.entityName.equalsIgnoreCase("LOAN");
+    }
+
     public boolean isUpdateDisbursementDate() {
         return this.actionName.equalsIgnoreCase("UPDATE") && this.entityName.equalsIgnoreCase("DISBURSEMENTDETAIL");
     }

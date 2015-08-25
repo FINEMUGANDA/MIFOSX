@@ -679,6 +679,24 @@ public class CommandWrapperBuilder {
         return this;
     }
 
+    public CommandWrapperBuilder watchLoanTransaction(final Long loanId) {
+        this.actionName = "WATCH";
+        this.entityName = "LOAN";
+        this.entityId = null;
+        this.loanId = loanId;
+        this.href = "/loans/" + loanId + "/transactions/template?command=watch";
+        return this;
+    }
+
+    public CommandWrapperBuilder unwatchLoanTransaction(final Long loanId) {
+        this.actionName = "UNWATCH";
+        this.entityName = "LOAN";
+        this.entityId = null;
+        this.loanId = loanId;
+        this.href = "/loans/" + loanId + "/transactions/template?command=unwatch";
+        return this;
+    }
+
     public CommandWrapperBuilder closeLoanAsRescheduledTransaction(final Long loanId) {
         this.actionName = "CLOSEASRESCHEDULED";
         this.entityName = "LOAN";

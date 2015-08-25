@@ -2574,6 +2574,38 @@ public class LoanWritePlatformServiceJpaRepositoryImpl implements LoanWritePlatf
                 .build();
     }
 
+    public CommandProcessingResult watch(Long loanId) {
+        final AppUser currentUser = getAppUserIfPresent();
+
+        final Loan loan = this.loanAssembler.assembleFrom(loanId);
+        loan.setWatchlist(true);
+
+        saveLoanWithDataIntegrityViolationChecks(loan);
+
+        return new CommandProcessingResultBuilder() //
+                .withOfficeId(loan.getOfficeId()) //
+                .withClientId(loan.getClientId()) //
+                .withGroupId(loan.getGroupId()) //
+                .withLoanId(loanId) //
+                .build();
+    }
+
+    public CommandProcessingResult unwatch(Long loanId) {
+        final AppUser currentUser = getAppUserIfPresent();
+
+        final Loan loan = this.loanAssembler.assembleFrom(loanId);
+        loan.setWatchlist(false);
+
+        saveLoanWithDataIntegrityViolationChecks(loan);
+
+        return new CommandProcessingResultBuilder() //
+                .withOfficeId(loan.getOfficeId()) //
+                .withClientId(loan.getClientId()) //
+                .withGroupId(loan.getGroupId()) //
+                .withLoanId(loanId) //
+                .build();
+    }
+
     @Override
     @Transactional
     public CommandProcessingResult updateDisbursementDateForTranche(final Long loanId, final Long disbursementId, final JsonCommand command) {
