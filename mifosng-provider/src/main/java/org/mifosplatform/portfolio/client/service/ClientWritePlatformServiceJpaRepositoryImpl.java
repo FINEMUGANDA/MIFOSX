@@ -26,6 +26,7 @@ import org.mifosplatform.infrastructure.core.api.JsonCommand;
 import org.mifosplatform.infrastructure.core.data.CommandProcessingResult;
 import org.mifosplatform.infrastructure.core.data.CommandProcessingResultBuilder;
 import org.mifosplatform.infrastructure.core.exception.PlatformDataIntegrityException;
+import org.mifosplatform.infrastructure.core.service.RoutingDataSource;
 import org.mifosplatform.infrastructure.security.service.PlatformSecurityContext;
 import org.mifosplatform.organisation.office.domain.Office;
 import org.mifosplatform.organisation.office.domain.OfficeRepository;
@@ -64,6 +65,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -88,6 +90,7 @@ public class ClientWritePlatformServiceJpaRepositoryImpl implements ClientWriteP
     private final CommandProcessingService commandProcessingService;
     private final ConfigurationDomainService configurationDomainService;
     private final AccountNumberFormatRepositoryWrapper accountNumberFormatRepository;
+    private final JdbcTemplate jdbcTemplate;
 
     @Autowired
     public ClientWritePlatformServiceJpaRepositoryImpl(final PlatformSecurityContext context,
@@ -98,7 +101,7 @@ public class ClientWritePlatformServiceJpaRepositoryImpl implements ClientWriteP
             final SavingsAccountRepository savingsRepository, final SavingsProductRepository savingsProductRepository,
             final SavingsApplicationProcessWritePlatformService savingsApplicationProcessWritePlatformService,
             final CommandProcessingService commandProcessingService, final ConfigurationDomainService configurationDomainService,
-            final AccountNumberFormatRepositoryWrapper accountNumberFormatRepository) {
+            final AccountNumberFormatRepositoryWrapper accountNumberFormatRepository, final RoutingDataSource dataSource) {
         this.context = context;
         this.clientRepository = clientRepository;
         this.officeRepository = officeRepository;
@@ -115,6 +118,7 @@ public class ClientWritePlatformServiceJpaRepositoryImpl implements ClientWriteP
         this.commandProcessingService = commandProcessingService;
         this.configurationDomainService = configurationDomainService;
         this.accountNumberFormatRepository = accountNumberFormatRepository;
+        this.jdbcTemplate = new JdbcTemplate(dataSource);
     }
 
     @Transactional
@@ -234,6 +238,7 @@ public class ClientWritePlatformServiceJpaRepositoryImpl implements ClientWriteP
             if (newClient.isAccountNumberRequiresAutoGeneration()) {
                 AccountNumberFormat accountNumberFormat = this.accountNumberFormatRepository.findByAccountType(EntityAccountType.CLIENT);
                 newClient.updateAccountNo(accountNumberGenerator.generate(newClient, accountNumberFormat));
+                newClient.updateExternalId(jdbcTemplate.queryForObject("SELECT max(cast(external_id AS UNSIGNED))+1 AS eid FROM m_client", Integer.class));
                 this.clientRepository.save(newClient);
             }
 
