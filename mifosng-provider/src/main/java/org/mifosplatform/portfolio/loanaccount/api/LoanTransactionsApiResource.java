@@ -161,11 +161,16 @@ public class LoanTransactionsApiResource {
         } else if (is(commandParam, "recoverypayment")) {
             final CommandWrapper commandRequest = builder.loanRecoveryPaymentTransaction(loanId).build();
             result = this.commandsSourceWritePlatformService.logCommandSource(commandRequest);
-        }
-        else if (is(commandParam, "refundByCash")) {
+        } else if (is(commandParam, "refundByCash")) {
             final CommandWrapper commandRequest = builder.refundLoanTransactionByCash(loanId).build();
             result = this.commandsSourceWritePlatformService.logCommandSource(commandRequest);
-        } 
+        } else if (is(commandParam, "watch")) {
+            final CommandWrapper commandRequest = builder.watchLoanTransaction(loanId).build();
+            result = this.commandsSourceWritePlatformService.logCommandSource(commandRequest);
+        } else if (is(commandParam, "unwatch")) {
+            final CommandWrapper commandRequest = builder.unwatchLoanTransaction(loanId).build();
+            result = this.commandsSourceWritePlatformService.logCommandSource(commandRequest);
+        }
 
         if (result == null) { throw new UnrecognizedQueryParamException("command", commandParam); }
 

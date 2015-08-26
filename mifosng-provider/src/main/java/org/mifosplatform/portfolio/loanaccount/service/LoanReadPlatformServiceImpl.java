@@ -568,6 +568,7 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService {
                     + " l.total_outstanding_derived as totalOutstanding,"
                     + " l.total_overpaid_derived as totalOverpaid,"
                     + " l.fixed_emi_amount as fixedEmiAmount,"
+                    + " l.watchlist as watchlist,"
                     + " l.max_outstanding_loan_balance as outstandingLoanBalance,"
                     + " la.principal_overdue_derived as principalOverdue,"
                     + " la.interest_overdue_derived as interestOverdue,"
@@ -846,6 +847,8 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService {
                         rescheduleStrategyType, calendarData, restFrequencyType, restFrequencyInterval, restFrequencyDate);
             }
 
+            final Boolean watchlist = rs.getBoolean("watchlist");
+
             return LoanAccountData.basicLoanDetails(id, accountNo, status, externalId, clientId, clientName, clientOfficeId, groupData,
                     loanType, loanProductId, loanProductName, loanProductDescription, fundId, fundName, loanPurposeId, loanPurposeName,
                     loanOfficerId, loanOfficerName, currencyData, proposedPrincipal, principal, approvedPrincipal, totalOverpaid,
@@ -856,7 +859,7 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService {
                     graceOnInterestCharged, interestChargedFromDate, timeline, loanSummary, feeChargesDueAtDisbursementCharged,
                     syncDisbursementWithMeeting, loanCounter, loanProductCounter, multiDisburseLoan, fixedEmiAmount,
                     outstandingLoanBalance, inArrears, daysInArrears, graceOnArrearsAgeing, isNPA, daysInMonthType, daysInYearType,
-                    isInterestRecalculationEnabled, interestRecalculationData, createStandingInstructionAtDisbursement);
+                    isInterestRecalculationEnabled, interestRecalculationData, createStandingInstructionAtDisbursement, watchlist);
         }
     }
 

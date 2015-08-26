@@ -174,7 +174,7 @@ public class StaffReadPlatformServiceImpl implements StaffReadPlatformService {
         public StaffLookupMapper() {
 
             final StringBuilder sqlBuilder = new StringBuilder(100);
-            sqlBuilder.append("s.id as id, s.display_name as displayName ");
+            sqlBuilder.append("s.id as id, s.display_name as displayName, s.is_loan_officer as isLoanOfficer, s.is_active as isActive ");
             sqlBuilder.append("from m_staff s ");
 
             this.schemaSql = sqlBuilder.toString();
@@ -189,7 +189,9 @@ public class StaffReadPlatformServiceImpl implements StaffReadPlatformService {
 
             final Long id = rs.getLong("id");
             final String displayName = rs.getString("displayName");
-            return StaffData.lookup(id, displayName);
+            final boolean isActive = rs.getBoolean("isActive");
+            final boolean isLoanOfficer = rs.getBoolean("isLoanOfficer");
+            return StaffData.lookup(id, displayName, isActive, isLoanOfficer);
         }
     }
 

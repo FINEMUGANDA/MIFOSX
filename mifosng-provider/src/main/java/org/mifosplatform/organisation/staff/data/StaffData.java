@@ -52,8 +52,8 @@ public class StaffData {
                 staff.isLoanOfficer, staff.externalId, staff.mobileNo, staff.mobileNo2, staff.email, staff.address, staff.children, staff.gender, staff.maritalStatus, staff.emergencyContactName, staff.emergencyContactMobileNo, staff.emergencyContactRelation, allowedOffices, staff.isActive, staff.joiningDate, genderOptions, maritalStatusOptions, emergencyContactRelationOptions);
     }
 
-    public static StaffData lookup(final Long id, final String displayName) {
-        return new StaffData(id, null, null, displayName, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
+    public static StaffData lookup(final Long id, final String displayName, final Boolean isActive, final Boolean isLoanOfficer) {
+        return new StaffData(id, null, null, displayName, null, null, isLoanOfficer, null, null, null, null, null, null, null, null, null, null, null, null, isActive, null, null, null, null);
     }
 
     public static StaffData instance(final Long id, final String firstname, final String lastname, final String displayName,

@@ -1,0 +1,1 @@
+ALTER TABLE `mifostenant-default`.m_loan ADD watchlist TINYINT NULL;

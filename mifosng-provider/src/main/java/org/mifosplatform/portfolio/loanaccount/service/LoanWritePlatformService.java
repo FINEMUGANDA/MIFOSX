@@ -80,6 +80,10 @@ public interface LoanWritePlatformService {
 
     CommandProcessingResult undoWriteOff(Long loanId);
 
+    CommandProcessingResult watch(Long loanId);
+
+    CommandProcessingResult unwatch(Long loanId);
+
     CommandProcessingResult updateDisbursementDateForTranche(Long loanId, Long disbursementId, JsonCommand command);
 
     void recalculateInterest();

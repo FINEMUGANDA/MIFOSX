@@ -1056,6 +1056,11 @@ public class LoanWritePlatformServiceJpaRepositoryImpl implements LoanWritePlatf
         checkClientOrGroupActive(loan);
         removeLoanCycle(loan);
 
+        if(command.hasParameter("watchlist")) {
+            changes.put("watchlist", command.booleanPrimitiveValueOfParameterNamed("watchlist"));
+            loan.setWatchlist(command.booleanPrimitiveValueOfParameterNamed("watchlist"));
+        }
+
         final List<Long> existingTransactionIds = new ArrayList<>();
         final List<Long> existingReversedTransactionIds = new ArrayList<>();
 
@@ -2561,6 +2566,38 @@ public class LoanWritePlatformServiceJpaRepositoryImpl implements LoanWritePlatf
         if (writeOffTransaction != null) {
             this.businessEventNotifierService.notifyBusinessEventWasExecuted(BUSINESS_EVENTS.LOAN_UNDO_WRITTEN_OFF, writeOffTransaction);
         }
+        return new CommandProcessingResultBuilder() //
+                .withOfficeId(loan.getOfficeId()) //
+                .withClientId(loan.getClientId()) //
+                .withGroupId(loan.getGroupId()) //
+                .withLoanId(loanId) //
+                .build();
+    }
+
+    public CommandProcessingResult watch(Long loanId) {
+        final AppUser currentUser = getAppUserIfPresent();
+
+        final Loan loan = this.loanAssembler.assembleFrom(loanId);
+        loan.setWatchlist(true);
+
+        saveLoanWithDataIntegrityViolationChecks(loan);
+
+        return new CommandProcessingResultBuilder() //
+                .withOfficeId(loan.getOfficeId()) //
+                .withClientId(loan.getClientId()) //
+                .withGroupId(loan.getGroupId()) //
+                .withLoanId(loanId) //
+                .build();
+    }
+
+    public CommandProcessingResult unwatch(Long loanId) {
+        final AppUser currentUser = getAppUserIfPresent();
+
+        final Loan loan = this.loanAssembler.assembleFrom(loanId);
+        loan.setWatchlist(false);
+
+        saveLoanWithDataIntegrityViolationChecks(loan);
+
         return new CommandProcessingResultBuilder() //
                 .withOfficeId(loan.getOfficeId()) //
                 .withClientId(loan.getClientId()) //

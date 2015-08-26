@@ -1,0 +1,2 @@
+INSERT IGNORE INTO m_permission(grouping, code, entity_name, action_name, can_maker_checker) VALUES ('fin_loan', 'WATCH_LOAN', 'LOAN', 'WATCH', 0);
+INSERT IGNORE INTO m_permission(grouping, code, entity_name, action_name, can_maker_checker) VALUES ('fin_loan', 'UNWATCH_LOAN', 'LOAN', 'UNWATCH', 0);
