@@ -9,31 +9,42 @@ import org.apache.commons.mail.DefaultAuthenticator;
 import org.apache.commons.mail.Email;
 import org.apache.commons.mail.EmailException;
 import org.apache.commons.mail.SimpleEmail;
+import org.mifosplatform.infrastructure.configuration.data.EmailCredentialsData;
+import org.mifosplatform.infrastructure.configuration.service.ExternalServicesReadPlatformService;
 import org.mifosplatform.infrastructure.core.domain.EmailDetail;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-//@Service
-@Deprecated
-public class GmailBackedPlatformEmailService implements PlatformEmailService {
+@Service
+public class GmailPlatformEmailService implements PlatformEmailService {
+    private static final Logger logger = LoggerFactory.getLogger(GmailPlatformEmailService.class);
+
+    private final ExternalServicesReadPlatformService externalServicesReadPlatformService;
+
+    private final EmailCredentialsData credentials;
+
+    @Autowired
+    public GmailPlatformEmailService(ExternalServicesReadPlatformService externalServicesReadPlatformService) {
+        this.externalServicesReadPlatformService = externalServicesReadPlatformService;
+        this.credentials = externalServicesReadPlatformService.getEmailCredentials();
+        logger.info("Production Email Service started!");
+    }
 
     @Override
     public void sendToUserAccount(final EmailDetail emailDetail, final String unencodedPassword) {
         final Email email = new SimpleEmail();
 
-        final String authuserName = "support@cloudmicrofinance.com";
-
-        final String authuser = "support@cloudmicrofinance.com";
-        final String authpwd = "support80";
-
         // Very Important, Don't use email.setAuthentication()
-        email.setAuthenticator(new DefaultAuthenticator(authuser, authpwd));
+        email.setAuthenticator(new DefaultAuthenticator(credentials.getAuthUsername(), credentials.getAuthPassword()));
         email.setDebug(false); // true if you want to debug
         email.setHostName("smtp.gmail.com");
         try {
             email.getMailSession().getProperties().put("mail.smtp.starttls.enable", "true");
-            email.setFrom(authuser, authuserName);
+            email.setFrom(credentials.getAuthUsername(), credentials.getAuthUsername());
 
-            final StringBuilder subjectBuilder = new StringBuilder().append("MifosX Prototype Demo: ").append(emailDetail.getContactName())
+            final StringBuilder subjectBuilder = new StringBuilder().append("FINEM U Ltd.: ").append(emailDetail.getContactName())
                     .append(" user account creation.");
 
             email.setSubject(subjectBuilder.toString());
@@ -42,7 +53,7 @@ public class GmailBackedPlatformEmailService implements PlatformEmailService {
 
             final StringBuilder messageBuilder = new StringBuilder().append("You are receiving this email as your email account: ")
                     .append(sendToEmail).append(" has being used to create a user account for an organisation named [")
-                    .append(emailDetail.getOrganisationName()).append("] on MifosX Prototype Demo.")
+                    .append(emailDetail.getOrganisationName()).append("].")
                     .append("You can login using the following credentials: username: ").append(emailDetail.getUsername())
                     .append(" password: ").append(unencodedPassword);
 
