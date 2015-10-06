@@ -4812,7 +4812,7 @@ public class Loan extends AbstractPersistable<Long> {
         return accruedTill;
     }
 
-    private void updateLoanOutstandingBalaces() {
+    public void updateLoanOutstandingBalaces() {
         Money outstanding = Money.zero(getCurrency());
         List<LoanTransaction> accrualTransactions = retreiveListOfAccrualTransactions();
         Money accrualPortion = Money.zero(getCurrency());
