@@ -2209,8 +2209,8 @@ public class Loan extends AbstractPersistable<Long> {
                 }
 
             }
-            updateLoanSummaryDerivedFields();
         }
+        updateLoanSummaryDerivedFields();
 
         return changedTransactionDetail;
     }
