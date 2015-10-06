@@ -167,11 +167,6 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService {
 
             final LoanMapper rm = new LoanMapper();
 
-            //TODO: remove this and add sql migration for calculate outstanding
-            final Loan loan = this.loanRepository.findOne(loanId);
-            loan.updateLoanOutstandingBalaces();
-            this.loanRepository.saveAndFlush(loan);
-
             final StringBuilder sqlBuilder = new StringBuilder();
             sqlBuilder.append("select ");
             sqlBuilder.append(rm.loanSchema());
