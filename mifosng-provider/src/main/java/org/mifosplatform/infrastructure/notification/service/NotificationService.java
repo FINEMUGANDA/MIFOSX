@@ -4,4 +4,6 @@ public interface NotificationService {
     void notifyPaymentReminders();
 
     void notifyFollowUps();
+
+    void notifyExpiredLoanPaymentReminders();
 }
