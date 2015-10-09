@@ -56,7 +56,7 @@ public class SmsNotificationService extends AbstractNotificationService {
     @Override
     @CronTarget(jobName = JobName.PAYMENT_REMINDER_SMS_NOTIFICATION)
     public void notifyPaymentReminders() {
-        if(!running.get()) {
+        if (!running.get()) {
             running.set(true);
             String template = "Dear %s. Your loan repayment is due on %s. Pls pay to FINEM (U) LTD,A/C:2916200002 Centenary Bank and deliver voucher to FINEM office.Tks";
 
@@ -71,12 +71,12 @@ public class SmsNotificationService extends AbstractNotificationService {
 
             logger.info("=============== SMS JOB - clients:{} - date:{} - id:{} - days:{}", clients, dueDate, daysInAdvance.getId(), daysInAdvance.getValue());
 
-            for(Map<String, Object> client : clients) {
+            for (Map<String, Object> client : clients) {
                 boolean sent = false;
                 SendMessageResult result = null;
 
                 String mobileNo = normalize(client.get("mobile_no").toString());
-                Long loanRepaymentScheduleId = (Long)client.get("loan_repayment_schedule_id");
+                Long loanRepaymentScheduleId = (Long) client.get("loan_repayment_schedule_id");
 
                 StringBuilder message = new StringBuilder();
                 message.append(String.format(template, client.get("firstname"), df.format(dueDate.toDate())));
@@ -89,7 +89,7 @@ public class SmsNotificationService extends AbstractNotificationService {
                     logger.error(e.toString(), e);
                 }
 
-                if(result!=null) {
+                if (result != null) {
                     SendMessageResultItem item = result.getSendMessageResults()[0];
 
                     notificationLogRepository.save(new NotificationLog(NotificationType.SMS, mobileNo, new Date(), sent, "m_loan_repayment_schedule", loanRepaymentScheduleId, item.getMessageStatus(), item.getMessageId()));
@@ -113,11 +113,11 @@ public class SmsNotificationService extends AbstractNotificationService {
     }
 
     private String normalize(String mobileNo) {
-        if(debug) {
+        if (debug) {
             return debugPhone;
-        } else if(mobileNo.startsWith("0")) {
+        } else if (mobileNo.startsWith("0")) {
             return "256" + mobileNo.substring(1);
-        } else if(mobileNo.startsWith("+")) {
+        } else if (mobileNo.startsWith("+")) {
             return mobileNo.substring(1);
         }
 
@@ -127,7 +127,7 @@ public class SmsNotificationService extends AbstractNotificationService {
     @Override
     @CronTarget(jobName = JobName.EXPIRED_LOAN_PAYMENT_REMINDER_SMS_NOTIFICATION)
     public void notifyExpiredLoanPaymentReminders() {
-        if(!running.get()) {
+        if (!running.get()) {
             running.set(true);
 
             String template = "Dear %s. Please be reminded to clear off your loan of Amount %s %s as it's way overdue. Deposit on FINEM (U) Ltd,Centenary Bank,A/C: 2916200002";
@@ -142,8 +142,8 @@ public class SmsNotificationService extends AbstractNotificationService {
             List<Map<String, Object>> clients = getExpiredLoanPaymentReminderClients(daysInAdvance.getValue().intValue());
 
             logger.info("=============== SMS JOB - clients:{} - date:{} - id:{} - days:{}", clients, dueDate, daysInAdvance.getId(), daysInAdvance.getValue());
-            Map<String, Object> client = clients.get(0);
-//            for(Map<String, Object> client : clients) {
+//            Map<String, Object> client = clients.get(0);
+            for (Map<String, Object> client : clients) {
                 boolean sent = false;
                 SendMessageResult result = null;
 
@@ -174,7 +174,7 @@ public class SmsNotificationService extends AbstractNotificationService {
                     logger.error(e.toString(), e);
                 }
 
-                if(result!=null) {
+                if (result != null) {
                     SendMessageResultItem item = result.getSendMessageResults()[0];
 
                     notificationLogRepository.save(new NotificationLog(NotificationType.SMS, mobileNo, new Date(), sent, "m_loan", loanId, item.getMessageStatus(), item.getMessageId()));
@@ -183,18 +183,19 @@ public class SmsNotificationService extends AbstractNotificationService {
                 } else {
                     logger.warn("############### SMS notification not sent: {} ({})", mobileNo, sent);
                 }
-//            }
+            }
 
             running.set(false);
         } else {
             logger.warn("############### SMS notification job is already running!");
         }
     }
+
     protected SendMessageResult send(String to, String message) {
         SMSRequest smsRequest = new SMSRequest(senderAddress, message, to);
         //smsRequest.setClientCorrelator(clientId);
         smsRequest.setSenderName(senderName);
-        if(notifyUrl!=null && !"".equals(notifyUrl.trim())) {
+        if (notifyUrl != null && !"".equals(notifyUrl.trim())) {
             smsRequest.setNotifyURL(notifyUrl); // TODO: implement this
         }
 
@@ -202,7 +203,7 @@ public class SmsNotificationService extends AbstractNotificationService {
     }
 
     protected void configure() {
-        if(smsClient==null) {
+        if (smsClient == null) {
             SmsCredentialsData credentials = externalServicesReadPlatformService.getSmsCredentials();
             this.senderName = credentials.getSenderName();
             this.senderAddress = credentials.getSenderAddress();
