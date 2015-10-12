@@ -1028,21 +1028,43 @@ public class ReadWriteNonCoreDataServiceImpl implements ReadWriteNonCoreDataServ
         } // 1:1 datatable
 
         final Map<String, Object> changes = getAffectedAndChangedColumns(grs, dataParams, pkName);
+        try {
+            if (!changes.isEmpty()) {
+                Long pkValue = appTableId;
+                if (datatableId != null) {
+                    pkValue = datatableId;
+                }
+                final String sql = getUpdateSql(grs.getColumnHeaders(), dataTableName, pkName, pkValue, changes);
+                logger.info("Update sql: " + sql);
+                if (StringUtils.isNotBlank(sql)) {
+                    this.jdbcTemplate.update(sql);
+                    changes.put("locale", dataParams.get("locale"));
+                    changes.put("dateFormat", "yyyy-MM-dd");
+                } else {
+                    logger.info("No Changes");
+                }
+            }
+        } catch (final ConstraintViolationException dve) {
+            // NOTE: jdbctemplate throws a
+            // org.hibernate.exception.ConstraintViolationException even though
+            // it should be a DataAccessException?
+            final Throwable realCause = dve.getCause();
+            if (realCause.getMessage().contains("Duplicate entry")) { throw new PlatformDataIntegrityException(
+                    "error.msg.datatable.entry.duplicate", "An entry already exists for datatable `" + dataTableName
+                    + "` and application table with identifier `" + appTableId + "`.", "dataTableName", dataTableName, appTableId); }
 
-        if (!changes.isEmpty()) {
-            Long pkValue = appTableId;
-            if (datatableId != null) {
-                pkValue = datatableId;
-            }
-            final String sql = getUpdateSql(grs.getColumnHeaders(), dataTableName, pkName, pkValue, changes);
-            logger.info("Update sql: " + sql);
-            if (StringUtils.isNotBlank(sql)) {
-                this.jdbcTemplate.update(sql);
-                changes.put("locale", dataParams.get("locale"));
-                changes.put("dateFormat", "yyyy-MM-dd");
-            } else {
-                logger.info("No Changes");
-            }
+            logAsErrorUnexpectedDataIntegrityException(dve);
+            throw new PlatformDataIntegrityException("error.msg.unknown.data.integrity.issue",
+                    "Unknown data integrity issue with resource.");
+        } catch (final DataAccessException dve) {
+            final Throwable realCause = dve.getMostSpecificCause();
+            if (realCause.getMessage().contains("Duplicate entry")) { throw new PlatformDataIntegrityException(
+                    "error.msg.datatable.entry.duplicate", "An entry already exists for datatable `" + dataTableName
+                    + "` and application table with identifier `" + appTableId + "`.", "dataTableName", dataTableName, appTableId); }
+
+            logAsErrorUnexpectedDataIntegrityException(dve);
+            throw new PlatformDataIntegrityException("error.msg.unknown.data.integrity.issue",
+                    "Unknown data integrity issue with resource.");
         }
 
         return new CommandProcessingResultBuilder() //
