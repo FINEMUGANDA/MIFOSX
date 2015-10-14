@@ -186,6 +186,8 @@ public class GLAccount extends AbstractPersistable<Long> {
                 this.manualEntriesAllowed = newValue;
             } else if (paramName.equals(GLAccountJsonInputParams.DISABLED.getValue())) {
                 this.disabled = newValue;
+            } else if (paramName.equals(GLAccountJsonInputParams.AFFECTS_LOAN.getValue())) {
+                this.affectsLoan = newValue;
             }
         }
     }
