@@ -55,7 +55,7 @@ public class GLAccountReadPlatformServiceImpl implements GLAccountReadPlatformSe
         public String schema() {
             StringBuilder sb = new StringBuilder();
             sb.append(
-                    " gl.id as id, name as name, parent_id as parentId, currency_code as currencyCode, gl_code as glCode, disabled as disabled, manual_journal_entries_allowed as manualEntriesAllowed, ")
+                    " gl.id as id, name as name, parent_id as parentId, currency_code as currencyCode, gl_code as glCode, disabled as disabled, manual_journal_entries_allowed as manualEntriesAllowed, affects_loan as affectsLoan, ")
                     .append("classification_enum as classification, account_usage as accountUsage, gl.description as description, ")
                     .append(nameDecoratedBaseOnHierarchy).append(" as nameDecorated, ")
                     .append("cv.id as codeId, cv.code_value as codeValue ");
@@ -64,7 +64,10 @@ public class GLAccountReadPlatformServiceImpl implements GLAccountReadPlatformSe
             }
             sb.append("from acc_gl_account gl left join m_code_value cv on tag_id=cv.id ");
             if (this.associationParametersData.isRunningBalanceRequired()) {
-                sb.append("left outer Join acc_gl_journal_entry gl_j on gl_j.account_id = gl.id");
+                sb.append("left outer Join acc_gl_journal_entry gl_j on gl_j.account_id = gl.id ");
+            }
+            if (this.associationParametersData.isStaffRelationRequired()) {
+                sb.append("left join m_cost_center mcc on mcc.acc_gl_account_id = gl.id ");
             }
             return sb.toString();
         }
@@ -88,12 +91,13 @@ public class GLAccountReadPlatformServiceImpl implements GLAccountReadPlatformSe
             final Long codeId = rs.wasNull() ? null : rs.getLong("codeId");
             final String codeValue = rs.getString("codeValue");
             final CodeValueData tagId = CodeValueData.instance(codeId, codeValue);
+            final boolean affectsLoan = rs.getBoolean("affectsLoan");
             Long organizationRunningBalance = null;
             if (associationParametersData.isRunningBalanceRequired()) {
                 organizationRunningBalance = rs.getLong("organizationRunningBalance");
             }
             return new GLAccountData(id, name, parentId, currencyCode, glCode, disabled, manualEntriesAllowed, accountType, usage, description,
-                    nameDecorated, tagId, organizationRunningBalance);
+                    nameDecorated, tagId, organizationRunningBalance, affectsLoan);
         }
     }
 
@@ -247,6 +251,14 @@ public class GLAccountReadPlatformServiceImpl implements GLAccountReadPlatformSe
         final GLAccountDataLookUpMapper mapper = new GLAccountDataLookUpMapper();
         final String sql = "Select " + mapper.schema() + " where rule.id=? and tags.acc_type_enum=?";
         return this.jdbcTemplate.query(sql, mapper, new Object[] { ruleId, transactionType });
+    }
+
+    @Override
+    public List<GLAccountData> retrieveAllRelatedToStaff(final Long staffId) {
+        JournalEntryAssociationParametersData journalEntryAssociationParametersData = new JournalEntryAssociationParametersData(false, false, true);
+        final GLAccountMapper mapper = new GLAccountMapper(journalEntryAssociationParametersData);
+        final String sql = "select " + mapper.schema() + " where mcc.staff_id = ? ";
+        return this.jdbcTemplate.query(sql, mapper, new Object[] { staffId });
     }
 
     private static final class GLAccountDataLookUpMapper implements RowMapper<GLAccountDataForLookup> {

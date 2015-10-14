@@ -35,6 +35,7 @@ public class GLAccountData {
     private final String nameDecorated;
     private final CodeValueData tagId;
     private final Long organizationRunningBalance;
+    private final Boolean affectsLoan;
 
     // templates
     final List<EnumOptionData> accountTypeOptions;
@@ -51,8 +52,8 @@ public class GLAccountData {
     final Collection<CodeValueData> allowedExpensesTagOptions;
 
     public GLAccountData(final Long id, final String name, final Long parentId, final String currencyCode, final String glCode, final boolean disabled,
-            final boolean manualEntriesAllowed, final EnumOptionData type, final EnumOptionData usage, final String description,
-            final String nameDecorated, final CodeValueData tagId, final Long organizationRunningBalance) {
+                         final boolean manualEntriesAllowed, final EnumOptionData type, final EnumOptionData usage, final String description,
+                         final String nameDecorated, final CodeValueData tagId, final Long organizationRunningBalance, final boolean affectsLoan) {
         this.id = id;
         this.name = name;
         this.parentId = parentId;
@@ -66,6 +67,7 @@ public class GLAccountData {
         this.nameDecorated = nameDecorated;
         this.tagId = tagId;
         this.organizationRunningBalance = organizationRunningBalance;
+        this.affectsLoan = affectsLoan;
         this.accountTypeOptions = null;
         this.usageOptions = null;
         this.assetHeaderAccountOptions = null;
@@ -100,6 +102,7 @@ public class GLAccountData {
         this.nameDecorated = accountData.nameDecorated;
         this.tagId = accountData.tagId;
         this.organizationRunningBalance = accountData.organizationRunningBalance;
+        this.affectsLoan = accountData.affectsLoan;
         this.accountTypeOptions = accountTypeOptions;
         this.usageOptions = usageOptions;
         this.assetHeaderAccountOptions = assetHeaderAccountOptions;
@@ -133,9 +136,10 @@ public class GLAccountData {
         final String nameDecorated = null;
         final CodeValueData tagId = null;
         final Long organizationRunningBalance = null;
+        final boolean affectsLoan = false;
 
         return new GLAccountData(id, name, parentId, currencyCode, glCode, disabled, manualEntriesAllowed, type, usage, description, nameDecorated,
-                tagId, organizationRunningBalance);
+                tagId, organizationRunningBalance, affectsLoan);
     }
 
     public GLAccountData(final Long id, final String name, final String currencyCode, final String glCode) {
@@ -152,6 +156,7 @@ public class GLAccountData {
         this.nameDecorated = null;
         this.tagId = null;
         this.organizationRunningBalance = null;
+        this.affectsLoan = null;
         this.accountTypeOptions = null;
         this.usageOptions = null;
         this.assetHeaderAccountOptions = null;

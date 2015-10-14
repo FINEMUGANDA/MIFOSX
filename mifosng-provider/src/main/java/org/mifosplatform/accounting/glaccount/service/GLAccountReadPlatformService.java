@@ -28,4 +28,6 @@ public interface GLAccountReadPlatformService {
     GLAccountData retrieveNewGLAccountDetails(final Integer type);
 
     List<GLAccountDataForLookup> retrieveAccountsByTagId(final Long ruleId, final Integer transactionType);
+
+    List<GLAccountData> retrieveAllRelatedToStaff(Long staffId);
 }

@@ -939,6 +939,30 @@ public class CommandWrapperBuilder {
         return this;
     }
 
+    public CommandWrapperBuilder createCostCenter() {
+        this.actionName = "CREATE";
+        this.entityName = "COSTCENTER";
+        this.entityId = null;
+        this.href = "/costcenters/template";
+        return this;
+    }
+
+    public CommandWrapperBuilder updateCostCenter(final Long staffId) {
+        this.actionName = "UPDATE";
+        this.entityName = "COSTCENTER";
+        this.entityId = staffId;
+        this.href = "/costcenters/" + staffId;
+        return this;
+    }
+
+    public CommandWrapperBuilder deleteCostCenter(final Long staffId) {
+        this.actionName = "DELETE";
+        this.entityName = "COSTCENTER";
+        this.entityId = staffId;
+        this.href = "/costcenters/" + staffId;
+        return this;
+    }
+
     public CommandWrapperBuilder createJournalEntry() {
         this.actionName = "CREATE";
         this.entityName = "JOURNALENTRY";
