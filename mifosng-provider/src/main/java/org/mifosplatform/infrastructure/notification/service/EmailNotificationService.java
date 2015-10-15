@@ -49,6 +49,12 @@ public class EmailNotificationService extends AbstractNotificationService {
     }
 
     @Override
+    @CronTarget(jobName = JobName.EXPIRED_LOAN_PAYMENT_REMINDER_EMAIL_NOTIFICATION)
+    public void notifyExpiredLoanPaymentReminders() {
+        logger.warn("Email expired loan notifications not yet implemented!");
+    }
+
+    @Override
     @CronTarget(jobName = JobName.FOLLOW_UP_EMAIL_NOTIFICATION)
     public void notifyFollowUps() {
         if(!running.get()) {

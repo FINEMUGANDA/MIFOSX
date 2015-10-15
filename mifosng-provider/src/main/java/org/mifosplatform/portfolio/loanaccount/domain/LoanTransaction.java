@@ -615,6 +615,9 @@ public final class LoanTransaction extends AbstractPersistable<Long> {
     public void updateOutstandingLoanBalance(BigDecimal outstandingLoanBalance) {
         this.outstandingLoanBalance = outstandingLoanBalance;
     }
+    public void updatePenaltyPortion(BigDecimal penaltyChargesPortion) {
+        this.penaltyChargesPortion = penaltyChargesPortion;
+    }
 
     public boolean isNotRefundForActiveLoan() {
         // TODO Auto-generated method stub

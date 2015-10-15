@@ -5,24 +5,26 @@
  */
 package org.mifosplatform.organisation.staff.domain;
 
-import java.util.Date;
-import java.util.LinkedHashMap;
-import java.util.Map;
-
-import javax.persistence.*;
-
 import org.apache.commons.lang.StringUtils;
 import org.joda.time.LocalDate;
+import org.mifosplatform.accounting.glaccount.domain.GLAccount;
 import org.mifosplatform.infrastructure.codes.domain.CodeValue;
 import org.mifosplatform.infrastructure.core.api.JsonCommand;
 import org.mifosplatform.infrastructure.core.data.EnumOptionData;
 import org.mifosplatform.organisation.office.domain.Office;
+import org.mifosplatform.organisation.staff.data.StaffData;
 import org.springframework.data.jpa.domain.AbstractPersistable;
 
+import javax.persistence.*;
+import java.util.Date;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
 @Entity
-@Table(name = "m_staff", uniqueConstraints = { @UniqueConstraint(columnNames = { "display_name" }, name = "display_name"),
-        @UniqueConstraint(columnNames = { "external_id" }, name = "external_id_UNIQUE"),
-        @UniqueConstraint(columnNames = { "mobile_no" }, name = "mobile_no_UNIQUE") })
+@Table(name = "m_staff", uniqueConstraints = {@UniqueConstraint(columnNames = {"display_name"}, name = "display_name"),
+        @UniqueConstraint(columnNames = {"external_id"}, name = "external_id_UNIQUE"),
+        @UniqueConstraint(columnNames = {"mobile_no"}, name = "mobile_no_UNIQUE")})
 public class Staff extends AbstractPersistable<Long> {
 
     @Column(name = "firstname", length = 50)
@@ -91,6 +93,16 @@ public class Staff extends AbstractPersistable<Long> {
     @JoinColumn(name = "organisational_role_parent_staff_id", nullable = true)
     private Staff organisationalRoleParentStaff;
 
+//    @OneToMany(mappedBy="staff")
+//    private List<CostCenter> assignedGlAccounts;
+
+    @ManyToMany
+    @JoinTable(
+            name = "m_cost_center",
+            joinColumns = {@JoinColumn(name = "staff_id", referencedColumnName = "id")},
+            inverseJoinColumns = {@JoinColumn(name = "acc_gl_account_id", referencedColumnName = "id")})
+    private List<GLAccount> glAccounts;
+
     public static Staff fromJson(final Office staffOffice, final CodeValue gender, final CodeValue maritalStatus, final CodeValue emergencyContactRelation, final JsonCommand command) {
 
         final String firstnameParamName = "firstname";
@@ -144,7 +156,7 @@ public class Staff extends AbstractPersistable<Long> {
     }
 
     private Staff(final Office staffOffice, final String firstname, final String lastname, final String externalId, final String mobileNo, final String mobileNo2,
-            final boolean isLoanOfficer, final Boolean isActive, final LocalDate joiningDate, final CodeValue gender, final CodeValue maritalStatus, final String address, final Integer children, final String email, final String emergencyContactName, final String emergencyContactMobileNo, final CodeValue emergencyContactRelation) {
+                  final boolean isLoanOfficer, final Boolean isActive, final LocalDate joiningDate, final CodeValue gender, final CodeValue maritalStatus, final String address, final Integer children, final String email, final String emergencyContactName, final String emergencyContactMobileNo, final CodeValue emergencyContactRelation) {
         this.office = staffOffice;
         this.firstname = StringUtils.defaultIfEmpty(firstname, null);
         this.lastname = StringUtils.defaultIfEmpty(lastname, null);
@@ -388,5 +400,21 @@ public class Staff extends AbstractPersistable<Long> {
             id = this.emergencyContactRelation.getId();
         }
         return id;
+    }
+
+    public StaffData toData() {
+        return StaffData.instance(this.getId(), this.firstname, this.lastname, this.displayName,
+                this.office.getId(), this.office.getName(), this.isLoanOfficer(), this.externalId, this.mobileNo,
+                this.isActive(), LocalDate.fromDateFields(this.joiningDate), this.gender.toData(), this.maritalStatus.toData(),
+                this.emergencyContactRelation.toData(), this.mobileNo2, this.email, this.address, this.children,
+                this.emergencyContactName, this.emergencyContactMobileNo);
+    }
+
+    public List<GLAccount> getGlAccounts() {
+        return glAccounts;
+    }
+
+    public void setGlAccounts(List<GLAccount> glAccounts) {
+        this.glAccounts = glAccounts;
     }
 }

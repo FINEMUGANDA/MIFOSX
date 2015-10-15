@@ -234,7 +234,14 @@ public class StaffReadPlatformServiceImpl implements StaffReadPlatformService {
     @Override
     public Collection<StaffData> retrieveAllStaff(final String sqlSearch, final Long officeId, final boolean loanOfficersOnly,
             final String status) {
-        final String extraCriteria = getStaffCriteria(sqlSearch, officeId, loanOfficersOnly, status);
+        final String extraCriteria = getStaffCriteria(sqlSearch, officeId, loanOfficersOnly, status, false);
+        return retrieveAllStaff(extraCriteria);
+    }
+
+    @Override
+    public Collection<StaffData> retrieveAllStaffWithAssignedGlAccounts() {
+        final String extraCriteria = getStaffCriteria(null, null, false, "active", true);
+//        final String extraCriteria = "(select count(id) from m_cost_center where staff_id = s.id) > 0";
         return retrieveAllStaff(extraCriteria);
     }
 
@@ -249,7 +256,7 @@ public class StaffReadPlatformServiceImpl implements StaffReadPlatformService {
         return this.jdbcTemplate.query(sql, rm, new Object[] {});
     }
 
-    private String getStaffCriteria(final String sqlSearch, final Long officeId, final boolean loanOfficersOnly, final String status) {
+    private String getStaffCriteria(final String sqlSearch, final Long officeId, final boolean loanOfficersOnly, final String status, final boolean includeOnlyWithAssignedGlAccount) {
 
         final StringBuffer extraCriteria = new StringBuffer(200);
 
@@ -261,6 +268,9 @@ public class StaffReadPlatformServiceImpl implements StaffReadPlatformService {
         }
         if (loanOfficersOnly) {
             extraCriteria.append(" and s.is_loan_officer is true ");
+        }
+        if (includeOnlyWithAssignedGlAccount) {
+            extraCriteria.append(" and (select count(mcc.staff_id) from m_cost_center mcc where mcc.staff_id = s.id) > 0");
         }
         // Passing status parameter to get ACTIVE (By Default), INACTIVE or ALL
         // (Both active and Inactive) employees

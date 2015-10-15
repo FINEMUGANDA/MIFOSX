@@ -5,29 +5,24 @@
  */
 package org.mifosplatform.accounting.glaccount.domain;
 
+import org.apache.commons.lang.BooleanUtils;
+import org.apache.commons.lang.StringUtils;
+import org.mifosplatform.accounting.glaccount.api.GLAccountJsonInputParams;
+import org.mifosplatform.accounting.glaccount.data.GLAccountData;
+import org.mifosplatform.infrastructure.codes.domain.CodeValue;
+import org.mifosplatform.infrastructure.core.api.JsonCommand;
+import org.mifosplatform.infrastructure.core.data.EnumOptionData;
+import org.mifosplatform.organisation.staff.domain.Staff;
+import org.springframework.data.jpa.domain.AbstractPersistable;
+
+import javax.persistence.*;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
-import javax.persistence.Table;
-import javax.persistence.UniqueConstraint;
-
-import org.apache.commons.lang.BooleanUtils;
-import org.apache.commons.lang.StringUtils;
-import org.mifosplatform.accounting.glaccount.api.GLAccountJsonInputParams;
-import org.mifosplatform.infrastructure.codes.domain.CodeValue;
-import org.mifosplatform.infrastructure.core.api.JsonCommand;
-import org.springframework.data.jpa.domain.AbstractPersistable;
-
 @Entity
-@Table(name = "acc_gl_account", uniqueConstraints = { @UniqueConstraint(columnNames = { "gl_code" }, name = "acc_gl_code") })
+@Table(name = "acc_gl_account", uniqueConstraints = {@UniqueConstraint(columnNames = {"gl_code"}, name = "acc_gl_code")})
 public class GLAccount extends AbstractPersistable<Long> {
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -69,12 +64,21 @@ public class GLAccount extends AbstractPersistable<Long> {
     @JoinColumn(name = "tag_id")
     private CodeValue tagId;
 
+    @Column(name = "affects_loan", nullable = false)
+    private boolean affectsLoan;
+
+//    @OneToMany(mappedBy="glAccount")
+//    private List<CostCenter> assignedStaffs;
+
+    @ManyToMany(mappedBy = "glAccounts")
+    private List<Staff> staffs;
+
     protected GLAccount() {
         //
     }
 
     private GLAccount(final GLAccount parent, final String name, final String currencyCode, final String glCode, final boolean disabled,
-            final boolean manualEntriesAllowed, final Integer type, final Integer usage, final String description, final CodeValue tagId) {
+                      final boolean manualEntriesAllowed, final Integer type, final Integer usage, final String description, final CodeValue tagId, final boolean affectsLoan) {
         this.name = StringUtils.defaultIfEmpty(name, null);
         this.currencyCode = StringUtils.defaultIfEmpty(currencyCode, null); // TODO: should use default currency
         this.glCode = StringUtils.defaultIfEmpty(glCode, null);
@@ -85,6 +89,7 @@ public class GLAccount extends AbstractPersistable<Long> {
         this.description = StringUtils.defaultIfEmpty(description, null);
         this.parent = parent;
         this.tagId = tagId;
+        this.affectsLoan = affectsLoan;
     }
 
     public static GLAccount fromJson(final GLAccount parent, final JsonCommand command, final CodeValue glAccountTagType) {
@@ -92,12 +97,12 @@ public class GLAccount extends AbstractPersistable<Long> {
         final String currencyCode = command.stringValueOfParameterNamed(GLAccountJsonInputParams.CURRENCY_CODE.getValue());
         final String glCode = command.stringValueOfParameterNamed(GLAccountJsonInputParams.GL_CODE.getValue());
         final boolean disabled = command.booleanPrimitiveValueOfParameterNamed(GLAccountJsonInputParams.DISABLED.getValue());
-        final boolean manualEntriesAllowed = command.booleanPrimitiveValueOfParameterNamed(GLAccountJsonInputParams.MANUAL_ENTRIES_ALLOWED
-                .getValue());
+        final boolean manualEntriesAllowed = command.booleanPrimitiveValueOfParameterNamed(GLAccountJsonInputParams.MANUAL_ENTRIES_ALLOWED.getValue());
         final Integer usage = command.integerValueSansLocaleOfParameterNamed(GLAccountJsonInputParams.USAGE.getValue());
         final Integer type = command.integerValueSansLocaleOfParameterNamed(GLAccountJsonInputParams.TYPE.getValue());
         final String description = command.stringValueOfParameterNamed(GLAccountJsonInputParams.DESCRIPTION.getValue());
-        return new GLAccount(parent, name, currencyCode, glCode, disabled, manualEntriesAllowed, type, usage, description, glAccountTagType);
+        final boolean affectsLoan = command.booleanPrimitiveValueOfParameterNamed(GLAccountJsonInputParams.AFFECTS_LOAN.getValue());
+        return new GLAccount(parent, name, currencyCode, glCode, disabled, manualEntriesAllowed, type, usage, description, glAccountTagType, affectsLoan);
     }
 
     public Map<String, Object> update(final JsonCommand command) {
@@ -111,13 +116,13 @@ public class GLAccount extends AbstractPersistable<Long> {
         handlePropertyUpdate(command, actualChanges, GLAccountJsonInputParams.PARENT_ID.getValue(), 0L);
         handlePropertyUpdate(command, actualChanges, GLAccountJsonInputParams.TYPE.getValue(), this.type, true);
         handlePropertyUpdate(command, actualChanges, GLAccountJsonInputParams.USAGE.getValue(), this.usage, true);
-        handlePropertyUpdate(command, actualChanges, GLAccountJsonInputParams.TAGID.getValue(),
-                this.tagId == null ? 0L : this.tagId.getId());
+        handlePropertyUpdate(command, actualChanges, GLAccountJsonInputParams.TAGID.getValue(), this.tagId == null ? 0L : this.tagId.getId());
+        handlePropertyUpdate(command, actualChanges, GLAccountJsonInputParams.AFFECTS_LOAN.getValue(), this.affectsLoan);
         return actualChanges;
     }
 
     private void handlePropertyUpdate(final JsonCommand command, final Map<String, Object> actualChanges, final String paramName,
-            final Integer propertyToBeUpdated, final boolean sansLocale) {
+                                      final Integer propertyToBeUpdated, final boolean sansLocale) {
         boolean changeDetected = false;
         if (sansLocale) {
             changeDetected = command.isChangeInIntegerSansLocaleParameterNamed(paramName, propertyToBeUpdated);
@@ -142,7 +147,7 @@ public class GLAccount extends AbstractPersistable<Long> {
     }
 
     private void handlePropertyUpdate(final JsonCommand command, final Map<String, Object> actualChanges, final String paramName,
-            final String propertyToBeUpdated) {
+                                      final String propertyToBeUpdated) {
         if (command.isChangeInStringParameterNamed(paramName, propertyToBeUpdated)) {
             final String newValue = command.stringValueOfParameterNamed(paramName);
             actualChanges.put(paramName, newValue);
@@ -160,7 +165,7 @@ public class GLAccount extends AbstractPersistable<Long> {
     }
 
     private void handlePropertyUpdate(final JsonCommand command, final Map<String, Object> actualChanges, final String paramName,
-            final Long propertyToBeUpdated) {
+                                      final Long propertyToBeUpdated) {
         if (command.isChangeInLongParameterNamed(paramName, propertyToBeUpdated)) {
             final Long newValue = command.longValueOfParameterNamed(paramName);
             actualChanges.put(paramName, newValue);
@@ -172,7 +177,7 @@ public class GLAccount extends AbstractPersistable<Long> {
     }
 
     private void handlePropertyUpdate(final JsonCommand command, final Map<String, Object> actualChanges, final String paramName,
-            final boolean propertyToBeUpdated) {
+                                      final boolean propertyToBeUpdated) {
         if (command.isChangeInBooleanParameterNamed(paramName, propertyToBeUpdated)) {
             final Boolean newValue = command.booleanObjectValueOfParameterNamed(paramName);
             actualChanges.put(paramName, newValue);
@@ -181,6 +186,8 @@ public class GLAccount extends AbstractPersistable<Long> {
                 this.manualEntriesAllowed = newValue;
             } else if (paramName.equals(GLAccountJsonInputParams.DISABLED.getValue())) {
                 this.disabled = newValue;
+            } else if (paramName.equals(GLAccountJsonInputParams.AFFECTS_LOAN.getValue())) {
+                this.affectsLoan = newValue;
             }
         }
     }
@@ -245,5 +252,39 @@ public class GLAccount extends AbstractPersistable<Long> {
     public void updateParentAccount(final GLAccount parentAccount) {
         this.parent = parentAccount;
         generateHierarchy();
+    }
+
+    public GLAccountData toData() {
+        Long parentId = null;
+        if (this.parent != null) {
+            parentId = this.parent.getId();
+        }
+
+        GLAccountType glAccountType = GLAccountType.fromInt(this.getType());
+        EnumOptionData glAccountTypeData = new EnumOptionData(glAccountType.getValue().longValue(), glAccountType.getCode(), glAccountType.toString());
+
+        GLAccountUsage glAccountUsage = GLAccountUsage.fromInt(this.getUsage());
+        EnumOptionData glAccountUsageData = new EnumOptionData(glAccountUsage.getValue().longValue(), glAccountUsage.getCode(), glAccountUsage.toString());
+
+
+        return new GLAccountData(this.getId(), this.name, parentId, this.currencyCode, this.glCode, this.disabled,
+                this.manualEntriesAllowed, glAccountTypeData, glAccountUsageData, this.description,
+                this.name, this.tagId.toData(), null, this.affectsLoan);
+    }
+
+    public boolean isAffectsLoan() {
+        return affectsLoan;
+    }
+
+    public void setAffectsLoan(boolean affectsLoan) {
+        this.affectsLoan = affectsLoan;
+    }
+
+    public List<Staff> getStaffs() {
+        return staffs;
+    }
+
+    public void setStaffs(List<Staff> staffs) {
+        this.staffs = staffs;
     }
 }

@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-package org.mifosplatform.accounting.glaccount.api;
+package org.mifosplatform.accounting.costcenter.api;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -11,19 +11,18 @@ import java.util.Set;
 /***
  * Enum of all parameters passed in while creating/updating a GL Account
  ***/
-public enum GLAccountJsonInputParams {
-    ID("id"), NAME("name"), PARENT_ID("parentId"), CURRENCY_CODE("currencyCode"), GL_CODE("glCode"), DISABLED("disabled"), MANUAL_ENTRIES_ALLOWED("manualEntriesAllowed"), TYPE(
-            "type"), USAGE("usage"), DESCRIPTION("description"), TAGID("tagId"), AFFECTS_LOAN("affectsLoan");
+public enum CostCenterJsonInputParams {
+    STAFF_ID("staffId"), GL_ACCOUNTS("glAccounts");
 
     private final String value;
 
-    private GLAccountJsonInputParams(final String value) {
+    private CostCenterJsonInputParams(final String value) {
         this.value = value;
     }
 
     private static final Set<String> values = new HashSet<>();
     static {
-        for (final GLAccountJsonInputParams type : GLAccountJsonInputParams.values()) {
+        for (final CostCenterJsonInputParams type : CostCenterJsonInputParams.values()) {
             values.add(type.value);
         }
     }

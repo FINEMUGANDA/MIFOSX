@@ -303,6 +303,10 @@ public class CommandWrapper {
         return this.entityName.equalsIgnoreCase("GLACCOUNT");
     }
 
+    public boolean isCostCenterResource() {
+        return this.entityName.equalsIgnoreCase("COSTCENTER");
+    }
+
     public boolean isGLClosureResource() {
         return this.entityName.equalsIgnoreCase("GLCLOSURE");
     }

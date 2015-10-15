@@ -2209,8 +2209,8 @@ public class Loan extends AbstractPersistable<Long> {
                 }
 
             }
-            updateLoanSummaryDerivedFields();
         }
+        updateLoanSummaryDerivedFields();
 
         return changedTransactionDetail;
     }
@@ -2837,6 +2837,27 @@ public class Loan extends AbstractPersistable<Long> {
         final LoanTransactionComparator transactionComparator = new LoanTransactionComparator();
         Collections.sort(repaymentsOrWaivers, transactionComparator);
         return repaymentsOrWaivers;
+    }
+
+    private List<LoanTransaction> retrieveListOfTransactions() {
+        final List<LoanTransaction> transactions = new ArrayList<>();
+        for (final LoanTransaction transaction : this.loanTransactions) {
+            if (transaction.isNotReversed()) {
+                transactions.add(transaction);
+            }
+        }
+        final LoanTransactionComparator transactionComparator = new LoanTransactionComparator();
+        Collections.sort(transactions, transactionComparator);
+        return transactions;
+    }
+
+    private LoanTransaction retrieveDisbursementTransaction() {
+        for (final LoanTransaction transaction : this.loanTransactions) {
+            if (transaction.isNotReversed() && transaction.isDisbursement()) {
+                return transaction;
+            }
+        }
+        return null;
     }
 
     public List<LoanTransaction> retreiveListOfTransactionsPostDisbursementExcludeAccruals() {
@@ -4791,15 +4812,28 @@ public class Loan extends AbstractPersistable<Long> {
         return accruedTill;
     }
 
-    private void updateLoanOutstandingBalaces() {
+    public void updateLoanOutstandingBalaces() {
         Money outstanding = Money.zero(getCurrency());
-        List<LoanTransaction> loanTransactions = retreiveListOfTransactionsExcludeAccruals();
+        List<LoanTransaction> accrualTransactions = retreiveListOfAccrualTransactions();
+        Money accrualPortion = Money.zero(getCurrency());
+        for (LoanTransaction loanTransaction : accrualTransactions) {
+            accrualPortion = accrualPortion.plus(loanTransaction.getAmount(getCurrency()));
+        }
+
+        LoanTransaction disbursementTransaction = retrieveDisbursementTransaction();
+
+        if (disbursementTransaction != null) {
+            outstanding = outstanding.plus(disbursementTransaction.getAmount(getCurrency()));
+            disbursementTransaction.updateOutstandingLoanBalance(outstanding.getAmount());
+        }
+
+        List<LoanTransaction> loanTransactions = retreiveListOfTransactionsPostDisbursement();
         for (LoanTransaction loanTransaction : loanTransactions) {
-            if (loanTransaction.isDisbursement()) {
+            if (loanTransaction.isAccrual()) {
                 outstanding = outstanding.plus(loanTransaction.getAmount(getCurrency()));
                 loanTransaction.updateOutstandingLoanBalance(outstanding.getAmount());
             } else {
-                outstanding = outstanding.minus(loanTransaction.getPrincipalPortion(getCurrency()));
+                outstanding = outstanding.minus(loanTransaction.getAmount(getCurrency()));
                 loanTransaction.updateOutstandingLoanBalance(outstanding.getAmount());
             }
         }
