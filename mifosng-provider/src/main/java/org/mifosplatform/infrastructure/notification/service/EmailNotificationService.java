@@ -100,7 +100,7 @@ public class EmailNotificationService extends AbstractNotificationService {
         StringBuilder builder = new StringBuilder();
 
         for(Map<String, Object> client : clients) {
-            builder.append("- ").append(client.get("firstname")).append(" ").append(client.get("lastname")).append(" - Account No. (").append(client.get("account_no")).append(") - Phone (").append(client.get("mobile_no")).append(")\n");
+            builder.append("- ").append(client.get("firstname")).append(" ").append(client.get("lastname")).append(" - File No. (").append(client.get("file_no")).append(") - Phone (").append(client.get("mobile_no")).append(")\n");
         }
 
         return builder.toString();
