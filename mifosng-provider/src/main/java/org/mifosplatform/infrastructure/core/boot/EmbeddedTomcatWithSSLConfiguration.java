@@ -29,6 +29,7 @@ public class EmbeddedTomcatWithSSLConfiguration {
         TomcatEmbeddedServletContainerFactory tomcat = new TomcatEmbeddedServletContainerFactory();
         tomcat.setContextPath(getContextPath());
         tomcat.addAdditionalTomcatConnectors(createSslConnector());
+        tomcat.setSessionTimeout(15);
         return tomcat;
     }
 
