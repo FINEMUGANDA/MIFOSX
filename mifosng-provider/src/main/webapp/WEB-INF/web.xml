@@ -20,7 +20,9 @@
           =========================================================================
       -->
 
-
+    <session-config>
+        <session-timeout>15</session-timeout>
+    </session-config>
 <!-- OK to remove this? It's probably not working with Spring Boot anyway..
 	<context-param>
 		<param-name>webAppRootKey</param-name>

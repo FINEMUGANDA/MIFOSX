@@ -18,6 +18,7 @@ import org.apache.commons.lang.time.StopWatch;
 import org.mifosplatform.infrastructure.cache.domain.CacheType;
 import org.mifosplatform.infrastructure.cache.service.CacheWritePlatformService;
 import org.mifosplatform.infrastructure.configuration.domain.ConfigurationDomainService;
+import org.mifosplatform.infrastructure.core.data.MutableHttpServletRequest;
 import org.mifosplatform.infrastructure.core.domain.MifosPlatformTenant;
 import org.mifosplatform.infrastructure.core.serialization.ToApiJsonSerializer;
 import org.mifosplatform.infrastructure.core.service.ThreadLocalContextUtil;
@@ -77,7 +78,7 @@ public class TenantAwareBasicAuthenticationFilter extends BasicAuthenticationFil
     @Override
     public void doFilter(final ServletRequest req, final ServletResponse res, final FilterChain chain) throws IOException, ServletException {
 
-        final HttpServletRequest request = (HttpServletRequest) req;
+        final MutableHttpServletRequest request = new MutableHttpServletRequest((HttpServletRequest) req);
         final HttpServletResponse response = (HttpServletResponse) res;
 
         final StopWatch task = new StopWatch();
@@ -105,8 +106,18 @@ public class TenantAwareBasicAuthenticationFilter extends BasicAuthenticationFil
                 ThreadLocalContextUtil.setTenant(tenant);
                 String authToken = request.getHeader("Authorization");
 
+                String queryAuthToken = request.getParameter("token");
+                if (queryAuthToken != null) {
+                    authToken = queryAuthToken;
+                    request.putHeader("Authorization", "Basic " + queryAuthToken);
+                }
+
                 if (authToken != null && authToken.startsWith("Basic ")) {
-                    ThreadLocalContextUtil.setAuthToken(authToken.replaceFirst("Basic ", ""));
+                    authToken = authToken.replaceFirst("Basic ", "");
+                }
+
+                if (authToken != null) {
+                    ThreadLocalContextUtil.setAuthToken(authToken);
                 }
 
                 if (!firstRequestProcessed) {
@@ -123,7 +134,7 @@ public class TenantAwareBasicAuthenticationFilter extends BasicAuthenticationFil
                 }
             }
             
-            super.doFilter(req, res, chain);
+            super.doFilter(request, res, chain);
         } catch (final InvalidTenantIdentiferException e) {
             // deal with exception at low level
             SecurityContextHolder.getContext().setAuthentication(null);
