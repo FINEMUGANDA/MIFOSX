@@ -13,14 +13,16 @@ public class EmailCredentialsData {
     private final String senderName;
     private final boolean startTls;
     private final boolean debug;
+    private final int smtpPort;
 
-    public EmailCredentialsData(final String host, final String authUsername, final String authPassword, final String senderName, final boolean startTls, final boolean debug) {
+    public EmailCredentialsData(final String host, final String authUsername, final String authPassword, final String senderName, final boolean startTls, final boolean debug, int smtpPort) {
         this.host = host;
         this.authUsername = authUsername;
         this.authPassword = authPassword;
         this.senderName = senderName;
         this.startTls = startTls;
         this.debug = debug;
+        this.smtpPort = smtpPort;
     }
 
     public String getHost() {
@@ -45,5 +47,9 @@ public class EmailCredentialsData {
 
     public boolean isDebug() {
         return debug;
+    }
+
+    public int getSmtpPort() {
+        return smtpPort;
     }
 }

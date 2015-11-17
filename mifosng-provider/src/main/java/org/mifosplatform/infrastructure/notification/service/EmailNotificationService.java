@@ -121,6 +121,9 @@ public class EmailNotificationService extends AbstractNotificationService {
         email.setDebug(credentials.isDebug());
         email.setHostName(credentials.getHost());
         email.setStartTLSEnabled(credentials.isStartTls());
+        if (credentials.getSmtpPort() > 0) {
+            email.setSmtpPort(credentials.getSmtpPort());
+        }
         email.setSocketTimeout(300);// recommended socket timeout - 5 min https://support.google.com/mail/answer/13287?hl=en
         //email.getMailSession().getProperties().put(EmailConstants.MAIL_TRANSPORT_STARTTLS_ENABLE, credentials.isStartTls());
         email.setFrom(credentials.getAuthUsername(), credentials.getSenderName());

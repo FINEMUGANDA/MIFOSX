@@ -18,6 +18,7 @@ public class ExternalServicesConstants {
     public static final String EMAIL_SENDER_NAME = "email_sender_name";
     public static final String EMAIL_SUBJECT = "email_subject";
     public static final String EMAIL_DEBUG = "email_debug";
+    public static final String EMAIL_SMTP_PORT = "email_smtp_port";
 
     public static final String SMS_AUTH_USERNAME = "sms_auth_username";
     public static final String SMS_AUTH_PASSWORD = "sms_auth_password";
