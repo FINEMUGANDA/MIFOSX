@@ -72,15 +72,21 @@ public class EmailNotificationService extends AbstractNotificationService {
                 StringBuilder message = new StringBuilder();
                 message.append(String.format(template, name, df.format(new Date())));
                 message.append(formatClients(getFollowUpClients(officer.get("username").toString())));
+                String errorMessage = "";
 
                 try {
                     messageId = send(email, name, followUpSubject, message.toString());
                     sent = true;
                 } catch (EmailException e) {
+                    if (e.getCause() != null && e.getCause().toString() != null) {
+                        errorMessage = e.getCause().toString();
+                    } else {
+                        errorMessage = e.toString();
+                    }
                     logger.error(e.toString(), e);
                 }
 
-                NotificationLog log = notificationLogRepository.save(new NotificationLog(NotificationType.EMAIL, email, new Date(), sent, "m_note", (Long)officer.get("note_id"), "", messageId));
+                NotificationLog log = notificationLogRepository.save(new NotificationLog(NotificationType.EMAIL, email, new Date(), sent, "m_note", (Long)officer.get("note_id"), errorMessage, messageId));
 
                 if(sent) {
                     jdbcTemplate.update(updateNotes, log.getId(), officer.get("username"));
@@ -124,7 +130,7 @@ public class EmailNotificationService extends AbstractNotificationService {
         if (credentials.getSmtpPort() > 0) {
             email.setSmtpPort(credentials.getSmtpPort());
         }
-        email.setSocketTimeout(300);// recommended socket timeout - 5 min https://support.google.com/mail/answer/13287?hl=en
+        email.setSocketTimeout(300000);// recommended socket timeout - 5 min https://support.google.com/mail/answer/13287?hl=en
         //email.getMailSession().getProperties().put(EmailConstants.MAIL_TRANSPORT_STARTTLS_ENABLE, credentials.isStartTls());
         email.setFrom(credentials.getAuthUsername(), credentials.getSenderName());
         email.setSubject(subject);
