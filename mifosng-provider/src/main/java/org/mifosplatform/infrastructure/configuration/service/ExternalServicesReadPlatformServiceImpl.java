@@ -66,6 +66,7 @@ public class ExternalServicesReadPlatformServiceImpl implements ExternalServices
             String senderName = null;
             boolean startTls = false;
             boolean debug = false;
+            int smtpPort = 0;
             while (rs.next()) {
                 if (rs.getString("name").equalsIgnoreCase(ExternalServicesConstants.EMAIL_HOST)) {
                     host = rs.getString("value");
@@ -79,9 +80,11 @@ public class ExternalServicesReadPlatformServiceImpl implements ExternalServices
                     startTls = "true".equals(rs.getString("value"));
                 } else if (rs.getString("name").equalsIgnoreCase(ExternalServicesConstants.EMAIL_DEBUG)) {
                     debug = "true".equals(rs.getString("value"));
+                } else if (rs.getString("name").equalsIgnoreCase(ExternalServicesConstants.EMAIL_SMTP_PORT)) {
+                    smtpPort = rs.getInt("value");
                 }
             }
-            return new EmailCredentialsData(host, authUsername, authPassword, senderName, startTls, debug);
+            return new EmailCredentialsData(host, authUsername, authPassword, senderName, startTls, debug, smtpPort);
         }
     }
 
