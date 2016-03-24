@@ -555,7 +555,10 @@ public class JournalEntryWritePlatformServiceJpaRepositoryImpl implements Journa
             final BigDecimal exchangeRate, final Date transactionDate,
             final SingleDebitOrCreditEntryCommand[] singleDebitOrCreditEntryCommands, final String transactionId,
             final JournalEntryType type, final String referenceNumber) {
+
         final boolean manualEntry = true;
+        final boolean unidentifiedEntry = Boolean.TRUE.equals(command.isUnidentifiedEntry());
+
         for (final SingleDebitOrCreditEntryCommand singleDebitOrCreditEntryCommand : singleDebitOrCreditEntryCommands) {
             final GLAccount glAccount = this.glAccountRepository.findOne(singleDebitOrCreditEntryCommand.getGlAccountId());
             if (glAccount == null) { throw new GLAccountNotFoundException(singleDebitOrCreditEntryCommand.getGlAccountId()); }
@@ -572,7 +575,7 @@ public class JournalEntryWritePlatformServiceJpaRepositoryImpl implements Journa
 
             final JournalEntry glJournalEntry = JournalEntry.createNew(office, paymentDetail, glAccount, glAccount.getCurrencyCode(), transactionId,
                     manualEntry, transactionDate, type, singleDebitOrCreditEntryCommand.getAmount(), exchangeRate, comments, null, null, referenceNumber,
-                    null, null);
+                    null, null, unidentifiedEntry);
             this.glJournalEntryRepository.saveAndFlush(glJournalEntry);
         }
     }

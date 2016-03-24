@@ -147,6 +147,7 @@ public class LoanProductToGLAccountMappingHelper extends ProductToGLAccountMappi
                 LOAN_PRODUCT_ACCOUNTING_PARAMS.INTEREST_WRITTEN_OFF.getValue(), element);
         final Long feeWriteOffAccountId = this.fromApiJsonHelper.extractLongNamed(
                 LOAN_PRODUCT_ACCOUNTING_PARAMS.FEES_WRITTEN_OFF.getValue(), element);
+        final Long unidentifiedDepositsAccountId = this.fromApiJsonHelper.extractLongNamed(LOAN_PRODUCT_ACCOUNTING_PARAMS.UNIDENTIFIED_DEPOSITS.getValue(), element);
 //final Long LPIWriteOffAccountId, final Long interestWriteOffAccountId,
 //            final Long feeWriteOffAccountId
         switch (accountingRuleType) {
@@ -161,13 +162,13 @@ public class LoanProductToGLAccountMappingHelper extends ProductToGLAccountMappi
                 populateChangesForAccrualBasedAccounting(changes, fundAccountId, loanPortfolioAccountId, incomeFromInterestId,
                         incomeFromFeeId, incomeFromPenaltyId, writeOffAccountId, overPaymentAccountId, transfersInSuspenseAccountId,
                         incomeFromRecoveryAccountId, receivableInterestAccountId, receivableFeeAccountId, receivablePenaltyAccountId,
-                        LPIWriteOffAccountId, interestWriteOffAccountId, feeWriteOffAccountId);
+                        LPIWriteOffAccountId, interestWriteOffAccountId, feeWriteOffAccountId, unidentifiedDepositsAccountId);
             break;
             case ACCRUAL_UPFRONT:
                 populateChangesForAccrualBasedAccounting(changes, fundAccountId, loanPortfolioAccountId, incomeFromInterestId,
                         incomeFromFeeId, incomeFromPenaltyId, writeOffAccountId, overPaymentAccountId, transfersInSuspenseAccountId,
                         incomeFromRecoveryAccountId, receivableInterestAccountId, receivableFeeAccountId, receivablePenaltyAccountId,
-                        LPIWriteOffAccountId, interestWriteOffAccountId, feeWriteOffAccountId);
+                        LPIWriteOffAccountId, interestWriteOffAccountId, feeWriteOffAccountId, unidentifiedDepositsAccountId);
             break;
         }
 
@@ -179,7 +180,7 @@ public class LoanProductToGLAccountMappingHelper extends ProductToGLAccountMappi
             final Long writeOffAccountId, final Long overPaymentAccountId, final Long transfersInSuspenseAccountId,
             final Long incomeFromRecoveryAccountId, final Long receivableInterestAccountId, final Long receivableFeeAccountId,
             final Long receivablePenaltyAccountId, final Long LPIWriteOffAccountId, final Long interestWriteOffAccountId,
-            final Long feeWriteOffAccountId) {
+            final Long feeWriteOffAccountId, final Long unidentifiedDepositsAccountId) {
 
         changes.put(LOAN_PRODUCT_ACCOUNTING_PARAMS.INTEREST_RECEIVABLE.getValue(), receivableInterestAccountId);
         changes.put(LOAN_PRODUCT_ACCOUNTING_PARAMS.FEES_RECEIVABLE.getValue(), receivableFeeAccountId);
@@ -188,6 +189,7 @@ public class LoanProductToGLAccountMappingHelper extends ProductToGLAccountMappi
         changes.put(LOAN_PRODUCT_ACCOUNTING_PARAMS.LPI_WRITTEN_OFF.getValue(), LPIWriteOffAccountId);
         changes.put(LOAN_PRODUCT_ACCOUNTING_PARAMS.INTEREST_WRITTEN_OFF.getValue(), interestWriteOffAccountId);
         changes.put(LOAN_PRODUCT_ACCOUNTING_PARAMS.FEES_WRITTEN_OFF.getValue(), feeWriteOffAccountId);
+        changes.put(LOAN_PRODUCT_ACCOUNTING_PARAMS.UNIDENTIFIED_DEPOSITS.getValue(), unidentifiedDepositsAccountId);
 
         populateChangesForCashBasedAccounting(changes, fundAccountId, loanPortfolioAccountId, incomeFromInterestId, incomeFromFeeId,
                 incomeFromPenaltyId, writeOffAccountId, overPaymentAccountId, transfersInSuspenseAccountId, incomeFromRecoveryAccountId);
@@ -305,6 +307,8 @@ public class LoanProductToGLAccountMappingHelper extends ProductToGLAccountMappi
                 // liabilities
 //                mergeLoanToLiabilityAccountMappingChanges(element, LOAN_PRODUCT_ACCOUNTING_PARAMS.OVERPAYMENT.getValue(), loanProductId,
 //                        CASH_ACCOUNTS_FOR_LOAN.OVERPAYMENT.getValue(), CASH_ACCOUNTS_FOR_LOAN.OVERPAYMENT.toString(), changes);
+                mergeLoanToLiabilityAccountMappingChanges(element, LOAN_PRODUCT_ACCOUNTING_PARAMS.UNIDENTIFIED_DEPOSITS.getValue(), loanProductId,
+                        CASH_ACCOUNTS_FOR_LOAN.UNIDENTIFIED_DEPOSITS.getValue(), CASH_ACCOUNTS_FOR_LOAN.UNIDENTIFIED_DEPOSITS.toString(), changes);
             break;
         }
     }

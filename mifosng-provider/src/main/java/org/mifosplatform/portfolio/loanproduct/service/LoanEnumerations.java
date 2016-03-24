@@ -368,6 +368,10 @@ public class LoanEnumerations {
                 optionData = new LoanTransactionEnumData(LoanTransactionType.REFUND_FOR_ACTIVE_LOAN.getValue().longValue(),
                         LoanTransactionType.REFUND_FOR_ACTIVE_LOAN.getCode(), "Refund");
             break;
+            case FROM_UNIDENTIFIED:
+                optionData = new LoanTransactionEnumData(LoanTransactionType.FROM_UNIDENTIFIED.getValue().longValue(),
+                        LoanTransactionType.FROM_UNIDENTIFIED.getCode(), "From Unidentified");
+                break;
             default:
             break;
         }

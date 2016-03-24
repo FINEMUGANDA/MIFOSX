@@ -123,6 +123,9 @@ public final class ProductToGLAccountMappingFromApiJsonDeserializer {
 //            baseDataValidator.reset().parameter(LOAN_PRODUCT_ACCOUNTING_PARAMS.TRANSFERS_SUSPENSE.getValue())
 //                    .value(transfersInSuspenseAccountId).notNull().integerGreaterThanZero();
 
+            final Long unidentifiedDepositsAccountId = this.fromApiJsonHelper.extractLongNamed(LOAN_PRODUCT_ACCOUNTING_PARAMS.UNIDENTIFIED_DEPOSITS.getValue(), element);
+            baseDataValidator.reset().parameter(LOAN_PRODUCT_ACCOUNTING_PARAMS.UNIDENTIFIED_DEPOSITS.getValue()).value(unidentifiedDepositsAccountId).notNull().integerGreaterThanZero();
+
         }
 
         if (isCashBasedAccounting(accountingRuleType)) {

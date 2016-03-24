@@ -192,4 +192,18 @@ public class LoanTransactionsApiResource {
         return this.toApiJsonSerializer.serialize(result);
     }
 
+    @POST
+    @Path("/unidentified/{transactionId}")
+    @Consumes({ MediaType.APPLICATION_JSON })
+    @Produces({ MediaType.APPLICATION_JSON })
+    public String fromUnidentifiedLoanTransaction(@PathParam("loanId") final Long loanId, @PathParam("transactionId") final String transactionId,
+                                        final String apiRequestBodyAsJson) {
+
+        final CommandWrapperBuilder builder = new CommandWrapperBuilder().withJson(apiRequestBodyAsJson);
+        final CommandWrapper commandRequest = builder.fromUnidentifiedLoanTransaction(loanId, transactionId).build();
+
+        final CommandProcessingResult result = this.commandsSourceWritePlatformService.logCommandSource(commandRequest);
+
+        return this.toApiJsonSerializer.serialize(result);
+    }
 }

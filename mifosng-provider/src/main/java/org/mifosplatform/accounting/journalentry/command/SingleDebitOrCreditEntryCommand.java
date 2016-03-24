@@ -54,5 +54,4 @@ public class SingleDebitOrCreditEntryCommand {
     public Set<String> getParametersPassedInRequest() {
         return this.parametersPassedInRequest;
     }
-
 }

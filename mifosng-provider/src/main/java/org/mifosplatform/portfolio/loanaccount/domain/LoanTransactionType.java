@@ -38,7 +38,8 @@ public enum LoanTransactionType {
     REJECT_TRANSFER(15, "loanTransactionType.rejectTransfer"), //
     REFUND(16, "loanTransactionType.refund"), //
     CHARGE_PAYMENT(17, "loanTransactionType.chargePayment"),  //
-    REFUND_FOR_ACTIVE_LOAN(18, "loanTransactionType.refund");
+    REFUND_FOR_ACTIVE_LOAN(18, "loanTransactionType.refund"),
+    FROM_UNIDENTIFIED(19, "loanTransactionType.fromUnidentified");
 
     private final Integer value;
     private final String code;
@@ -113,6 +114,9 @@ public enum LoanTransactionType {
             case 18:
                 loanTransactionType = LoanTransactionType.REFUND_FOR_ACTIVE_LOAN;
             break;
+            case 19:
+                loanTransactionType = LoanTransactionType.FROM_UNIDENTIFIED;
+                break;
             default:
                 loanTransactionType = LoanTransactionType.INVALID;
             break;

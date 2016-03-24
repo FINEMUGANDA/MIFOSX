@@ -81,7 +81,8 @@ public class JournalEntriesApiResource {
             @QueryParam("offset") final Integer offset, @QueryParam("limit") final Integer limit,
             @QueryParam("orderBy") final String orderBy, @QueryParam("sortOrder") final String sortOrder,
             @QueryParam("locale") final String locale, @QueryParam("dateFormat") final String dateFormat,
-            @QueryParam("runningBalance") final boolean runningBalance, @QueryParam("transactionDetails") final boolean transactionDetails) {
+            @QueryParam("runningBalance") final boolean runningBalance, @QueryParam("transactionDetails") final boolean transactionDetails,
+            @QueryParam("onlyUnidentifiedEntries") final Boolean onlyUnidentifiedEntries) {
 
         this.context.authenticatedUser().validateHasReadPermission(this.resourceNameForPermission);
 
@@ -99,7 +100,7 @@ public class JournalEntriesApiResource {
                 runningBalance);
 
         final Page<JournalEntryData> glJournalEntries = this.journalEntryReadPlatformService.retrieveAll(searchParameters, glAccountId,
-                onlyManualEntries, fromDate, toDate, transactionId, entityType, associationParametersData);
+                onlyManualEntries, fromDate, toDate, transactionId, entityType, associationParametersData, onlyUnidentifiedEntries);
         final ApiRequestJsonSerializationSettings settings = this.apiRequestParameterHelper.process(uriInfo.getQueryParameters());
         return this.apiJsonSerializerService.serialize(settings, glJournalEntries, RESPONSE_DATA_PARAMETERS);
     }

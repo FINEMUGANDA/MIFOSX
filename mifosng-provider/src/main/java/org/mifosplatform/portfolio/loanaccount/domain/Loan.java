@@ -2692,7 +2692,7 @@ public class Loan extends AbstractPersistable<Long> {
             this.loanTransactions.add(loanTransaction);
         }
 
-        if (loanTransaction.isNotRepayment() && loanTransaction.isNotWaiver() && loanTransaction.isNotRecoveryRepayment()) {
+        if (loanTransaction.isNotRepayment() && loanTransaction.isNotWaiver() && loanTransaction.isNotRecoveryRepayment() && loanTransaction.isNotFromUnidentified()) {
             final String errorMessage = "A transaction of type repayment or recovery repayment or waiver was expected but not received.";
             throw new InvalidLoanTransactionTypeException("transaction", "is.not.a.repayment.or.waiver.or.recovery.transaction",
                     errorMessage);
@@ -2796,7 +2796,7 @@ public class Loan extends AbstractPersistable<Long> {
          * FIXME: Vishwas, skipping post loan transaction checks for Loan
          * recoveries
          **/
-        if (loanTransaction.isNotRecoveryRepayment()) {
+        if (loanTransaction.isNotRecoveryRepayment() && loanTransaction.isNotFromUnidentified()) {
             doPostLoanTransactionChecks(loanTransaction.getTransactionDate(), loanLifecycleStateMachine);
         }
 

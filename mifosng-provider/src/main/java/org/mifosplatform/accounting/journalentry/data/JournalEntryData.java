@@ -62,6 +62,8 @@ public class JournalEntryData {
     private final BigDecimal organizationRunningBalance;
     @SuppressWarnings("unused")
     private final Boolean runningBalanceComputed;
+    @SuppressWarnings("unused")
+    private final Boolean unidentifiedEntry;
 
     @SuppressWarnings("unused")
     private final TransactionDetailData transactionDetails;
@@ -72,7 +74,7 @@ public class JournalEntryData {
             final Boolean manualEntry, final EnumOptionData entityType, final Long entityId, final Long createdByUserId,
             final LocalDate createdDate, final String createdByUserName, final String comments, final Boolean reversed,
             final String referenceNumber, final BigDecimal officeRunningBalance, final BigDecimal organizationRunningBalance,
-            final Boolean runningBalanceComputed, final TransactionDetailData transactionDetailData, final CurrencyData currency) {
+            final Boolean runningBalanceComputed, final TransactionDetailData transactionDetailData, final CurrencyData currency, final Boolean unidentifiedEntry) {
         this.id = id;
         this.officeId = officeId;
         this.officeName = officeName;
@@ -99,6 +101,7 @@ public class JournalEntryData {
         this.runningBalanceComputed = runningBalanceComputed;
         this.transactionDetails = transactionDetailData;
         this.currency = currency;
+        this.unidentifiedEntry = unidentifiedEntry;
     }
 
     public Long getId() {

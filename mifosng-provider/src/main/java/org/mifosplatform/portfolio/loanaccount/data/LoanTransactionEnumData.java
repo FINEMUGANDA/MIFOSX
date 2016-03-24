@@ -31,6 +31,7 @@ public class LoanTransactionEnumData {
     private final boolean chargePayment;
     private final boolean refund;
     private final boolean refundForActiveLoans;
+    private final boolean fromUnidentified;
 
     public LoanTransactionEnumData(final Long id, final String code, final String value) {
         this.id = id;
@@ -52,6 +53,7 @@ public class LoanTransactionEnumData {
         this.refund = Long.valueOf(16).equals(this.id);
         this.chargePayment = Long.valueOf(17).equals(this.id);
         this.refundForActiveLoans = Long.valueOf(18).equals(this.id);
+        fromUnidentified = Long.valueOf(19).equals(this.id);
     }
 
     public Long id() {
@@ -137,4 +139,7 @@ public class LoanTransactionEnumData {
         return this.refundForActiveLoans;
     }
 
+    public boolean isFromUnidentified() {
+        return fromUnidentified;
+    }
 }

@@ -16,6 +16,8 @@ import java.util.Set;
 import org.apache.commons.lang.StringUtils;
 import org.joda.time.LocalDate;
 import org.joda.time.LocalDateTime;
+import org.mifosplatform.accounting.journalentry.domain.JournalEntry;
+import org.mifosplatform.accounting.journalentry.domain.JournalEntryRepository;
 import org.mifosplatform.accounting.journalentry.service.JournalEntryWritePlatformService;
 import org.mifosplatform.infrastructure.configuration.domain.ConfigurationDomainService;
 import org.mifosplatform.infrastructure.core.data.ApiParameterError;
@@ -86,20 +88,21 @@ public class LoanAccountDomainServiceJpa implements LoanAccountDomainService {
     private final LoanAccrualWritePlatformService accrualWritePlatformService;
     private final PlatformSecurityContext context;
     private final BusinessEventNotifierService businessEventNotifierService;
+    private final JournalEntryRepository journalEntryRepository;
 
     @Autowired
     public LoanAccountDomainServiceJpa(final LoanAssembler loanAccountAssembler, final LoanRepository loanRepository,
-            final LoanTransactionRepository loanTransactionRepository, final NoteRepository noteRepository,
-            final ConfigurationDomainService configurationDomainService, final HolidayRepository holidayRepository,
-            final WorkingDaysRepositoryWrapper workingDaysRepository,
-            final ApplicationCurrencyRepositoryWrapper applicationCurrencyRepositoryWrapper,
-            final JournalEntryWritePlatformService journalEntryWritePlatformService,
-            final AccountTransferRepository accountTransferRepository, final LoanScheduleGeneratorFactory loanScheduleFactory,
-            final ApplicationCurrencyRepositoryWrapper applicationCurrencyRepository,
-            final CalendarInstanceRepository calendarInstanceRepository,
-            final LoanRepaymentScheduleInstallmentRepository repaymentScheduleInstallmentRepository,
-            final LoanAccrualWritePlatformService accrualWritePlatformService, final PlatformSecurityContext context,
-            final BusinessEventNotifierService businessEventNotifierService) {
+                                       final LoanTransactionRepository loanTransactionRepository, final NoteRepository noteRepository,
+                                       final ConfigurationDomainService configurationDomainService, final HolidayRepository holidayRepository,
+                                       final WorkingDaysRepositoryWrapper workingDaysRepository,
+                                       final ApplicationCurrencyRepositoryWrapper applicationCurrencyRepositoryWrapper,
+                                       final JournalEntryWritePlatformService journalEntryWritePlatformService,
+                                       final AccountTransferRepository accountTransferRepository, final LoanScheduleGeneratorFactory loanScheduleFactory,
+                                       final ApplicationCurrencyRepositoryWrapper applicationCurrencyRepository,
+                                       final CalendarInstanceRepository calendarInstanceRepository,
+                                       final LoanRepaymentScheduleInstallmentRepository repaymentScheduleInstallmentRepository,
+                                       final LoanAccrualWritePlatformService accrualWritePlatformService, final PlatformSecurityContext context,
+                                       final BusinessEventNotifierService businessEventNotifierService, final JournalEntryRepository journalEntryRepository) {
         this.loanAccountAssembler = loanAccountAssembler;
         this.loanRepository = loanRepository;
         this.loanTransactionRepository = loanTransactionRepository;
@@ -117,6 +120,7 @@ public class LoanAccountDomainServiceJpa implements LoanAccountDomainService {
         this.accrualWritePlatformService = accrualWritePlatformService;
         this.context = context;
         this.businessEventNotifierService = businessEventNotifierService;
+        this.journalEntryRepository = journalEntryRepository;
     }
 
     @Transactional
@@ -218,6 +222,120 @@ public class LoanAccountDomainServiceJpa implements LoanAccountDomainService {
         }
 
         postJournalEntries(loan, existingTransactionIds, existingReversedTransactionIds, isAccountTransfer);
+
+        recalculateAccruals(loan);
+
+        this.businessEventNotifierService.notifyBusinessEventWasExecuted(BUSINESS_EVENTS.LOAN_MAKE_REPAYMENT, newRepaymentTransaction);
+
+        builderResult.withEntityId(newRepaymentTransaction.getId()) //
+                .withOfficeId(loan.getOfficeId()) //
+                .withClientId(loan.getClientId()) //
+                .withGroupId(loan.getGroupId()); //
+
+        return newRepaymentTransaction;
+    }
+
+
+    @Transactional
+    @Override
+    public LoanTransaction makeRepaymentFromUnidentified(final Loan loan, final CommandProcessingResultBuilder builderResult, final String transactionId) {
+        AppUser currentUser = getAppUserIfPresent();
+        checkClientOrGroupActive(loan);
+
+        final List<JournalEntry> journalEntries = this.journalEntryRepository.findUnReversedManualJournalEntriesByTransactionId(transactionId);
+
+        BigDecimal transactionAmount = BigDecimal.ZERO;
+
+        final List<JournalEntry> creditJournalEntries = new ArrayList<>();
+
+        for (JournalEntry journalEntry: journalEntries) {
+            if (journalEntry.isDebitEntry()) {
+                transactionAmount = transactionAmount.add(journalEntry.getAmount());
+            } else {
+                creditJournalEntries.add(journalEntry);
+            }
+        }
+
+        final List<Long> existingTransactionIds = new ArrayList<>();
+        final List<Long> existingReversedTransactionIds = new ArrayList<>();
+
+        final Money repaymentAmount = Money.of(loan.getCurrency(), transactionAmount);
+        LoanTransaction newRepaymentTransaction = null;
+        final LocalDateTime currentDateTime = DateUtils.getLocalDateTimeOfTenant();
+
+        final PaymentDetail paymentDetail = journalEntries.get(0).getPaymentDetails();
+        final LocalDate transactionDate = LocalDate.fromDateFields(journalEntries.get(0).getTransactionDate());
+        final String txnExternalId = journalEntries.get(0).getTransactionId();
+
+        newRepaymentTransaction = LoanTransaction.fromUnidentified(loan.getOffice(), repaymentAmount, paymentDetail, transactionDate,
+                txnExternalId, currentDateTime, currentUser);
+
+        final boolean allowTransactionsOnHoliday = this.configurationDomainService.allowTransactionsOnHolidayEnabled();
+        final List<Holiday> holidays = this.holidayRepository.findByOfficeIdAndGreaterThanDate(loan.getOfficeId(),
+                transactionDate.toDate(), HolidayStatusType.ACTIVE.getValue());
+        final WorkingDays workingDays = this.workingDaysRepository.findOne();
+        final boolean allowTransactionsOnNonWorkingDay = this.configurationDomainService.allowTransactionsOnNonWorkingDayEnabled();
+
+        CalendarInstance restCalendarInstance = null;
+        ApplicationCurrency applicationCurrency = null;
+        LocalDate calculatedRepaymentsStartingFromDate = null;
+        boolean isHolidayEnabled = false;
+        LocalDate recalculateFrom = null;
+        Long overdurPenaltyWaitPeriod = null;
+        LocalDate recalculateDueDateChargesFrom = null;
+        if (loan.repaymentScheduleDetail().isInterestRecalculationEnabled()) {
+            restCalendarInstance = calendarInstanceRepository.findCalendarInstaneByEntityId(loan.loanInterestRecalculationDetailId(),
+                    CalendarEntityType.LOAN_RECALCULATION_DETAIL.getValue());
+
+            final MonetaryCurrency currency = loan.getCurrency();
+            applicationCurrency = this.applicationCurrencyRepository.findOneWithNotFoundDetection(currency);
+            final CalendarInstance calendarInstance = this.calendarInstanceRepository.findCalendarInstaneByEntityId(loan.getId(),
+                    CalendarEntityType.LOANS.getValue());
+            calculatedRepaymentsStartingFromDate = getCalculatedRepaymentsStartingFromDate(loan.getDisbursementDate(), loan,
+                    calendarInstance);
+
+            isHolidayEnabled = this.configurationDomainService.isRescheduleRepaymentsOnHolidaysEnabled();
+            overdurPenaltyWaitPeriod = this.configurationDomainService.retrievePenaltyWaitPeriod();
+        }
+        HolidayDetailDTO holidayDetailDTO = new HolidayDetailDTO(isHolidayEnabled, holidays, workingDays, allowTransactionsOnHoliday,
+                allowTransactionsOnNonWorkingDay);
+        final ScheduleGeneratorDTO scheduleGeneratorDTO = new ScheduleGeneratorDTO(loanScheduleFactory, applicationCurrency,
+                calculatedRepaymentsStartingFromDate, holidayDetailDTO, restCalendarInstance, recalculateFrom, overdurPenaltyWaitPeriod,
+                recalculateDueDateChargesFrom);
+
+        final boolean isRecoveryRepayment = false;
+
+        final ChangedTransactionDetail changedTransactionDetail = loan.makeRepayment(newRepaymentTransaction,
+                defaultLoanLifecycleStateMachine(), existingTransactionIds, existingReversedTransactionIds, isRecoveryRepayment,
+                scheduleGeneratorDTO, currentUser);
+
+        saveLoanTransactionWithDataIntegrityViolationChecks(newRepaymentTransaction);
+
+        /***
+         * TODO Vishwas Batch save is giving me a
+         * HibernateOptimisticLockingFailureException, looping and saving for
+         * the time being, not a major issue for now as this loop is entered
+         * only in edge cases (when a payment is made before the latest payment
+         * recorded against the loan)
+         ***/
+
+        saveAndFlushLoanWithDataIntegrityViolationChecks(loan);
+
+        if (changedTransactionDetail != null) {
+            for (Map.Entry<Long, LoanTransaction> mapEntry : changedTransactionDetail.getNewTransactionMappings().entrySet()) {
+                saveLoanTransactionWithDataIntegrityViolationChecks(mapEntry.getValue());
+                // update loan with references to the newly created transactions
+                loan.getLoanTransactions().add(mapEntry.getValue());
+                updateLoanTransaction(mapEntry.getKey(), mapEntry.getValue());
+            }
+        }
+
+//        if (StringUtils.isNotBlank(noteText)) {
+//            final Note note = Note.loanTransactionNote(loan, newRepaymentTransaction, noteText);
+//            this.noteRepository.save(note);
+//        }
+
+        postJournalEntries(loan, existingTransactionIds, existingReversedTransactionIds, false);
 
         recalculateAccruals(loan);
 

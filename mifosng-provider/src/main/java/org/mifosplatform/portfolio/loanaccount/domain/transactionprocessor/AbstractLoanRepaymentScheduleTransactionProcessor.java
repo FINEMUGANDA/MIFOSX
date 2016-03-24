@@ -229,7 +229,7 @@ public abstract class AbstractLoanRepaymentScheduleTransactionProcessor implemen
             final List<LoanRepaymentScheduleInstallment> installments, final Set<LoanCharge> charges, final Money chargeAmountToProcess,
             final boolean isFeeCharge) {
         // to.
-        if (loanTransaction.isRepayment() || loanTransaction.isInterestWaiver() || loanTransaction.isRecoveryRepayment()) {
+        if (loanTransaction.isRepayment() || loanTransaction.isInterestWaiver() || loanTransaction.isRecoveryRepayment() || loanTransaction.isFromUnidentified()) {
             loanTransaction.resetDerivedComponents();
         }
         Money transactionAmountUnprocessed = processTransaction(loanTransaction, currency, installments, chargeAmountToProcess);

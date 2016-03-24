@@ -81,6 +81,10 @@ public class AccrualBasedAccountingProcessorForLoan implements AccountingProcess
             else if (loanTransactionDTO.getTransactionType().isRefundForActiveLoans()) {
                 createJournalEntriesForRefundForActiveLoan(loanDTO, loanTransactionDTO, office);
             }
+
+            else if (loanTransactionDTO.getTransactionType().isFromUnidentified()) {
+                createJournalEntriesFromUnidentified(loanDTO, loanTransactionDTO, office);
+            }
         }
     }
 
@@ -266,6 +270,64 @@ public class AccrualBasedAccountingProcessorForLoan implements AccountingProcess
                             transactionDate, totalDebitAmount, isReversal);
                 }
             }
+        }
+    }
+
+    private void createJournalEntriesFromUnidentified(final LoanDTO loanDTO, final LoanTransactionDTO loanTransactionDTO, final Office office) {
+        // loan properties
+        final Long loanProductId = loanDTO.getLoanProductId();
+        final Long loanId = loanDTO.getLoanId();
+        final String currencyCode = loanDTO.getCurrencyCode();
+
+        // transaction properties
+        final String transactionId = loanTransactionDTO.getTransactionId();
+        final Date transactionDate = loanTransactionDTO.getTransactionDate();
+        final BigDecimal principalAmount = loanTransactionDTO.getPrincipal();
+        final BigDecimal interestAmount = loanTransactionDTO.getInterest();
+        final BigDecimal feesAmount = loanTransactionDTO.getFees();
+        final BigDecimal penaltiesAmount = loanTransactionDTO.getPenalties();
+        final Long paymentTypeId = loanTransactionDTO.getPaymentTypeId();
+        final boolean isReversal = loanTransactionDTO.isReversed();
+
+        BigDecimal totalDebitAmount = new BigDecimal(0);
+
+        // handle principal payment or writeOff (and reversals)
+        if (principalAmount != null && !(principalAmount.compareTo(BigDecimal.ZERO) == 0)) {
+            totalDebitAmount = totalDebitAmount.add(principalAmount);
+            this.helper.createCreditJournalEntryOrReversalForLoan(office, currencyCode, ACCRUAL_ACCOUNTS_FOR_LOAN.LOAN_PORTFOLIO,
+                    loanProductId, paymentTypeId, loanId, transactionId, transactionDate, principalAmount, isReversal);
+        }
+
+        // handle interest payment of writeOff (and reversals)
+        if (interestAmount != null && !(interestAmount.compareTo(BigDecimal.ZERO) == 0)) {
+            totalDebitAmount = totalDebitAmount.add(interestAmount);
+            this.helper.createCreditJournalEntryOrReversalForLoan(office, currencyCode, ACCRUAL_ACCOUNTS_FOR_LOAN.INTEREST_RECEIVABLE,
+                    loanProductId, paymentTypeId, loanId, transactionId, transactionDate, interestAmount, isReversal);
+        }
+
+        // handle fees payment of writeOff (and reversals)
+        if (feesAmount != null && !(feesAmount.compareTo(BigDecimal.ZERO) == 0)) {
+            totalDebitAmount = totalDebitAmount.add(feesAmount);
+
+            this.helper.createCreditJournalEntryOrReversalForLoan(office, currencyCode, ACCRUAL_ACCOUNTS_FOR_LOAN.FEES_RECEIVABLE,
+                    loanProductId, paymentTypeId, loanId, transactionId, transactionDate, feesAmount, isReversal);
+        }
+
+        // handle penalties payment of writeOff (and reversals)
+        if (penaltiesAmount != null && !(penaltiesAmount.compareTo(BigDecimal.ZERO) == 0)) {
+            totalDebitAmount = totalDebitAmount.add(penaltiesAmount);
+            this.helper.createCreditJournalEntryOrReversalForLoan(office, currencyCode, ACCRUAL_ACCOUNTS_FOR_LOAN.PENALTIES_RECEIVABLE,
+                    loanProductId, paymentTypeId, loanId, transactionId, transactionDate, penaltiesAmount, isReversal);
+        }
+
+        /**
+         * Single DEBIT transaction for write-offs or Repayments (and their
+         * reversals)
+         ***/
+        if (!(totalDebitAmount.compareTo(BigDecimal.ZERO) == 0)) {
+            this.helper.createDebitJournalEntryOrReversalForLoan(office, currencyCode,
+                    ACCRUAL_ACCOUNTS_FOR_LOAN.UNIDENTIFIED_DEPOSITS.getValue(), loanProductId, paymentTypeId, loanId, transactionId,
+                    transactionDate, totalDebitAmount, isReversal);
         }
     }
 

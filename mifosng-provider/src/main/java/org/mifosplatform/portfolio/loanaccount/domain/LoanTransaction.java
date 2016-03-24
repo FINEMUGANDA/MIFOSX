@@ -140,6 +140,12 @@ public final class LoanTransaction extends AbstractPersistable<Long> {
                 createdDate, appUser);
     }
 
+    public static LoanTransaction fromUnidentified(final Office office, final Money amount, final PaymentDetail paymentDetail,
+                                            final LocalDate paymentDate, final String externalId, final LocalDateTime createdDate, final AppUser appUser) {
+        return new LoanTransaction(null, office, LoanTransactionType.FROM_UNIDENTIFIED, paymentDetail, amount.getAmount(), paymentDate, externalId,
+                createdDate, appUser);
+    }
+
     public static LoanTransaction recoveryRepayment(final Office office, final Money amount, final PaymentDetail paymentDetail,
             final LocalDate paymentDate, final String externalId, final LocalDateTime createdDate, final AppUser appUser) {
         return new LoanTransaction(null, office, LoanTransactionType.RECOVERY_REPAYMENT, paymentDetail, amount.getAmount(), paymentDate,
@@ -440,6 +446,14 @@ public final class LoanTransaction extends AbstractPersistable<Long> {
 
     public boolean isNotRepayment() {
         return !isRepayment();
+    }
+
+    public boolean isFromUnidentified() {
+        return LoanTransactionType.FROM_UNIDENTIFIED.equals(getTypeOf()) && isNotReversed();
+    }
+
+    public boolean isNotFromUnidentified() {
+        return !isFromUnidentified();
     }
 
     public boolean isDisbursement() {

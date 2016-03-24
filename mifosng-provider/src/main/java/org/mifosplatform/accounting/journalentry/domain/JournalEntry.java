@@ -93,6 +93,9 @@ public class JournalEntry extends AbstractAuditableCustom<AppUser, Long> {
     @Column(name = "ref_num")
     private String referenceNumber;
 
+    @Column(name = "unidentified_entry", nullable = false)
+    private boolean unidentifiedEntry = false;
+
     public static JournalEntry createNew(final Office office, final PaymentDetail paymentDetail, final GLAccount glAccount,
                                          final String currencyCode, final String transactionId, final boolean manualEntry, final Date transactionDate,
                                          final JournalEntryType journalEntryType, final BigDecimal amount, final String description, final Integer entityType,
@@ -111,6 +114,16 @@ public class JournalEntry extends AbstractAuditableCustom<AppUser, Long> {
         return new JournalEntry(office, paymentDetail, glAccount, currencyCode, transactionId, manualEntry, transactionDate,
                 journalEntryType.getValue(), amount, exchangeRate, description, entityType, entityId, referenceNumber, loanTransaction,
                 savingsTransaction);
+    }
+
+    public static JournalEntry createNew(final Office office, final PaymentDetail paymentDetail, final GLAccount glAccount,
+                                         final String currencyCode, final String transactionId, final boolean manualEntry, final Date transactionDate,
+                                         final JournalEntryType journalEntryType, final BigDecimal amount, final BigDecimal exchangeRate, final String description, final Integer entityType,
+                                         final Long entityId, final String referenceNumber, final LoanTransaction loanTransaction,
+                                         final SavingsAccountTransaction savingsTransaction, final boolean unidentifiedEntry) {
+        return new JournalEntry(office, paymentDetail, glAccount, currencyCode, transactionId, manualEntry, transactionDate,
+                journalEntryType.getValue(), amount, exchangeRate, description, entityType, entityId, referenceNumber, loanTransaction,
+                savingsTransaction, unidentifiedEntry);
     }
 
     protected JournalEntry() {
@@ -139,6 +152,31 @@ public class JournalEntry extends AbstractAuditableCustom<AppUser, Long> {
         this.loanTransaction = loanTransaction;
         this.savingsTransaction = savingsTransaction;
         this.paymentDetail = paymentDetail;
+    }
+
+    public JournalEntry(final Office office, final PaymentDetail paymentDetail, final GLAccount glAccount, final String currencyCode,
+                        final String transactionId, final boolean manualEntry, final Date transactionDate, final Integer type, final BigDecimal amount, final BigDecimal exchangeRate,
+                        final String description, final Integer entityType, final Long entityId, final String referenceNumber,
+                        final LoanTransaction loanTransaction, final SavingsAccountTransaction savingsTransaction, final boolean unidentifiedEntry) {
+        this.office = office;
+        this.glAccount = glAccount;
+        this.reversalJournalEntry = null;
+        this.transactionId = transactionId;
+        this.reversed = false;
+        this.manualEntry = manualEntry;
+        this.transactionDate = transactionDate;
+        this.type = type;
+        this.amount = amount;
+        this.exchangeRate = exchangeRate;
+        this.description = StringUtils.defaultIfEmpty(description, null);
+        this.entityType = entityType;
+        this.entityId = entityId;
+        this.referenceNumber = referenceNumber;
+        this.currencyCode = currencyCode;
+        this.loanTransaction = loanTransaction;
+        this.savingsTransaction = savingsTransaction;
+        this.paymentDetail = paymentDetail;
+        this.unidentifiedEntry = unidentifiedEntry;
     }
 
     public boolean isDebitEntry() {
@@ -197,4 +235,7 @@ public class JournalEntry extends AbstractAuditableCustom<AppUser, Long> {
         return this.paymentDetail;
     }
 
+    public String getTransactionId() {
+        return transactionId;
+    }
 }

@@ -696,7 +696,15 @@ public class CommandWrapperBuilder {
         this.href = "/loans/" + loanId + "/transactions/template?command=unwatch";
         return this;
     }
-
+    public CommandWrapperBuilder fromUnidentifiedLoanTransaction(final Long loanId, final String transactionId) {
+        this.actionName = "FROM_UNIDENTIFIED";
+        this.entityName = "LOAN";
+        this.entityId = null;
+        this.transactionId = transactionId;
+        this.loanId = loanId;
+        this.href = "/loans/" + loanId + "/transactions/unidentified/" + transactionId;
+        return this;
+    }
     public CommandWrapperBuilder closeLoanAsRescheduledTransaction(final Long loanId) {
         this.actionName = "CLOSEASRESCHEDULED";
         this.entityName = "LOAN";

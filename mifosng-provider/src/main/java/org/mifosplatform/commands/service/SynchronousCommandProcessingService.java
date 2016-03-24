@@ -413,6 +413,8 @@ public class SynchronousCommandProcessingService implements CommandProcessingSer
                 handler = this.applicationContext.getBean("watchLoanCommandHandler", NewCommandSourceHandler.class);
             } else if (wrapper.isLoanUnwatch()) {
                 handler = this.applicationContext.getBean("unwatchLoanCommandHandler", NewCommandSourceHandler.class);
+            } else if (wrapper.isLoanFromUnidentified()) {
+                handler = this.applicationContext.getBean("fromUnidentifiedLoanCommandHandler", NewCommandSourceHandler.class);
             } else {
                 throw new UnsupportedCommandException(wrapper.commandName());
             }

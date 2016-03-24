@@ -73,6 +73,7 @@ public class JournalEntryReadPlatformServiceImpl implements JournalEntryReadPlat
                     .append(" glAccount.name as glAccountName, glAccount.currency_code as glAccountCurrencyCode, glAccount.gl_code as glAccountCode, glAccount.id as glAccountId, ")
                     .append(" journalEntry.office_id as officeId, office.name as officeName, journalEntry.ref_num as referenceNumber, ")
                     .append(" journalEntry.manual_entry as manualEntry,journalEntry.entry_date as transactionDate, ")
+                    .append(" journalEntry.unidentified_entry as unidentifiedEntry, ")
                     .append(" journalEntry.type_enum as entryType,journalEntry.amount as amount,journalEntry.exchange_rate as exchangeRate, journalEntry.transaction_id as transactionId,")
                     .append(" journalEntry.entity_type_enum as entityType, journalEntry.entity_id as entityId, creatingUser.id as createdByUserId, ")
                     .append(" creatingUser.username as createdByUserName, journalEntry.description as comments, ")
@@ -152,6 +153,7 @@ public class JournalEntryReadPlatformServiceImpl implements JournalEntryReadPlat
             final Integer inMultiplesOf = JdbcSupport.getInteger(rs, "inMultiplesOf");
             final CurrencyData currency = new CurrencyData(currencyCode, currencyName, currencyDigits, inMultiplesOf,
                     currencyDisplaySymbol, currencyNameCode);
+            final Boolean unidentifiedEntry = rs.getBoolean("unidentifiedEntry");
 
             if (associationParametersData.isRunningBalanceRequired()) {
                 officeRunningBalance = rs.getBigDecimal("officeRunningBalance");
@@ -204,14 +206,14 @@ public class JournalEntryReadPlatformServiceImpl implements JournalEntryReadPlat
             return new JournalEntryData(id, officeId, officeName, glAccountName, glAccountId, glCode, accountType, transactionDate,
                     entryType, amount, exchangeRate, transactionId, manualEntry, entityType, entityId, createdByUserId, createdDate, createdByUserName,
                     comments, reversed, referenceNumber, officeRunningBalance, organizationRunningBalance, runningBalanceComputed,
-                    transactionDetailData, currency);
+                    transactionDetailData, currency, unidentifiedEntry);
         }
     }
 
     @Override
     public Page<JournalEntryData> retrieveAll(final SearchParameters searchParameters, final Long glAccountId,
             final Boolean onlyManualEntries, final Date fromDate, final Date toDate, final String transactionId, final Integer entityType,
-            final JournalEntryAssociationParametersData associationParametersData) {
+            final JournalEntryAssociationParametersData associationParametersData, final Boolean onlyUnidentifiedEntries) {
 
         GLJournalEntryMapper rm = new GLJournalEntryMapper(associationParametersData);
         final StringBuilder sqlBuilder = new StringBuilder(200);
@@ -291,6 +293,14 @@ public class JournalEntryReadPlatformServiceImpl implements JournalEntryReadPlat
         if (onlyManualEntries != null) {
             if (onlyManualEntries) {
                 sqlBuilder.append(whereClose + " journalEntry.manual_entry = 1");
+
+                whereClose = " and ";
+            }
+        }
+
+        if (onlyUnidentifiedEntries != null) {
+            if (onlyUnidentifiedEntries) {
+                sqlBuilder.append(whereClose + " journalEntry.unidentified_entry = 1");
 
                 whereClose = " and ";
             }
