@@ -82,7 +82,7 @@ public class JournalEntriesApiResource {
             @QueryParam("orderBy") final String orderBy, @QueryParam("sortOrder") final String sortOrder,
             @QueryParam("locale") final String locale, @QueryParam("dateFormat") final String dateFormat,
             @QueryParam("runningBalance") final boolean runningBalance, @QueryParam("transactionDetails") final boolean transactionDetails,
-            @QueryParam("onlyUnidentifiedEntries") final Boolean onlyUnidentifiedEntries) {
+            @QueryParam("onlyUnidentifiedEntries") final boolean onlyUnidentifiedEntries) {
 
         this.context.authenticatedUser().validateHasReadPermission(this.resourceNameForPermission);
 
