@@ -105,6 +105,9 @@ public class JournalEntryReadPlatformServiceImpl implements JournalEntryReadPlat
                         .append(" left join m_code_value as cdv on cdv.id = pd.payment_type_cv_id ")
                         .append(" left join m_note as note on lt.id = note.loan_transaction_id or st.id = note.savings_account_transaction_id ");
             }
+            if (associationParametersData.isOnlyUnidentifiedEntries()) {
+                sb.append(" left join m_loan_transaction as ltex on journalEntry.transaction_id = ltex.external_id ");
+            }
             return sb.toString();
 
         }
@@ -300,7 +303,7 @@ public class JournalEntryReadPlatformServiceImpl implements JournalEntryReadPlat
 
         if (onlyUnidentifiedEntries != null) {
             if (onlyUnidentifiedEntries) {
-                sqlBuilder.append(whereClose + " journalEntry.unidentified_entry = 1");
+                sqlBuilder.append(whereClose + " journalEntry.unidentified_entry = 1 and ltex.id is null ");
 
                 whereClose = " and ";
             }
