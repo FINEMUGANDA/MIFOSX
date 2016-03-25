@@ -78,11 +78,16 @@ public class ProductToGLAccountMappingHelper {
 
         // get the existing product
         if (accountId != null) {
-            final ProductToGLAccountMapping accountMapping = this.accountMappingRepository.findCoreProductToFinAccountMapping(productId,
+            ProductToGLAccountMapping accountMapping = this.accountMappingRepository.findCoreProductToFinAccountMapping(productId,
                     portfolioProductType.getValue(), accountTypeId);
-            if (accountMapping == null) { throw new ProductToGLAccountMappingNotFoundException(portfolioProductType, productId,
-                    accountTypeName); }
-            if (accountMapping.getGlAccount().getId() != accountId) {
+            if (accountMapping == null) {
+                final GLAccount glAccount = getAccountByIdAndType(paramName, expectedAccountType, accountId);
+
+                accountMapping = new ProductToGLAccountMapping(glAccount, productId,
+                        portfolioProductType.getValue(), accountTypeId);
+                changes.put(paramName, accountId);
+                this.accountMappingRepository.save(accountMapping);
+            } else if (accountMapping.getGlAccount().getId() != accountId) {
                 final GLAccount glAccount = getAccountByIdAndType(paramName, expectedAccountType, accountId);
                 changes.put(paramName, accountId);
                 accountMapping.setGlAccount(glAccount);

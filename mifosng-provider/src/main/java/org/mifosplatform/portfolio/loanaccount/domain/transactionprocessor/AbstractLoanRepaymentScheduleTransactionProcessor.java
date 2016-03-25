@@ -151,7 +151,7 @@ public abstract class AbstractLoanRepaymentScheduleTransactionProcessor implemen
                  Collections.sort(installments,byDate);
              }
 
-            if (loanTransaction.isRepayment() || loanTransaction.isInterestWaiver() || loanTransaction.isRecoveryRepayment()) {
+            if (loanTransaction.isRepayment() || loanTransaction.isInterestWaiver() || loanTransaction.isRecoveryRepayment() || loanTransaction.isFromUnidentified()) {
                 // pass through for new transactions
                 if (loanTransaction.getId() == null) {
                     handleTransaction(loanTransaction, currency, installments, charges);
@@ -294,6 +294,8 @@ public abstract class AbstractLoanRepaymentScheduleTransactionProcessor implemen
                                 loanTransaction, transactionAmountUnprocessed);
                     }
                 }
+            } else {
+                break;
             }
 
             installmentIndex++;
