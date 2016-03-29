@@ -265,10 +265,10 @@ public class LoanAccountDomainServiceJpa implements LoanAccountDomainService {
 
         final PaymentDetail paymentDetail = journalEntries.get(0).getPaymentDetails();
         final LocalDate transactionDate = LocalDate.fromDateFields(journalEntries.get(0).getTransactionDate());
-        final String txnExternalId = journalEntries.get(0).getTransactionId();
+        final String relatedTransactionId = journalEntries.get(0).getTransactionId();
 
         newRepaymentTransaction = LoanTransaction.fromUnidentified(loan.getOffice(), repaymentAmount, paymentDetail, transactionDate,
-                txnExternalId, currentDateTime, currentUser);
+                null, currentDateTime, currentUser, relatedTransactionId);
 
         final boolean allowTransactionsOnHoliday = this.configurationDomainService.allowTransactionsOnHolidayEnabled();
         final List<Holiday> holidays = this.holidayRepository.findByOfficeIdAndGreaterThanDate(loan.getOfficeId(),

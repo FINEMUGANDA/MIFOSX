@@ -3074,7 +3074,7 @@ public class Loan extends AbstractPersistable<Long> {
         validateActivityNotBeforeClientOrGroupTransferDate(LoanEvent.LOAN_REPAYMENT_OR_WAIVER,
                 transactionForAdjustment.getTransactionDate());
 
-        if (transactionForAdjustment.isNotRepayment() && transactionForAdjustment.isNotWaiver()) {
+        if (transactionForAdjustment.isNotRepayment() && transactionForAdjustment.isNotWaiver() && transactionForAdjustment.isNotFromUnidentified()) {
             final String errorMessage = "Only transactions of type repayment or waiver can be adjusted.";
             throw new InvalidLoanTransactionTypeException("transaction", "adjustment.is.only.allowed.to.repayment.or.waiver.transaction",
                     errorMessage);

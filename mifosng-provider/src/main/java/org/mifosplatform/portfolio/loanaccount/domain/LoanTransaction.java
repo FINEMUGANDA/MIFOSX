@@ -119,6 +119,9 @@ public final class LoanTransaction extends AbstractPersistable<Long> {
     @Column(name = "manually_adjusted_or_reversed", nullable = false)
     private boolean manuallyAdjustedOrReversed;
 
+    @Column(name = "related_transaction_id", length = 100, nullable = false)
+    private String relatedTransactionId;
+
     protected LoanTransaction() {
         this.loan = null;
         this.dateOf = null;
@@ -141,9 +144,9 @@ public final class LoanTransaction extends AbstractPersistable<Long> {
     }
 
     public static LoanTransaction fromUnidentified(final Office office, final Money amount, final PaymentDetail paymentDetail,
-                                            final LocalDate paymentDate, final String externalId, final LocalDateTime createdDate, final AppUser appUser) {
+                                            final LocalDate paymentDate, final String externalId, final LocalDateTime createdDate, final AppUser appUser, final String relatedTransactionId) {
         return new LoanTransaction(null, office, LoanTransactionType.FROM_UNIDENTIFIED, paymentDetail, amount.getAmount(), paymentDate, externalId,
-                createdDate, appUser);
+                createdDate, appUser, relatedTransactionId);
     }
 
     public static LoanTransaction recoveryRepayment(final Office office, final Money amount, final PaymentDetail paymentDetail,
@@ -316,6 +319,22 @@ public final class LoanTransaction extends AbstractPersistable<Long> {
         this.createdDate = createdDate.toDate();
         this.appUser = appUser;
     }
+    private LoanTransaction(final Loan loan, final Office office, final LoanTransactionType type, final PaymentDetail paymentDetail,
+                            final BigDecimal amount, final LocalDate date, final String externalId, final LocalDateTime createdDate,
+                            final AppUser appUser, final String relatedTransactionId) {
+        this.loan = loan;
+        this.typeOf = type.getValue();
+        this.paymentDetail = paymentDetail;
+        this.amount = amount;
+        this.dateOf = date.toDateTimeAtStartOfDay().toDate();
+        this.externalId = externalId;
+        this.office = office;
+        this.submittedOnDate = DateUtils.getDateOfTenant();
+        this.createdDate = createdDate.toDate();
+        this.appUser = appUser;
+        this.relatedTransactionId = relatedTransactionId;
+    }
+
 
     public void reverse() {
         this.reversed = true;
@@ -674,5 +693,9 @@ public final class LoanTransaction extends AbstractPersistable<Long> {
             isLatest = this.getCreatedDate().isBefore(loanTransaction.getCreatedDate());
         }
         return isLatest;
+    }
+
+    public String getRelatedTransactionId() {
+        return relatedTransactionId;
     }
 }

@@ -2606,36 +2606,14 @@ public class LoanWritePlatformServiceJpaRepositoryImpl implements LoanWritePlatf
                 .build();
     }
 
+    @Override
     public CommandProcessingResult fromUnidentified(JsonCommand command) {
         final Long loanId = command.getLoanId();
         final String transactionId = command.getTransactionId();
 
-//        this.loanEventApiJsonValidator.validateNewRepaymentTransaction(command.json());
-//
-//        final LocalDate transactionDate = command.localDateValueOfParameterNamed("transactionDate");
-//        final BigDecimal transactionAmount = command.bigDecimalValueOfParameterNamed("transactionAmount");
-//        final String txnExternalId = command.stringValueOfParameterNamedAllowingNull("externalId");
-//
-//        final Map<String, Object> changes = new LinkedHashMap<>();
-//        changes.put("transactionDate", command.stringValueOfParameterNamed("transactionDate"));
-//        changes.put("transactionAmount", command.stringValueOfParameterNamed("transactionAmount"));
-//        changes.put("locale", command.locale());
-//        changes.put("dateFormat", command.dateFormat());
-//        changes.put("paymentTypeId", command.stringValueOfParameterNamed("paymentTypeId"));
-//
-//        final String noteText = command.stringValueOfParameterNamed("note");
-//        if (StringUtils.isNotBlank(noteText)) {
-//            changes.put("note", noteText);
-//        }
         final Loan loan = this.loanAssembler.assembleFrom(loanId);
-//        final PaymentDetail paymentDetail = this.paymentDetailWritePlatformService.createAndPersistPaymentDetail(command, changes);
-//
-//        boolean isAccountTransfer = false;
         final CommandProcessingResultBuilder commandProcessingResultBuilder = new CommandProcessingResultBuilder();
         this.loanAccountDomainService.makeRepaymentFromUnidentified(loan, commandProcessingResultBuilder, transactionId);
-//        loan.setWatchlist(false);
-//
-//        saveLoanWithDataIntegrityViolationChecks(loan);
 
         return new CommandProcessingResultBuilder() //
                 .withOfficeId(loan.getOfficeId()) //
