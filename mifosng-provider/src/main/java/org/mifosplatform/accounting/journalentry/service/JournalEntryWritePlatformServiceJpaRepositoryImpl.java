@@ -41,6 +41,8 @@ import org.mifosplatform.infrastructure.security.service.PlatformSecurityContext
 import org.mifosplatform.organisation.office.domain.*;
 import org.mifosplatform.organisation.office.exception.OfficeNotFoundException;
 import org.mifosplatform.portfolio.financialyear.domain.FinancialYearRepository;
+import org.mifosplatform.portfolio.loanaccount.domain.LoanTransaction;
+import org.mifosplatform.portfolio.loanaccount.domain.LoanTransactionRepository;
 import org.mifosplatform.portfolio.paymentdetail.domain.PaymentDetail;
 import org.mifosplatform.portfolio.paymentdetail.service.PaymentDetailWritePlatformService;
 import org.mifosplatform.useradministration.domain.AppUser;
@@ -76,19 +78,21 @@ public class JournalEntryWritePlatformServiceJpaRepositoryImpl implements Journa
     private final OrganisationCurrencyRepositoryWrapper organisationCurrencyRepository;
     private final PlatformSecurityContext context;
     private final PaymentDetailWritePlatformService paymentDetailWritePlatformService;
+    private final LoanTransactionRepository loanTransactionRepository;
     private final JdbcTemplate jdbcTemplate;
 
     @Autowired
     public JournalEntryWritePlatformServiceJpaRepositoryImpl(final GLClosureRepository glClosureRepository,
-            final JournalEntryRepository glJournalEntryRepository, final OfficeRepository officeRepository,
-            final GLAccountRepository glAccountRepository, final FinancialYearRepository financialYearRepository, final JournalEntryCommandFromApiJsonDeserializer fromApiJsonDeserializer,
-            final AccountingProcessorHelper accountingProcessorHelper, final AccountingRuleRepository accountingRuleRepository,
-            final AccountingProcessorForLoanFactory accountingProcessorForLoanFactory,
-            final AccountingProcessorForSavingsFactory accountingProcessorForSavingsFactory,
-            final GLAccountReadPlatformService glAccountReadPlatformService,
-            final OrganisationCurrencyRepository organisationCurrencyRepo,
-            final OrganisationCurrencyRepositoryWrapper organisationCurrencyRepository, final PlatformSecurityContext context,
-            final PaymentDetailWritePlatformService paymentDetailWritePlatformService, final RoutingDataSource dataSource) {
+                                                             final JournalEntryRepository glJournalEntryRepository, final OfficeRepository officeRepository,
+                                                             final GLAccountRepository glAccountRepository, final FinancialYearRepository financialYearRepository, final JournalEntryCommandFromApiJsonDeserializer fromApiJsonDeserializer,
+                                                             final AccountingProcessorHelper accountingProcessorHelper, final AccountingRuleRepository accountingRuleRepository,
+                                                             final AccountingProcessorForLoanFactory accountingProcessorForLoanFactory,
+                                                             final AccountingProcessorForSavingsFactory accountingProcessorForSavingsFactory,
+                                                             final GLAccountReadPlatformService glAccountReadPlatformService,
+                                                             final OrganisationCurrencyRepository organisationCurrencyRepo,
+                                                             final OrganisationCurrencyRepositoryWrapper organisationCurrencyRepository, final PlatformSecurityContext context,
+                                                             final PaymentDetailWritePlatformService paymentDetailWritePlatformService, final RoutingDataSource dataSource,
+                                                             final LoanTransactionRepository loanTransactionRepository) {
         this.glClosureRepository = glClosureRepository;
         this.officeRepository = officeRepository;
         this.glJournalEntryRepository = glJournalEntryRepository;
@@ -104,6 +108,7 @@ public class JournalEntryWritePlatformServiceJpaRepositoryImpl implements Journa
         this.organisationCurrencyRepository = organisationCurrencyRepository;
         this.context = context;
         this.paymentDetailWritePlatformService = paymentDetailWritePlatformService;
+        this.loanTransactionRepository = loanTransactionRepository;
         this.jdbcTemplate = new JdbcTemplate(dataSource);
     }
 
@@ -436,6 +441,8 @@ public class JournalEntryWritePlatformServiceJpaRepositoryImpl implements Journa
             validateFinancialYear(journalEntry.getTransactionDate());
         }
 
+        validateCanBeReversed(journalEntries);
+
         for (final JournalEntry journalEntry : journalEntries) {
             JournalEntry reversalJournalEntry;
             if (useDefaultComment) {
@@ -547,6 +554,14 @@ public class JournalEntryWritePlatformServiceJpaRepositoryImpl implements Journa
 
             if(Boolean.TRUE.equals(closed) || closed==null) {
                 throw new JournalEntryInvalidException(GL_JOURNAL_ENTRY_INVALID_REASON.FINANCIALYEAR_CLOSED, date, null, null);
+            }
+        }
+    }
+    private void validateCanBeReversed(List<JournalEntry> journalEntries) {
+        if (journalEntries.size() > 0 && journalEntries.get(0).isUnidentifiedEntry()) {
+            LoanTransaction loanTransaction = loanTransactionRepository.findOneByRelatedTransactionIdAndNotReversed(journalEntries.get(0).getTransactionId());
+            if (loanTransaction != null) {
+                throw new JournalEntryInvalidException(GL_JOURNAL_ENTRY_INVALID_REASON.USED_IN_LOAN, null, null, null);
             }
         }
     }

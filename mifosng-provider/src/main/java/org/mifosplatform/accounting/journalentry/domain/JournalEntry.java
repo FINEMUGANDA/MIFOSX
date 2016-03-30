@@ -238,4 +238,8 @@ public class JournalEntry extends AbstractAuditableCustom<AppUser, Long> {
     public String getTransactionId() {
         return transactionId;
     }
+
+    public boolean isUnidentifiedEntry() {
+        return unidentifiedEntry;
+    }
 }
