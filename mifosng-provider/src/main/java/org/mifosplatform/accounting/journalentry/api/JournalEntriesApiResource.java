@@ -150,6 +150,9 @@ public class JournalEntriesApiResource {
         if (is(commandParam, "reverse")) {
             final CommandWrapper commandRequest = new CommandWrapperBuilder().reverseJournalEntry(transactionId).withJson(jsonRequestBody).build();
             result = this.commandsSourceWritePlatformService.logCommandSource(commandRequest);
+        } else if (is(commandParam, "moveToProfit")) {
+            final CommandWrapper commandRequest = new CommandWrapperBuilder().moveJournalEntryToProfit(transactionId).withJson(jsonRequestBody).build();
+            result = this.commandsSourceWritePlatformService.logCommandSource(commandRequest);
         } else {
             throw new UnrecognizedQueryParamException("command", commandParam);
         }

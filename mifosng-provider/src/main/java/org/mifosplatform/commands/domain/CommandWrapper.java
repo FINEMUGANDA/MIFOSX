@@ -327,6 +327,10 @@ public class CommandWrapper {
         return this.actionName.equalsIgnoreCase("REVERSE") && this.entityName.equalsIgnoreCase("JOURNALENTRY");
     }
 
+    public boolean isMoveJournalEntryToProfit() {
+        return this.actionName.equalsIgnoreCase("MOVETOPROFIT") && this.entityName.equalsIgnoreCase("JOURNALENTRY");
+    }
+
     public boolean isUpdateRunningbalance() {
         return this.actionName.equalsIgnoreCase("UPDATERUNNINGBALANCE") && this.entityName.equalsIgnoreCase("JOURNALENTRY");
     }

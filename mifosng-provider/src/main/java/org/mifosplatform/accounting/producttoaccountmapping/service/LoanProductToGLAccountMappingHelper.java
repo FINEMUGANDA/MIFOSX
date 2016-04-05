@@ -148,6 +148,8 @@ public class LoanProductToGLAccountMappingHelper extends ProductToGLAccountMappi
         final Long feeWriteOffAccountId = this.fromApiJsonHelper.extractLongNamed(
                 LOAN_PRODUCT_ACCOUNTING_PARAMS.FEES_WRITTEN_OFF.getValue(), element);
         final Long unidentifiedDepositsAccountId = this.fromApiJsonHelper.extractLongNamed(LOAN_PRODUCT_ACCOUNTING_PARAMS.UNIDENTIFIED_DEPOSITS.getValue(), element);
+
+        final Long unidentifiedProfitAccountId = this.fromApiJsonHelper.extractLongNamed(LOAN_PRODUCT_ACCOUNTING_PARAMS.UNIDENTIFIED_PROFIT.getValue(), element);
 //final Long LPIWriteOffAccountId, final Long interestWriteOffAccountId,
 //            final Long feeWriteOffAccountId
         switch (accountingRuleType) {
@@ -162,13 +164,13 @@ public class LoanProductToGLAccountMappingHelper extends ProductToGLAccountMappi
                 populateChangesForAccrualBasedAccounting(changes, fundAccountId, loanPortfolioAccountId, incomeFromInterestId,
                         incomeFromFeeId, incomeFromPenaltyId, writeOffAccountId, overPaymentAccountId, transfersInSuspenseAccountId,
                         incomeFromRecoveryAccountId, receivableInterestAccountId, receivableFeeAccountId, receivablePenaltyAccountId,
-                        LPIWriteOffAccountId, interestWriteOffAccountId, feeWriteOffAccountId, unidentifiedDepositsAccountId);
+                        LPIWriteOffAccountId, interestWriteOffAccountId, feeWriteOffAccountId, unidentifiedDepositsAccountId, unidentifiedProfitAccountId);
             break;
             case ACCRUAL_UPFRONT:
                 populateChangesForAccrualBasedAccounting(changes, fundAccountId, loanPortfolioAccountId, incomeFromInterestId,
                         incomeFromFeeId, incomeFromPenaltyId, writeOffAccountId, overPaymentAccountId, transfersInSuspenseAccountId,
                         incomeFromRecoveryAccountId, receivableInterestAccountId, receivableFeeAccountId, receivablePenaltyAccountId,
-                        LPIWriteOffAccountId, interestWriteOffAccountId, feeWriteOffAccountId, unidentifiedDepositsAccountId);
+                        LPIWriteOffAccountId, interestWriteOffAccountId, feeWriteOffAccountId, unidentifiedDepositsAccountId, unidentifiedProfitAccountId);
             break;
         }
 
@@ -180,7 +182,7 @@ public class LoanProductToGLAccountMappingHelper extends ProductToGLAccountMappi
             final Long writeOffAccountId, final Long overPaymentAccountId, final Long transfersInSuspenseAccountId,
             final Long incomeFromRecoveryAccountId, final Long receivableInterestAccountId, final Long receivableFeeAccountId,
             final Long receivablePenaltyAccountId, final Long LPIWriteOffAccountId, final Long interestWriteOffAccountId,
-            final Long feeWriteOffAccountId, final Long unidentifiedDepositsAccountId) {
+            final Long feeWriteOffAccountId, final Long unidentifiedDepositsAccountId, final Long unidentifiedProfitAccountId) {
 
         changes.put(LOAN_PRODUCT_ACCOUNTING_PARAMS.INTEREST_RECEIVABLE.getValue(), receivableInterestAccountId);
         changes.put(LOAN_PRODUCT_ACCOUNTING_PARAMS.FEES_RECEIVABLE.getValue(), receivableFeeAccountId);
@@ -190,6 +192,7 @@ public class LoanProductToGLAccountMappingHelper extends ProductToGLAccountMappi
         changes.put(LOAN_PRODUCT_ACCOUNTING_PARAMS.INTEREST_WRITTEN_OFF.getValue(), interestWriteOffAccountId);
         changes.put(LOAN_PRODUCT_ACCOUNTING_PARAMS.FEES_WRITTEN_OFF.getValue(), feeWriteOffAccountId);
         changes.put(LOAN_PRODUCT_ACCOUNTING_PARAMS.UNIDENTIFIED_DEPOSITS.getValue(), unidentifiedDepositsAccountId);
+        changes.put(LOAN_PRODUCT_ACCOUNTING_PARAMS.UNIDENTIFIED_PROFIT.getValue(), unidentifiedProfitAccountId);
 
         populateChangesForCashBasedAccounting(changes, fundAccountId, loanPortfolioAccountId, incomeFromInterestId, incomeFromFeeId,
                 incomeFromPenaltyId, writeOffAccountId, overPaymentAccountId, transfersInSuspenseAccountId, incomeFromRecoveryAccountId);
@@ -289,6 +292,9 @@ public class LoanProductToGLAccountMappingHelper extends ProductToGLAccountMappi
                 mergeLoanToIncomeAccountMappingChanges(element, LOAN_PRODUCT_ACCOUNTING_PARAMS.INCOME_FROM_RECOVERY.getValue(),
                         loanProductId, ACCRUAL_ACCOUNTS_FOR_LOAN.INCOME_FROM_RECOVERY.getValue(),
                         ACCRUAL_ACCOUNTS_FOR_LOAN.INCOME_FROM_RECOVERY.toString(), changes);
+                mergeLoanToIncomeAccountMappingChanges(element, LOAN_PRODUCT_ACCOUNTING_PARAMS.UNIDENTIFIED_PROFIT.getValue(),
+                        loanProductId, ACCRUAL_ACCOUNTS_FOR_LOAN.UNIDENTIFIED_PROFIT.getValue(),
+                        ACCRUAL_ACCOUNTS_FOR_LOAN.UNIDENTIFIED_PROFIT.toString(), changes);
 
                 // expenses
                 mergeLoanToExpenseAccountMappingChanges(element, LOAN_PRODUCT_ACCOUNTING_PARAMS.PRINCIPAL_WRITTEN_OFF.getValue(),

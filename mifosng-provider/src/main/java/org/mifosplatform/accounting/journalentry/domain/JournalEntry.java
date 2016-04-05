@@ -96,6 +96,12 @@ public class JournalEntry extends AbstractAuditableCustom<AppUser, Long> {
     @Column(name = "unidentified_entry", nullable = false)
     private boolean unidentifiedEntry = false;
 
+    @Column(name = "profit", nullable = false)
+    private boolean profit = false;
+
+    @Column(name = "profit_transaction_id")
+    private String profitTransactionId;
+
     public static JournalEntry createNew(final Office office, final PaymentDetail paymentDetail, final GLAccount glAccount,
                                          final String currencyCode, final String transactionId, final boolean manualEntry, final Date transactionDate,
                                          final JournalEntryType journalEntryType, final BigDecimal amount, final String description, final Integer entityType,
@@ -123,7 +129,16 @@ public class JournalEntry extends AbstractAuditableCustom<AppUser, Long> {
                                          final SavingsAccountTransaction savingsTransaction, final boolean unidentifiedEntry) {
         return new JournalEntry(office, paymentDetail, glAccount, currencyCode, transactionId, manualEntry, transactionDate,
                 journalEntryType.getValue(), amount, exchangeRate, description, entityType, entityId, referenceNumber, loanTransaction,
-                savingsTransaction, unidentifiedEntry);
+                savingsTransaction, unidentifiedEntry, false);
+    }
+    public static JournalEntry createNew(final Office office, final PaymentDetail paymentDetail, final GLAccount glAccount,
+                                         final String currencyCode, final String transactionId, final boolean manualEntry, final Date transactionDate,
+                                         final JournalEntryType journalEntryType, final BigDecimal amount, final BigDecimal exchangeRate, final String description, final Integer entityType,
+                                         final Long entityId, final String referenceNumber, final LoanTransaction loanTransaction,
+                                         final SavingsAccountTransaction savingsTransaction, final boolean unidentifiedEntry, final boolean profit) {
+        return new JournalEntry(office, paymentDetail, glAccount, currencyCode, transactionId, manualEntry, transactionDate,
+                journalEntryType.getValue(), amount, exchangeRate, description, entityType, entityId, referenceNumber, loanTransaction,
+                savingsTransaction, unidentifiedEntry, profit);
     }
 
     protected JournalEntry() {
@@ -158,25 +173,17 @@ public class JournalEntry extends AbstractAuditableCustom<AppUser, Long> {
                         final String transactionId, final boolean manualEntry, final Date transactionDate, final Integer type, final BigDecimal amount, final BigDecimal exchangeRate,
                         final String description, final Integer entityType, final Long entityId, final String referenceNumber,
                         final LoanTransaction loanTransaction, final SavingsAccountTransaction savingsTransaction, final boolean unidentifiedEntry) {
-        this.office = office;
-        this.glAccount = glAccount;
-        this.reversalJournalEntry = null;
-        this.transactionId = transactionId;
-        this.reversed = false;
-        this.manualEntry = manualEntry;
-        this.transactionDate = transactionDate;
-        this.type = type;
-        this.amount = amount;
-        this.exchangeRate = exchangeRate;
-        this.description = StringUtils.defaultIfEmpty(description, null);
-        this.entityType = entityType;
-        this.entityId = entityId;
-        this.referenceNumber = referenceNumber;
-        this.currencyCode = currencyCode;
-        this.loanTransaction = loanTransaction;
-        this.savingsTransaction = savingsTransaction;
-        this.paymentDetail = paymentDetail;
+        this(office, paymentDetail, glAccount, currencyCode, transactionId, manualEntry, transactionDate, type,
+                amount, exchangeRate, description, entityType, entityId, referenceNumber, loanTransaction, savingsTransaction);
         this.unidentifiedEntry = unidentifiedEntry;
+    }
+    public JournalEntry(final Office office, final PaymentDetail paymentDetail, final GLAccount glAccount, final String currencyCode,
+                        final String transactionId, final boolean manualEntry, final Date transactionDate, final Integer type, final BigDecimal amount, final BigDecimal exchangeRate,
+                        final String description, final Integer entityType, final Long entityId, final String referenceNumber,
+                        final LoanTransaction loanTransaction, final SavingsAccountTransaction savingsTransaction, final boolean unidentifiedEntry, final boolean profit) {
+        this(office, paymentDetail, glAccount, currencyCode, transactionId, manualEntry, transactionDate, type,
+                amount, exchangeRate, description, entityType, entityId, referenceNumber, loanTransaction, savingsTransaction, unidentifiedEntry);
+        this.profit = profit;
     }
 
     public boolean isDebitEntry() {
@@ -211,8 +218,20 @@ public class JournalEntry extends AbstractAuditableCustom<AppUser, Long> {
         this.reversalJournalEntry = reversalJournalEntry;
     }
 
+    public String getProfitTransactionId() {
+        return profitTransactionId;
+    }
+
+    public void setProfitTransactionId(String profitTransactionId) {
+        this.profitTransactionId = profitTransactionId;
+    }
+
     public void setReversed(final boolean reversed) {
         this.reversed = reversed;
+    }
+
+    public void setProfit(boolean profit) {
+        this.profit = profit;
     }
 
     public String getReferenceNumber() {
@@ -242,4 +261,9 @@ public class JournalEntry extends AbstractAuditableCustom<AppUser, Long> {
     public boolean isUnidentifiedEntry() {
         return unidentifiedEntry;
     }
+
+    public boolean isProfit() {
+        return profit;
+    }
+
 }

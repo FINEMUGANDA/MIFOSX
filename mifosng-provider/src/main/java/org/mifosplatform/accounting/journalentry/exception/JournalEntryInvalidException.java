@@ -57,7 +57,7 @@ public class JournalEntryInvalidException extends AbstractPlatformDomainRuleExce
             } else if (name().toString().equalsIgnoreCase("GL_ACCOUNT_MANUAL_ENTRIES_NOT_PERMITTED")) {
                 return "Target account does not allow maual adjustments";
             } else if (name().toString().equalsIgnoreCase("USED_IN_LOAN")) {
-                return "Journal Entry used in loan transaction";
+                return "Journal Entry are used in loan transaction";
             }
             return name().toString();
         }

@@ -443,6 +443,8 @@ public class JournalEntryWritePlatformServiceJpaRepositoryImpl implements Journa
 
         validateCanBeReversed(journalEntries);
 
+        boolean isProfit = false;
+
         for (final JournalEntry journalEntry : journalEntries) {
             JournalEntry reversalJournalEntry;
             if (useDefaultComment) {
@@ -453,17 +455,83 @@ public class JournalEntryWritePlatformServiceJpaRepositoryImpl implements Journa
                 reversalJournalEntry = JournalEntry.createNew(journalEntry.getOffice(), journalEntry.getPaymentDetails(),
                         journalEntry.getGlAccount(), journalEntry.getCurrencyCode(), reversalTransactionId, manualEntry,
                         journalEntry.getTransactionDate(), JournalEntryType.CREDIT, journalEntry.getAmount(), journalEntry.getExchangeRate(), reversalComment, null, null,
-                        journalEntry.getReferenceNumber(), journalEntry.getLoanTransaction(), journalEntry.getSavingsTransaction());
+                        journalEntry.getReferenceNumber(), journalEntry.getLoanTransaction(), journalEntry.getSavingsTransaction(),
+                        journalEntry.isUnidentifiedEntry(), journalEntry.isProfit());
             } else {
                 reversalJournalEntry = JournalEntry.createNew(journalEntry.getOffice(), journalEntry.getPaymentDetails(),
                         journalEntry.getGlAccount(), journalEntry.getCurrencyCode(), reversalTransactionId, manualEntry,
                         journalEntry.getTransactionDate(), JournalEntryType.DEBIT, journalEntry.getAmount(), journalEntry.getExchangeRate(), reversalComment, null, null,
-                        journalEntry.getReferenceNumber(), journalEntry.getLoanTransaction(), journalEntry.getSavingsTransaction());
+                        journalEntry.getReferenceNumber(), journalEntry.getLoanTransaction(), journalEntry.getSavingsTransaction(),
+                        journalEntry.isUnidentifiedEntry(), journalEntry.isProfit());
+            }
+            if (journalEntry.isProfit()) {
+                isProfit = true;
             }
             // save the reversal entry
             this.glJournalEntryRepository.saveAndFlush(reversalJournalEntry);
             journalEntry.setReversed(true);
             journalEntry.setReversalJournalEntry(reversalJournalEntry);
+            // save the updated journal entry
+            this.glJournalEntryRepository.saveAndFlush(journalEntry);
+        }
+        if (isProfit) {
+            final List<JournalEntry> unidentifiedProfitJournalEntries = this.glJournalEntryRepository.findJournalEntriesByProfitTransactionId(command.getTransactionId());
+            for (final JournalEntry unidentifiedProfitJournalEntry : unidentifiedProfitJournalEntries) {
+                unidentifiedProfitJournalEntry.setProfit(false);
+                unidentifiedProfitJournalEntry.setProfitTransactionId(null);
+                this.glJournalEntryRepository.saveAndFlush(unidentifiedProfitJournalEntry);
+            }
+        }
+        return new CommandProcessingResultBuilder().withTransactionId(reversalTransactionId).build();
+    }
+
+    @Transactional
+    @Override
+    public CommandProcessingResult moveJournalEntryToProfit(final JsonCommand command) {
+        // is the transaction Id valid
+        final List<JournalEntry> journalEntries = this.glJournalEntryRepository.findUnReversedManualNotProfitJournalEntriesByTransactionId(command.getTransactionId());
+
+
+        if (journalEntries.size() <= 1) { throw new JournalEntriesNotFoundException(command.getTransactionId()); }
+        final Long officeId = journalEntries.get(0).getOffice().getId();
+        final String reversalTransactionId = generateTransactionId(officeId);
+        final boolean manualEntry = true;
+        String reversalComment = command.stringValueOfParameterNamed("comments");
+        final boolean useDefaultComment = StringUtils.isBlank(reversalComment);
+        final Long profitGLAccountId = command.longValueOfParameterNamed("glAccount");
+        final GLAccount glAccount = this.glAccountRepository.findOne(profitGLAccountId);
+
+        validateCommentForReversal(reversalComment);
+
+        // check financial year
+        for (final JournalEntry journalEntry : journalEntries) {
+            validateFinancialYear(journalEntry.getTransactionDate());
+        }
+
+        validateCanBeReversed(journalEntries);
+
+        for (final JournalEntry journalEntry : journalEntries) {
+            JournalEntry profitJournalEntry;
+            if (useDefaultComment) {
+                reversalComment = "Profit entry for Journal Entry with Entry Id  :" + journalEntry.getId()
+                        + " and transaction Id " + command.getTransactionId();
+            }
+            if (journalEntry.isDebitEntry()) {
+                profitJournalEntry = JournalEntry.createNew(journalEntry.getOffice(), journalEntry.getPaymentDetails(),
+                        journalEntry.getGlAccount(), journalEntry.getCurrencyCode(), reversalTransactionId, manualEntry,
+                        journalEntry.getTransactionDate(), JournalEntryType.CREDIT, journalEntry.getAmount(), journalEntry.getExchangeRate(), reversalComment, null, null,
+                        journalEntry.getReferenceNumber(), journalEntry.getLoanTransaction(), journalEntry.getSavingsTransaction(), false, true);
+            } else {
+                profitJournalEntry = JournalEntry.createNew(journalEntry.getOffice(), journalEntry.getPaymentDetails(),
+                        glAccount, journalEntry.getCurrencyCode(), reversalTransactionId, manualEntry,
+                        journalEntry.getTransactionDate(), JournalEntryType.DEBIT, journalEntry.getAmount(), journalEntry.getExchangeRate(), reversalComment, null, null,
+                        journalEntry.getReferenceNumber(), journalEntry.getLoanTransaction(), journalEntry.getSavingsTransaction(), false, true);
+            }
+            // save the profit entry
+            this.glJournalEntryRepository.saveAndFlush(profitJournalEntry);
+            journalEntry.setProfit(true);
+            journalEntry.setProfitTransactionId(profitJournalEntry.getTransactionId());
+
             // save the updated journal entry
             this.glJournalEntryRepository.saveAndFlush(journalEntry);
         }
@@ -557,6 +625,7 @@ public class JournalEntryWritePlatformServiceJpaRepositoryImpl implements Journa
             }
         }
     }
+
     private void validateCanBeReversed(List<JournalEntry> journalEntries) {
         if (journalEntries.size() > 0 && journalEntries.get(0).isUnidentifiedEntry()) {
             LoanTransaction loanTransaction = loanTransactionRepository.findOneByRelatedTransactionIdAndNotReversed(journalEntries.get(0).getTransactionId());

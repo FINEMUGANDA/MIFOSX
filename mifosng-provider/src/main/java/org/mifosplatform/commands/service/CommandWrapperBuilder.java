@@ -988,6 +988,15 @@ public class CommandWrapperBuilder {
         return this;
     }
 
+    public CommandWrapperBuilder moveJournalEntryToProfit(final String transactionId) {
+        this.actionName = "MOVETOPROFIT";
+        this.entityName = "JOURNALENTRY";
+        this.entityId = null;
+        this.transactionId = transactionId;
+        this.href = "/journalentries/" + transactionId;
+        return this;
+    }
+
     public CommandWrapperBuilder updateRunningBalanceForJournalEntry() {
         this.actionName = "UPDATERUNNINGBALANCE";
         this.entityName = "JOURNALENTRY";

@@ -63,6 +63,7 @@ public final class LoanProductDataValidator {
             LOAN_PRODUCT_ACCOUNTING_PARAMS.FEES_WRITTEN_OFF.getValue(),
             LOAN_PRODUCT_ACCOUNTING_PARAMS.PENALTY_INCOME_ACCOUNT_MAPPING.getValue(),
             LOAN_PRODUCT_ACCOUNTING_PARAMS.UNIDENTIFIED_DEPOSITS.getValue(),
+            LOAN_PRODUCT_ACCOUNTING_PARAMS.UNIDENTIFIED_PROFIT.getValue(),
             LoanProductConstants.useBorrowerCycleParameterName,
             LoanProductConstants.principalVariationsForBorrowerCycleParameterName,
             LoanProductConstants.interestRateVariationsForBorrowerCycleParameterName,
@@ -382,6 +383,9 @@ public final class LoanProductDataValidator {
 //                    .notNull().integerGreaterThanZero();
             final Long unidentifiedDepositsAccountId = this.fromApiJsonHelper.extractLongNamed(LOAN_PRODUCT_ACCOUNTING_PARAMS.UNIDENTIFIED_DEPOSITS.getValue(),element);
             baseDataValidator.reset().parameter(LOAN_PRODUCT_ACCOUNTING_PARAMS.UNIDENTIFIED_DEPOSITS.getValue()).value(unidentifiedDepositsAccountId).notNull().integerGreaterThanZero();
+
+            final Long unidentifiedProfitAccountId = this.fromApiJsonHelper.extractLongNamed(LOAN_PRODUCT_ACCOUNTING_PARAMS.UNIDENTIFIED_PROFIT.getValue(),element);
+            baseDataValidator.reset().parameter(LOAN_PRODUCT_ACCOUNTING_PARAMS.UNIDENTIFIED_PROFIT.getValue()).value(unidentifiedProfitAccountId).notNull().integerGreaterThanZero();
 
             validatePaymentChannelFundSourceMappings(baseDataValidator, element);
             validateChargeToIncomeAccountMappings(baseDataValidator, element);
