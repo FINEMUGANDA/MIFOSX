@@ -311,8 +311,8 @@ public class LoanProductToGLAccountMappingHelper extends ProductToGLAccountMappi
                         ACCRUAL_ACCOUNTS_FOR_LOAN.FEES_WRITTEN_OFF.toString(), changes);
 
                 // liabilities
-//                mergeLoanToLiabilityAccountMappingChanges(element, LOAN_PRODUCT_ACCOUNTING_PARAMS.OVERPAYMENT.getValue(), loanProductId,
-//                        CASH_ACCOUNTS_FOR_LOAN.OVERPAYMENT.getValue(), CASH_ACCOUNTS_FOR_LOAN.OVERPAYMENT.toString(), changes);
+                mergeLoanToLiabilityAccountMappingChanges(element, LOAN_PRODUCT_ACCOUNTING_PARAMS.OVERPAYMENT.getValue(), loanProductId,
+                        CASH_ACCOUNTS_FOR_LOAN.OVERPAYMENT.getValue(), CASH_ACCOUNTS_FOR_LOAN.OVERPAYMENT.toString(), changes);
                 mergeLoanToLiabilityAccountMappingChanges(element, LOAN_PRODUCT_ACCOUNTING_PARAMS.UNIDENTIFIED_DEPOSITS.getValue(), loanProductId,
                         CASH_ACCOUNTS_FOR_LOAN.UNIDENTIFIED_DEPOSITS.getValue(), CASH_ACCOUNTS_FOR_LOAN.UNIDENTIFIED_DEPOSITS.toString(), changes);
             break;

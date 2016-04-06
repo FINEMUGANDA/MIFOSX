@@ -58,4 +58,6 @@ public interface LoanAccountDomainService {
 
     LoanTransaction makeRepaymentFromUnidentified(Loan loan, CommandProcessingResultBuilder builderResult, String transactionId);
 
+    LoanTransaction moveOverpaymentToProfit(Loan loan, CommandProcessingResultBuilder builderResult);
+
 }

@@ -86,6 +86,8 @@ public interface LoanWritePlatformService {
 
     CommandProcessingResult fromUnidentified(JsonCommand command);
 
+    CommandProcessingResult moveToProfit(JsonCommand command);
+
     CommandProcessingResult updateDisbursementDateForTranche(Long loanId, Long disbursementId, JsonCommand command);
 
     void recalculateInterest();

@@ -2625,6 +2625,22 @@ public class LoanWritePlatformServiceJpaRepositoryImpl implements LoanWritePlatf
     }
 
     @Override
+    public CommandProcessingResult moveToProfit(JsonCommand command) {
+        final Long loanId = command.getLoanId();
+
+        final Loan loan = this.loanAssembler.assembleFrom(loanId);
+        final CommandProcessingResultBuilder commandProcessingResultBuilder = new CommandProcessingResultBuilder();
+        this.loanAccountDomainService.moveOverpaymentToProfit(loan, commandProcessingResultBuilder);
+
+        return new CommandProcessingResultBuilder() //
+                .withOfficeId(loan.getOfficeId()) //
+                .withClientId(loan.getClientId()) //
+                .withGroupId(loan.getGroupId()) //
+                .withLoanId(loanId) //
+                .build();
+    }
+
+    @Override
     @Transactional
     public CommandProcessingResult updateDisbursementDateForTranche(final Long loanId, final Long disbursementId, final JsonCommand command) {
 

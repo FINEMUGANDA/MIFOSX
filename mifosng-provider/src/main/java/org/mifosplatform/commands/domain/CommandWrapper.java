@@ -479,6 +479,10 @@ public class CommandWrapper {
         return this.actionName.equalsIgnoreCase("FROM_UNIDENTIFIED") && this.entityName.equalsIgnoreCase("LOAN");
     }
 
+    public boolean isLoanMoveToProfit() {
+        return this.actionName.equalsIgnoreCase("MOVE_TO_PROFIT") && this.entityName.equalsIgnoreCase("LOAN");
+    }
+
     public boolean isUpdateDisbursementDate() {
         return this.actionName.equalsIgnoreCase("UPDATE") && this.entityName.equalsIgnoreCase("DISBURSEMENTDETAIL");
     }

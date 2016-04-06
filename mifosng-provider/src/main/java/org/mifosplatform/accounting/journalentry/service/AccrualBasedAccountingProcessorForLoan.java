@@ -183,6 +183,7 @@ public class AccrualBasedAccountingProcessorForLoan implements AccountingProcess
         final BigDecimal interestAmount = loanTransactionDTO.getInterest();
         final BigDecimal feesAmount = loanTransactionDTO.getFees();
         final BigDecimal penaltiesAmount = loanTransactionDTO.getPenalties();
+        final BigDecimal overPaymentAmount = loanTransactionDTO.getOverPayment();
         final Long paymentTypeId = loanTransactionDTO.getPaymentTypeId();
         final boolean isReversal = loanTransactionDTO.isReversed();
 
@@ -250,6 +251,12 @@ public class AccrualBasedAccountingProcessorForLoan implements AccountingProcess
 
         }
 
+        if (overPaymentAmount != null && !(overPaymentAmount.compareTo(BigDecimal.ZERO) == 0)) {
+            totalDebitAmount = totalDebitAmount.add(overPaymentAmount);
+            this.helper.createCreditJournalEntryOrReversalForLoan(office, currencyCode, ACCRUAL_ACCOUNTS_FOR_LOAN.OVERPAYMENT, loanProductId,
+                    paymentTypeId, loanId, transactionId, transactionDate, overPaymentAmount, isReversal);
+        }
+
         /**
          * Single DEBIT transaction for write-offs or Repayments (and their
          * reversals)
@@ -286,6 +293,7 @@ public class AccrualBasedAccountingProcessorForLoan implements AccountingProcess
         final BigDecimal interestAmount = loanTransactionDTO.getInterest();
         final BigDecimal feesAmount = loanTransactionDTO.getFees();
         final BigDecimal penaltiesAmount = loanTransactionDTO.getPenalties();
+        final BigDecimal overPaymentAmount = loanTransactionDTO.getOverPayment();
         final Long paymentTypeId = loanTransactionDTO.getPaymentTypeId();
         final boolean isReversal = loanTransactionDTO.isReversed();
 
@@ -311,6 +319,12 @@ public class AccrualBasedAccountingProcessorForLoan implements AccountingProcess
 
             this.helper.createCreditJournalEntryOrReversalForLoan(office, currencyCode, ACCRUAL_ACCOUNTS_FOR_LOAN.FEES_RECEIVABLE,
                     loanProductId, paymentTypeId, loanId, transactionId, transactionDate, feesAmount, isReversal);
+        }
+
+        if (overPaymentAmount != null && !(overPaymentAmount.compareTo(BigDecimal.ZERO) == 0)) {
+            totalDebitAmount = totalDebitAmount.add(overPaymentAmount);
+            this.helper.createCreditJournalEntryOrReversalForLoan(office, currencyCode, ACCRUAL_ACCOUNTS_FOR_LOAN.OVERPAYMENT, loanProductId,
+                    paymentTypeId, loanId, transactionId, transactionDate, overPaymentAmount, isReversal);
         }
 
         // handle penalties payment of writeOff (and reversals)

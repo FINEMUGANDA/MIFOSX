@@ -221,6 +221,11 @@ public final class LoanTransaction extends AbstractPersistable<Long> {
                 createdDate, appUser);
     }
 
+    public static LoanTransaction moveToProfit(final Office office, final Money amount, final PaymentDetail paymentDetail,
+                                         final LocalDate paymentDate, final String externalId, final LocalDateTime createdDate, final AppUser appUser) {
+        return new LoanTransaction(null, office, LoanTransactionType.MOVE_TO_PROFIT, paymentDetail, amount.getAmount(), paymentDate, externalId,
+                createdDate, appUser);
+    }
     public static LoanTransaction copyTransactionProperties(final LoanTransaction loanTransaction) {
         return new LoanTransaction(loanTransaction.loan, loanTransaction.office, loanTransaction.typeOf, loanTransaction.dateOf,
                 loanTransaction.amount, loanTransaction.principalPortion, loanTransaction.interestPortion,
@@ -473,6 +478,14 @@ public final class LoanTransaction extends AbstractPersistable<Long> {
 
     public boolean isNotFromUnidentified() {
         return !isFromUnidentified();
+    }
+
+    public boolean isMoveToProfit() {
+        return LoanTransactionType.MOVE_TO_PROFIT.equals(getTypeOf()) && isNotReversed();
+    }
+
+    public boolean isNotMoveToProfit() {
+        return !isMoveToProfit();
     }
 
     public boolean isDisbursement() {

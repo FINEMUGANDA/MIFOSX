@@ -2723,14 +2723,14 @@ public class Loan extends AbstractPersistable<Long> {
             }
         }
 
-        if (loanTransaction.isRepayment()) {
-            Money totalOutstandingOnLoan = getLoanSummary().getTotalOutstanding(loanCurrency());
-            if (loanTransaction.getAmount(loanCurrency()).isGreaterThan(totalOutstandingOnLoan)) {
-                final String errorMessage = "The amount to repay cannot be greater than total amount outstanding on loan.";
-                throw new InvalidLoanStateTransitionException("repayment", "amount.exceeds.total.outstanding", errorMessage,
-                        loanTransaction.getAmount(loanCurrency()), totalOutstandingOnLoan.getAmount());
-            }
-        }
+//        if (loanTransaction.isRepayment()) {
+//            Money totalOutstandingOnLoan = getLoanSummary().getTotalOutstanding(loanCurrency());
+//            if (loanTransaction.getAmount(loanCurrency()).isGreaterThan(totalOutstandingOnLoan)) {
+//                final String errorMessage = "The amount to repay cannot be greater than total amount outstanding on loan.";
+//                throw new InvalidLoanStateTransitionException("repayment", "amount.exceeds.total.outstanding", errorMessage,
+//                        loanTransaction.getAmount(loanCurrency()), totalOutstandingOnLoan.getAmount());
+//            }
+//        }
 
         if (this.loanProduct.isMultiDisburseLoan() && adjustedTransaction == null) {
             BigDecimal totalDisbursed = getDisbursedAmount();
@@ -2796,7 +2796,7 @@ public class Loan extends AbstractPersistable<Long> {
          * FIXME: Vishwas, skipping post loan transaction checks for Loan
          * recoveries
          **/
-        if (loanTransaction.isNotRecoveryRepayment() && loanTransaction.isNotFromUnidentified()) {
+        if (loanTransaction.isNotRecoveryRepayment()) {
             doPostLoanTransactionChecks(loanTransaction.getTransactionDate(), loanLifecycleStateMachine);
         }
 
@@ -3584,9 +3584,9 @@ public class Loan extends AbstractPersistable<Long> {
     private Money getTotalPaidInRepayments() {
         Money cumulativePaid = Money.zero(loanCurrency());
 
-        for (final LoanTransaction repayment : this.loanTransactions) {
-            if (repayment.isRepayment() && !repayment.isReversed()) {
-                cumulativePaid = cumulativePaid.plus(repayment.getAmount(loanCurrency()));
+        for (final LoanTransaction loanTransaction : this.loanTransactions) {
+            if ((loanTransaction.isRepayment() || loanTransaction.isFromUnidentified())&& !loanTransaction.isReversed()) {
+                cumulativePaid = cumulativePaid.plus(loanTransaction.getAmount(loanCurrency()));
             }
         }
 
