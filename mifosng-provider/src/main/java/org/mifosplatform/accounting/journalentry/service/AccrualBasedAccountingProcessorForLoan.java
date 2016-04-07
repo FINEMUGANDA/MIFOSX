@@ -71,6 +71,10 @@ public class AccrualBasedAccountingProcessorForLoan implements AccountingProcess
                 createJournalEntriesForRefund(loanDTO, loanTransactionDTO, office);
             }
 
+            else if (loanTransactionDTO.getTransactionType().isMoveToProfit()) {
+                createJournalEntriesForMoveToProfit(loanDTO, loanTransactionDTO, office);
+            }
+
             /** Handle Write Offs, waivers and their reversals **/
             else if ((loanTransactionDTO.getTransactionType().isWriteOff() || loanTransactionDTO.getTransactionType().isWaiveInterest() || loanTransactionDTO
                     .getTransactionType().isWaiveCharges())) {
@@ -80,9 +84,7 @@ public class AccrualBasedAccountingProcessorForLoan implements AccountingProcess
             /** Logic for Refunds of Active Loans **/
             else if (loanTransactionDTO.getTransactionType().isRefundForActiveLoans()) {
                 createJournalEntriesForRefundForActiveLoan(loanDTO, loanTransactionDTO, office);
-            }
-
-            else if (loanTransactionDTO.getTransactionType().isFromUnidentified()) {
+            } else if (loanTransactionDTO.getTransactionType().isFromUnidentified()) {
                 createJournalEntriesFromUnidentified(loanDTO, loanTransactionDTO, office);
             }
         }
@@ -449,6 +451,25 @@ public class AccrualBasedAccountingProcessorForLoan implements AccountingProcess
                     paymentTypeId, loanId, transactionId, transactionDate, refundAmount, isReversal);
         }
     }
+
+    private void createJournalEntriesForMoveToProfit(final LoanDTO loanDTO, final LoanTransactionDTO loanTransactionDTO, final Office office) {
+        // loan properties
+        final Long loanProductId = loanDTO.getLoanProductId();
+        final Long loanId = loanDTO.getLoanId();
+        final String currencyCode = loanDTO.getCurrencyCode();
+
+        // transaction properties
+        final String transactionId = loanTransactionDTO.getTransactionId();
+        final Date transactionDate = loanTransactionDTO.getTransactionDate();
+        final BigDecimal refundAmount = loanTransactionDTO.getAmount();
+        final boolean isReversal = loanTransactionDTO.isReversed();
+        final Long paymentTypeId = loanTransactionDTO.getPaymentTypeId();
+
+        this.helper.createAccrualBasedJournalEntriesAndReversalsForLoan(office, currencyCode,
+                ACCRUAL_ACCOUNTS_FOR_LOAN.OVERPAYMENT.getValue(), ACCRUAL_ACCOUNTS_FOR_LOAN.UNIDENTIFIED_PROFIT.getValue(), loanProductId,
+                paymentTypeId, loanId, transactionId, transactionDate, refundAmount, isReversal);
+    }
+
     private void createJournalEntriesForRefundForActiveLoan(LoanDTO loanDTO, LoanTransactionDTO loanTransactionDTO, Office office) {
         // TODO Auto-generated method stub
         // loan properties

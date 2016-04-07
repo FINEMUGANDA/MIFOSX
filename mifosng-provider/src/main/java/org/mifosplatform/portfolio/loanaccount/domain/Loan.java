@@ -3585,8 +3585,10 @@ public class Loan extends AbstractPersistable<Long> {
         Money cumulativePaid = Money.zero(loanCurrency());
 
         for (final LoanTransaction loanTransaction : this.loanTransactions) {
-            if ((loanTransaction.isRepayment() || loanTransaction.isFromUnidentified())&& !loanTransaction.isReversed()) {
+            if ((loanTransaction.isRepayment() || loanTransaction.isFromUnidentified()) && !loanTransaction.isReversed()) {
                 cumulativePaid = cumulativePaid.plus(loanTransaction.getAmount(loanCurrency()));
+            } else if (loanTransaction.isMoveToProfit() && !loanTransaction.isReversed()) {
+                cumulativePaid = cumulativePaid.minus(loanTransaction.getAmount(loanCurrency()));
             }
         }
 
@@ -4829,7 +4831,7 @@ public class Loan extends AbstractPersistable<Long> {
 
         List<LoanTransaction> loanTransactions = retreiveListOfTransactionsPostDisbursement();
         for (LoanTransaction loanTransaction : loanTransactions) {
-            if (loanTransaction.isAccrual()) {
+            if (loanTransaction.isAccrual() || loanTransaction.isMoveToProfit()) {
                 outstanding = outstanding.plus(loanTransaction.getAmount(getCurrency()));
                 loanTransaction.updateOutstandingLoanBalance(outstanding.getAmount());
             } else {
