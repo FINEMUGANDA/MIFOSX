@@ -126,8 +126,8 @@ public final class ProductToGLAccountMappingFromApiJsonDeserializer {
             final Long unidentifiedDepositsAccountId = this.fromApiJsonHelper.extractLongNamed(LOAN_PRODUCT_ACCOUNTING_PARAMS.UNIDENTIFIED_DEPOSITS.getValue(), element);
             baseDataValidator.reset().parameter(LOAN_PRODUCT_ACCOUNTING_PARAMS.UNIDENTIFIED_DEPOSITS.getValue()).value(unidentifiedDepositsAccountId).notNull().integerGreaterThanZero();
 
-            final Long unidentifiedProfitAccountId = this.fromApiJsonHelper.extractLongNamed(LOAN_PRODUCT_ACCOUNTING_PARAMS.UNIDENTIFIED_PROFIT.getValue(), element);
-            baseDataValidator.reset().parameter(LOAN_PRODUCT_ACCOUNTING_PARAMS.UNIDENTIFIED_PROFIT.getValue()).value(unidentifiedProfitAccountId).notNull().integerGreaterThanZero();
+            final Long overpaidProfitAccountId = this.fromApiJsonHelper.extractLongNamed(LOAN_PRODUCT_ACCOUNTING_PARAMS.OVERPAID_PROFIT.getValue(), element);
+            baseDataValidator.reset().parameter(LOAN_PRODUCT_ACCOUNTING_PARAMS.OVERPAID_PROFIT.getValue()).value(overpaidProfitAccountId).notNull().integerGreaterThanZero();
 
         }
 

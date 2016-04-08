@@ -52,7 +52,7 @@ public class AccountingConstants {
     public static enum ACCRUAL_ACCOUNTS_FOR_LOAN {
         FUND_SOURCE(1), LOAN_PORTFOLIO(2), INTEREST_ON_LOANS(3), INCOME_FROM_FEES(4), INCOME_FROM_PENALTIES(5), PRINCIPAL_WRITTEN_OFF(6), INTEREST_RECEIVABLE(
                 7), FEES_RECEIVABLE(8), PENALTIES_RECEIVABLE(9), TRANSFERS_SUSPENSE(10), OVERPAYMENT(11), INCOME_FROM_RECOVERY(12),
-                LPI_WRITTEN_OFF(13), INTEREST_WRITTEN_OFF(14), FEES_WRITTEN_OFF(15), UNIDENTIFIED_DEPOSITS(16), UNIDENTIFIED_PROFIT(17);
+                LPI_WRITTEN_OFF(13), INTEREST_WRITTEN_OFF(14), FEES_WRITTEN_OFF(15), UNIDENTIFIED_DEPOSITS(16), OVERPAID_PROFIT(17);
 
         private final Integer value;
 
@@ -96,7 +96,7 @@ public class AccountingConstants {
                 "paymentTypeId"), FEE_INCOME_ACCOUNT_MAPPING("feeToIncomeAccountMappings"), PENALTY_INCOME_ACCOUNT_MAPPING(
                 "penaltyToIncomeAccountMappings"), CHARGE_ID("chargeId"), INCOME_ACCOUNT_ID("incomeAccountId"), INCOME_FROM_RECOVERY("incomeFromRecoveryAccountId"),
                 LPI_WRITTEN_OFF("LPIWriteOffAccountId"), INTEREST_WRITTEN_OFF("interestWriteOffAccountId"), FEES_WRITTEN_OFF("feeWriteOffAccountId"),
-                UNIDENTIFIED_DEPOSITS("unidentifiedDepositsAccountId"), UNIDENTIFIED_PROFIT("unidentifiedProfitAccountId");
+                UNIDENTIFIED_DEPOSITS("unidentifiedDepositsAccountId"), OVERPAID_PROFIT("overpaidProfitAccountId");
 
         private final String value;
 
@@ -121,7 +121,7 @@ public class AccountingConstants {
                 "receivablePenaltyAccount"), TRANSFERS_SUSPENSE("transfersInSuspenseAccount"), INCOME_ACCOUNT_ID("incomeAccount"), INCOME_FROM_RECOVERY(
                 "incomeFromRecoveryAccount"), LIABILITY_TRANSFER_SUSPENSE("liabilityTransferInSuspenseAccount"),
                 LPI_WRITTEN_OFF("LPIWriteOffAccount"), INTEREST_WRITTEN_OFF("interestWriteOffAccount"), FEES_WRITTEN_OFF("feeWriteOffAccount"),
-                UNIDENTIFIED_DEPOSITS("unidentifiedDepositsAccount"), UNIDENTIFIED_PROFIT("unidentifiedProfitAccount");
+                UNIDENTIFIED_DEPOSITS("unidentifiedDepositsAccount"), OVERPAID_PROFIT("overpaidProfitAccount");
 
         private final String value;
 

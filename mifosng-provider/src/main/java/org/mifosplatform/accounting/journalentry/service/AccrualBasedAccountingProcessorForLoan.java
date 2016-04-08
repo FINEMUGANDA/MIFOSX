@@ -466,7 +466,7 @@ public class AccrualBasedAccountingProcessorForLoan implements AccountingProcess
         final Long paymentTypeId = loanTransactionDTO.getPaymentTypeId();
 
         this.helper.createAccrualBasedJournalEntriesAndReversalsForLoan(office, currencyCode,
-                ACCRUAL_ACCOUNTS_FOR_LOAN.OVERPAYMENT.getValue(), ACCRUAL_ACCOUNTS_FOR_LOAN.UNIDENTIFIED_PROFIT.getValue(), loanProductId,
+                ACCRUAL_ACCOUNTS_FOR_LOAN.OVERPAYMENT.getValue(), ACCRUAL_ACCOUNTS_FOR_LOAN.OVERPAID_PROFIT.getValue(), loanProductId,
                 paymentTypeId, loanId, transactionId, transactionDate, refundAmount, isReversal);
     }
 
