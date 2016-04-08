@@ -628,6 +628,8 @@ public class AccountingProcessorHelper {
                 result = "Loan Written Off" + loanInfo;
             } else if (loanTransaction.isFromUnidentified()) {
                 result = "Loan From Unidentified" + loanInfo;
+            } else if (loanTransaction.isMoveToProfit()) {
+                result = "Overpaid moved to Profit" + loanInfo;
             }
         }
         return result;
