@@ -298,6 +298,9 @@ public class CommandWrapper {
     public boolean isGuaranteeRecovery() {
         return this.actionName.equalsIgnoreCase("RECOVERGUARANTEES");
     }
+    public boolean isMoveOverpaid() {
+        return this.actionName.equalsIgnoreCase("MOVE_OVERPAID");
+    }
 
     public boolean isGLAccountResource() {
         return this.entityName.equalsIgnoreCase("GLACCOUNT");

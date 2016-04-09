@@ -417,6 +417,8 @@ public class SynchronousCommandProcessingService implements CommandProcessingSer
                 handler = this.applicationContext.getBean("fromUnidentifiedLoanCommandHandler", NewCommandSourceHandler.class);
             } else if (wrapper.isLoanMoveToProfit()) {
                 handler = this.applicationContext.getBean("loanMoveToProfitCommandHandler", NewCommandSourceHandler.class);
+            } else if (wrapper.isMoveOverpaid()) {
+                handler = this.applicationContext.getBean("loanMoveOverpaidCommandHandler", NewCommandSourceHandler.class);
             } else {
                 throw new UnsupportedCommandException(wrapper.commandName());
             }

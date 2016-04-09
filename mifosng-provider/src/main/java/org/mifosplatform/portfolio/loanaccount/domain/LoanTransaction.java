@@ -226,6 +226,19 @@ public final class LoanTransaction extends AbstractPersistable<Long> {
         return new LoanTransaction(null, office, LoanTransactionType.MOVE_TO_PROFIT, paymentDetail, amount.getAmount(), paymentDate, externalId,
                 createdDate, appUser);
     }
+
+    public static LoanTransaction transferOverpaid(final Office office, final Money amount, final PaymentDetail paymentDetail,
+                                               final LocalDate paymentDate, final String externalId, final LocalDateTime createdDate, final AppUser appUser) {
+        return new LoanTransaction(null, office, LoanTransactionType.TRANSFER_OVERPAID, paymentDetail, amount.getAmount(), paymentDate, externalId,
+                createdDate, appUser);
+    }
+
+    public static LoanTransaction fromTransferOverpaid(final Office office, final Money amount, final PaymentDetail paymentDetail,
+                                               final LocalDate paymentDate, final String externalId, final LocalDateTime createdDate, final AppUser appUser) {
+        return new LoanTransaction(null, office, LoanTransactionType.FROM_TRANSFER_OVERPAID, paymentDetail, amount.getAmount(), paymentDate, externalId,
+                createdDate, appUser);
+    }
+
     public static LoanTransaction copyTransactionProperties(final LoanTransaction loanTransaction) {
         return new LoanTransaction(loanTransaction.loan, loanTransaction.office, loanTransaction.typeOf, loanTransaction.dateOf,
                 loanTransaction.amount, loanTransaction.principalPortion, loanTransaction.interestPortion,
@@ -486,6 +499,22 @@ public final class LoanTransaction extends AbstractPersistable<Long> {
 
     public boolean isNotMoveToProfit() {
         return !isMoveToProfit();
+    }
+
+    public boolean isTransferOverpaid() {
+        return LoanTransactionType.TRANSFER_OVERPAID.equals(getTypeOf()) && isNotReversed();
+    }
+
+    public boolean isNotTransferOverpaid() {
+        return !isTransferOverpaid();
+    }
+
+    public boolean isFromTransferOverpaid() {
+        return LoanTransactionType.FROM_TRANSFER_OVERPAID.equals(getTypeOf()) && isNotReversed();
+    }
+
+    public boolean isNotFromTransferOverpaid() {
+        return !isFromTransferOverpaid();
     }
 
     public boolean isDisbursement() {

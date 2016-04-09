@@ -630,6 +630,10 @@ public class AccountingProcessorHelper {
                 result = "Loan From Unidentified" + loanInfo;
             } else if (loanTransaction.isMoveToProfit()) {
                 result = "Overpaid moved to Profit" + loanInfo;
+            } else if (loanTransaction.isTransferOverpaid()) {
+                result = "Transfer Overpaid amount" + loanInfo;
+            } else if (loanTransaction.isFromTransferOverpaid()) {
+                result = "Transfer From Overpaid" + loanInfo;
             }
         }
         return result;

@@ -60,4 +60,5 @@ public interface LoanAccountDomainService {
 
     LoanTransaction moveOverpaymentToProfit(Loan loan, CommandProcessingResultBuilder builderResult);
 
+    LoanTransaction moveOverpaymentToLoan(Loan loan, CommandProcessingResultBuilder builderResult);
 }

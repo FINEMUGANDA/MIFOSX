@@ -2692,7 +2692,8 @@ public class Loan extends AbstractPersistable<Long> {
             this.loanTransactions.add(loanTransaction);
         }
 
-        if (loanTransaction.isNotRepayment() && loanTransaction.isNotWaiver() && loanTransaction.isNotRecoveryRepayment() && loanTransaction.isNotFromUnidentified()) {
+        if (loanTransaction.isNotRepayment() && loanTransaction.isNotWaiver() && loanTransaction.isNotRecoveryRepayment() &&
+                loanTransaction.isNotFromUnidentified() && loanTransaction.isNotFromTransferOverpaid()) {
             final String errorMessage = "A transaction of type repayment or recovery repayment or waiver was expected but not received.";
             throw new InvalidLoanTransactionTypeException("transaction", "is.not.a.repayment.or.waiver.or.recovery.transaction",
                     errorMessage);
@@ -3586,9 +3587,9 @@ public class Loan extends AbstractPersistable<Long> {
         Money cumulativePaid = Money.zero(loanCurrency());
 
         for (final LoanTransaction loanTransaction : this.loanTransactions) {
-            if ((loanTransaction.isRepayment() || loanTransaction.isFromUnidentified()) && !loanTransaction.isReversed()) {
+            if ((loanTransaction.isRepayment() || loanTransaction.isFromUnidentified() || loanTransaction.isFromTransferOverpaid()) && !loanTransaction.isReversed()) {
                 cumulativePaid = cumulativePaid.plus(loanTransaction.getAmount(loanCurrency()));
-            } else if (loanTransaction.isMoveToProfit() && !loanTransaction.isReversed()) {
+            } else if ((loanTransaction.isMoveToProfit() || loanTransaction.isTransferOverpaid()) && !loanTransaction.isReversed()) {
                 cumulativePaid = cumulativePaid.minus(loanTransaction.getAmount(loanCurrency()));
             }
         }
@@ -4832,7 +4833,7 @@ public class Loan extends AbstractPersistable<Long> {
 
         List<LoanTransaction> loanTransactions = retreiveListOfTransactionsPostDisbursement();
         for (LoanTransaction loanTransaction : loanTransactions) {
-            if (loanTransaction.isAccrual() || loanTransaction.isMoveToProfit()) {
+            if (loanTransaction.isAccrual() || loanTransaction.isMoveToProfit() || loanTransaction.isTransferOverpaid()) {
                 outstanding = outstanding.plus(loanTransaction.getAmount(getCurrency()));
                 loanTransaction.updateOutstandingLoanBalance(outstanding.getAmount());
             } else {

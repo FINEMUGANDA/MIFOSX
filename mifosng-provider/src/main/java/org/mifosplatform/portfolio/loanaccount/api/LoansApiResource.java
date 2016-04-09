@@ -645,6 +645,9 @@ public class LoansApiResource {
         } else if (is(commandParam, "recoverGuarantees")) {
             final CommandWrapper commandRequest = new CommandWrapperBuilder().recoverFromGuarantor(loanId).build();
             result = this.commandsSourceWritePlatformService.logCommandSource(commandRequest);
+        } else if (is(commandParam, "moveOverpaid")) {
+            final CommandWrapper commandRequest = builder.moveOverpaid(loanId).build();
+            result = this.commandsSourceWritePlatformService.logCommandSource(commandRequest);
         }
 
         if (result == null) { throw new UnrecognizedQueryParamException("command", commandParam); }
