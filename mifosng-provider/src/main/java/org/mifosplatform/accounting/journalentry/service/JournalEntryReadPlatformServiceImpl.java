@@ -79,7 +79,9 @@ public class JournalEntryReadPlatformServiceImpl implements JournalEntryReadPlat
                     .append(" creatingUser.username as createdByUserName, journalEntry.description as comments, ")
                     .append(" journalEntry.created_date as createdDate, journalEntry.reversed as reversed, ")
                     .append(" journalEntry.currency_code as currencyCode, curr.name as currencyName, curr.internationalized_name_code as currencyNameCode, ")
-                    .append(" curr.display_symbol as currencyDisplaySymbol, curr.decimal_places as currencyDigits, curr.currency_multiplesof as inMultiplesOf ");
+                    .append(" curr.display_symbol as currencyDisplaySymbol, curr.decimal_places as currencyDigits, curr.currency_multiplesof as inMultiplesOf, ")
+                    .append(" journalEntry.profit as isProfit, journalEntry.profit_transaction_id as profitTransactionId, (ltex.id is not null) as usedInLoan, ")
+                    .append(" (reversalJournalEntry.id is not null) as isReversalEntry ");
             if (associationParametersData.isRunningBalanceRequired()) {
                 sb.append(" ,journalEntry.is_running_balance_calculated as runningBalanceComputed, ")
                         .append(" journalEntry.office_running_balance as officeRunningBalance, ")
@@ -105,9 +107,8 @@ public class JournalEntryReadPlatformServiceImpl implements JournalEntryReadPlat
                         .append(" left join m_code_value as cdv on cdv.id = pd.payment_type_cv_id ")
                         .append(" left join m_note as note on lt.id = note.loan_transaction_id or st.id = note.savings_account_transaction_id ");
             }
-            if (associationParametersData.isOnlyUnidentifiedEntries()) {
-                sb.append(" left join m_loan_transaction as ltex on journalEntry.transaction_id = ltex.external_id ");
-            }
+            sb.append(" left join m_loan_transaction as ltex on journalEntry.transaction_id = ltex.related_transaction_id ");
+            sb.append(" left join acc_gl_journal_entry as reversalJournalEntry on journalEntry.id = reversalJournalEntry.reversal_id ");
             return sb.toString();
 
         }
@@ -157,6 +158,10 @@ public class JournalEntryReadPlatformServiceImpl implements JournalEntryReadPlat
             final CurrencyData currency = new CurrencyData(currencyCode, currencyName, currencyDigits, inMultiplesOf,
                     currencyDisplaySymbol, currencyNameCode);
             final Boolean unidentifiedEntry = rs.getBoolean("unidentifiedEntry");
+            final Boolean isProfit = rs.getBoolean("isProfit");
+            final String profitTransactionId = rs.getString("profitTransactionId");
+            final Boolean usedInLoan = rs.getBoolean("usedInLoan");
+            final Boolean isReversalEntry = rs.getBoolean("isReversalEntry");
 
             if (associationParametersData.isRunningBalanceRequired()) {
                 officeRunningBalance = rs.getBigDecimal("officeRunningBalance");
@@ -209,7 +214,7 @@ public class JournalEntryReadPlatformServiceImpl implements JournalEntryReadPlat
             return new JournalEntryData(id, officeId, officeName, glAccountName, glAccountId, glCode, accountType, transactionDate,
                     entryType, amount, exchangeRate, transactionId, manualEntry, entityType, entityId, createdByUserId, createdDate, createdByUserName,
                     comments, reversed, referenceNumber, officeRunningBalance, organizationRunningBalance, runningBalanceComputed,
-                    transactionDetailData, currency, unidentifiedEntry);
+                    transactionDetailData, currency, unidentifiedEntry, isProfit, profitTransactionId, usedInLoan, isReversalEntry);
         }
     }
 
