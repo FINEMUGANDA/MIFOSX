@@ -516,15 +516,15 @@ public class JournalEntryWritePlatformServiceJpaRepositoryImpl implements Journa
                 reversalComment = "Profit entry for Journal Entry with Entry Id  :" + journalEntry.getId()
                         + " and transaction Id " + command.getTransactionId();
             }
-            if (journalEntry.isDebitEntry()) {
+            if (journalEntry.isCreditEntry()) {
                 profitJournalEntry = JournalEntry.createNew(journalEntry.getOffice(), journalEntry.getPaymentDetails(),
                         journalEntry.getGlAccount(), journalEntry.getCurrencyCode(), reversalTransactionId, manualEntry,
-                        journalEntry.getTransactionDate(), JournalEntryType.CREDIT, journalEntry.getAmount(), journalEntry.getExchangeRate(), reversalComment, null, null,
+                        journalEntry.getTransactionDate(), JournalEntryType.DEBIT, journalEntry.getAmount(), journalEntry.getExchangeRate(), reversalComment, null, null,
                         journalEntry.getReferenceNumber(), journalEntry.getLoanTransaction(), journalEntry.getSavingsTransaction(), false, true);
             } else {
                 profitJournalEntry = JournalEntry.createNew(journalEntry.getOffice(), journalEntry.getPaymentDetails(),
                         glAccount, journalEntry.getCurrencyCode(), reversalTransactionId, manualEntry,
-                        journalEntry.getTransactionDate(), JournalEntryType.DEBIT, journalEntry.getAmount(), journalEntry.getExchangeRate(), reversalComment, null, null,
+                        journalEntry.getTransactionDate(), JournalEntryType.CREDIT, journalEntry.getAmount(), journalEntry.getExchangeRate(), reversalComment, null, null,
                         journalEntry.getReferenceNumber(), journalEntry.getLoanTransaction(), journalEntry.getSavingsTransaction(), false, true);
             }
             // save the profit entry

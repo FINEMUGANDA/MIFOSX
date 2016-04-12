@@ -627,13 +627,13 @@ public class AccountingProcessorHelper {
             } else if (loanTransaction.isWriteOff()) {
                 result = "Loan Written Off" + loanInfo;
             } else if (loanTransaction.isFromUnidentified()) {
-                result = "Loan From Unidentified" + loanInfo;
+                result = "Loan Repayment from Unidentified" + loanInfo;
             } else if (loanTransaction.isMoveToProfit()) {
                 result = "Overpaid moved to Profit" + loanInfo;
             } else if (loanTransaction.isTransferOverpaid()) {
                 result = "Transfer Overpaid amount" + loanInfo;
             } else if (loanTransaction.isFromTransferOverpaid()) {
-                result = "Transfer From Overpaid" + loanInfo;
+                result = "Loan repayment from Overpaid" + loanInfo;
             }
         }
         return result;
