@@ -73,12 +73,15 @@ public class JournalEntryReadPlatformServiceImpl implements JournalEntryReadPlat
                     .append(" glAccount.name as glAccountName, glAccount.currency_code as glAccountCurrencyCode, glAccount.gl_code as glAccountCode, glAccount.id as glAccountId, ")
                     .append(" journalEntry.office_id as officeId, office.name as officeName, journalEntry.ref_num as referenceNumber, ")
                     .append(" journalEntry.manual_entry as manualEntry,journalEntry.entry_date as transactionDate, ")
+                    .append(" journalEntry.unidentified_entry as unidentifiedEntry, ")
                     .append(" journalEntry.type_enum as entryType,journalEntry.amount as amount,journalEntry.exchange_rate as exchangeRate, journalEntry.transaction_id as transactionId,")
                     .append(" journalEntry.entity_type_enum as entityType, journalEntry.entity_id as entityId, creatingUser.id as createdByUserId, ")
                     .append(" creatingUser.username as createdByUserName, journalEntry.description as comments, ")
                     .append(" journalEntry.created_date as createdDate, journalEntry.reversed as reversed, ")
                     .append(" journalEntry.currency_code as currencyCode, curr.name as currencyName, curr.internationalized_name_code as currencyNameCode, ")
-                    .append(" curr.display_symbol as currencyDisplaySymbol, curr.decimal_places as currencyDigits, curr.currency_multiplesof as inMultiplesOf ");
+                    .append(" curr.display_symbol as currencyDisplaySymbol, curr.decimal_places as currencyDigits, curr.currency_multiplesof as inMultiplesOf, ")
+                    .append(" journalEntry.profit as isProfit, journalEntry.profit_transaction_id as profitTransactionId, (ltex.id is not null) as usedInLoan, ")
+                    .append(" (reversalJournalEntry.id is not null) as isReversalEntry ");
             if (associationParametersData.isRunningBalanceRequired()) {
                 sb.append(" ,journalEntry.is_running_balance_calculated as runningBalanceComputed, ")
                         .append(" journalEntry.office_running_balance as officeRunningBalance, ")
@@ -104,6 +107,8 @@ public class JournalEntryReadPlatformServiceImpl implements JournalEntryReadPlat
                         .append(" left join m_code_value as cdv on cdv.id = pd.payment_type_cv_id ")
                         .append(" left join m_note as note on lt.id = note.loan_transaction_id or st.id = note.savings_account_transaction_id ");
             }
+            sb.append(" left join m_loan_transaction as ltex on journalEntry.transaction_id = ltex.related_transaction_id ");
+            sb.append(" left join acc_gl_journal_entry as reversalJournalEntry on journalEntry.id = reversalJournalEntry.reversal_id ");
             return sb.toString();
 
         }
@@ -152,6 +157,11 @@ public class JournalEntryReadPlatformServiceImpl implements JournalEntryReadPlat
             final Integer inMultiplesOf = JdbcSupport.getInteger(rs, "inMultiplesOf");
             final CurrencyData currency = new CurrencyData(currencyCode, currencyName, currencyDigits, inMultiplesOf,
                     currencyDisplaySymbol, currencyNameCode);
+            final Boolean unidentifiedEntry = rs.getBoolean("unidentifiedEntry");
+            final Boolean isProfit = rs.getBoolean("isProfit");
+            final String profitTransactionId = rs.getString("profitTransactionId");
+            final Boolean usedInLoan = rs.getBoolean("usedInLoan");
+            final Boolean isReversalEntry = rs.getBoolean("isReversalEntry");
 
             if (associationParametersData.isRunningBalanceRequired()) {
                 officeRunningBalance = rs.getBigDecimal("officeRunningBalance");
@@ -204,14 +214,14 @@ public class JournalEntryReadPlatformServiceImpl implements JournalEntryReadPlat
             return new JournalEntryData(id, officeId, officeName, glAccountName, glAccountId, glCode, accountType, transactionDate,
                     entryType, amount, exchangeRate, transactionId, manualEntry, entityType, entityId, createdByUserId, createdDate, createdByUserName,
                     comments, reversed, referenceNumber, officeRunningBalance, organizationRunningBalance, runningBalanceComputed,
-                    transactionDetailData, currency);
+                    transactionDetailData, currency, unidentifiedEntry, isProfit, profitTransactionId, usedInLoan, isReversalEntry);
         }
     }
 
     @Override
     public Page<JournalEntryData> retrieveAll(final SearchParameters searchParameters, final Long glAccountId,
             final Boolean onlyManualEntries, final Date fromDate, final Date toDate, final String transactionId, final Integer entityType,
-            final JournalEntryAssociationParametersData associationParametersData) {
+            final JournalEntryAssociationParametersData associationParametersData, final Boolean onlyUnidentifiedEntries) {
 
         GLJournalEntryMapper rm = new GLJournalEntryMapper(associationParametersData);
         final StringBuilder sqlBuilder = new StringBuilder(200);
@@ -291,6 +301,14 @@ public class JournalEntryReadPlatformServiceImpl implements JournalEntryReadPlat
         if (onlyManualEntries != null) {
             if (onlyManualEntries) {
                 sqlBuilder.append(whereClose + " journalEntry.manual_entry = 1");
+
+                whereClose = " and ";
+            }
+        }
+
+        if (onlyUnidentifiedEntries != null) {
+            if (onlyUnidentifiedEntries) {
+                sqlBuilder.append(whereClose + " journalEntry.unidentified_entry = 1 and ltex.id is null ");
 
                 whereClose = " and ";
             }

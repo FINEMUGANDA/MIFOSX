@@ -95,6 +95,9 @@ public class ProductToGLAccountMappingWritePlatformServiceImpl implements Produc
                 // advanced accounting mappings
                 this.loanProductToGLAccountMappingHelper.savePaymentChannelToFundSourceMappings(command, element, loanProductId, null);
                 this.loanProductToGLAccountMappingHelper.saveChargesToIncomeAccountMappings(command, element, loanProductId, null);
+                this.loanProductToGLAccountMappingHelper
+                        .saveLoanToLiabilityAccountMapping(element, LOAN_PRODUCT_ACCOUNTING_PARAMS.UNIDENTIFIED_DEPOSITS.getValue(), loanProductId,
+                                CASH_ACCOUNTS_FOR_LOAN.UNIDENTIFIED_DEPOSITS.getValue());
             break;
             case ACCRUAL_UPFRONT:
                 // Fall Through
@@ -150,6 +153,9 @@ public class ProductToGLAccountMappingWritePlatformServiceImpl implements Produc
 //                this.loanProductToGLAccountMappingHelper.saveLoanToLiabilityAccountMapping(element,
 //                        LOAN_PRODUCT_ACCOUNTING_PARAMS.OVERPAYMENT.getValue(), loanProductId,
 //                        ACCRUAL_ACCOUNTS_FOR_LOAN.OVERPAYMENT.getValue());
+                this.loanProductToGLAccountMappingHelper.saveLoanToLiabilityAccountMapping(element,
+                        LOAN_PRODUCT_ACCOUNTING_PARAMS.UNIDENTIFIED_DEPOSITS.getValue(), loanProductId,
+                        ACCRUAL_ACCOUNTS_FOR_LOAN.UNIDENTIFIED_DEPOSITS.getValue());
 
                 // advanced accounting mappings
                 this.loanProductToGLAccountMappingHelper.savePaymentChannelToFundSourceMappings(command, element, loanProductId, null);

@@ -368,6 +368,22 @@ public class LoanEnumerations {
                 optionData = new LoanTransactionEnumData(LoanTransactionType.REFUND_FOR_ACTIVE_LOAN.getValue().longValue(),
                         LoanTransactionType.REFUND_FOR_ACTIVE_LOAN.getCode(), "Refund");
             break;
+            case FROM_UNIDENTIFIED:
+                optionData = new LoanTransactionEnumData(LoanTransactionType.FROM_UNIDENTIFIED.getValue().longValue(),
+                        LoanTransactionType.FROM_UNIDENTIFIED.getCode(), "From Unidentified");
+            break;
+            case MOVE_TO_PROFIT:
+                optionData = new LoanTransactionEnumData(LoanTransactionType.MOVE_TO_PROFIT.getValue().longValue(),
+                        LoanTransactionType.MOVE_TO_PROFIT.getCode(), "Move To Profit");
+            break;
+            case TRANSFER_OVERPAID:
+                optionData = new LoanTransactionEnumData(LoanTransactionType.TRANSFER_OVERPAID.getValue().longValue(),
+                        LoanTransactionType.TRANSFER_OVERPAID.getCode(), "Transfer Overpaid");
+            break;
+            case FROM_TRANSFER_OVERPAID:
+                optionData = new LoanTransactionEnumData(LoanTransactionType.FROM_TRANSFER_OVERPAID.getValue().longValue(),
+                        LoanTransactionType.FROM_TRANSFER_OVERPAID.getCode(), "From Overpaid Transfer");
+            break;
             default:
             break;
         }

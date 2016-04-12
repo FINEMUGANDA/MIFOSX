@@ -208,6 +208,15 @@ public class CommandWrapperBuilder {
         return this;
     }
 
+    public CommandWrapperBuilder moveOverpaid(final Long loanId) {
+        this.actionName = "MOVE_OVERPAID";
+        this.entityName = "LOAN";
+        this.entityId = loanId;
+        this.loanId = loanId;
+        this.href = "/loans/" + loanId + "?command=moveOverpaid";
+        return this;
+    }
+
     public CommandWrapperBuilder updateGuarantor(final Long loanId, final Long guarantorId) {
         this.actionName = "UPDATE";
         this.entityName = "GUARANTOR";
@@ -697,6 +706,25 @@ public class CommandWrapperBuilder {
         return this;
     }
 
+    public CommandWrapperBuilder fromUnidentifiedLoanTransaction(final Long loanId, final String transactionId) {
+        this.actionName = "FROM_UNIDENTIFIED";
+        this.entityName = "LOAN";
+        this.entityId = null;
+        this.transactionId = transactionId;
+        this.loanId = loanId;
+        this.href = "/loans/" + loanId + "/transactions/unidentified/" + transactionId;
+        return this;
+    }
+
+    public CommandWrapperBuilder moveToProfitLoanTransaction(final Long loanId) {
+        this.actionName = "MOVE_TO_PROFIT";
+        this.entityName = "LOAN";
+        this.entityId = null;
+        this.loanId = loanId;
+        this.href = "/loans/" + loanId + "/transactions/template?command=moveToProfit";
+        return this;
+    }
+
     public CommandWrapperBuilder closeLoanAsRescheduledTransaction(final Long loanId) {
         this.actionName = "CLOSEASRESCHEDULED";
         this.entityName = "LOAN";
@@ -973,6 +1001,15 @@ public class CommandWrapperBuilder {
 
     public CommandWrapperBuilder reverseJournalEntry(final String transactionId) {
         this.actionName = "REVERSE";
+        this.entityName = "JOURNALENTRY";
+        this.entityId = null;
+        this.transactionId = transactionId;
+        this.href = "/journalentries/" + transactionId;
+        return this;
+    }
+
+    public CommandWrapperBuilder moveJournalEntryToProfit(final String transactionId) {
+        this.actionName = "MOVETOPROFIT";
         this.entityName = "JOURNALENTRY";
         this.entityId = null;
         this.transactionId = transactionId;

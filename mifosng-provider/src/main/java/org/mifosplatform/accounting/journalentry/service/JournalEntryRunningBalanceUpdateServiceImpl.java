@@ -269,7 +269,7 @@ public class JournalEntryRunningBalanceUpdateServiceImpl implements JournalEntry
             final EnumOptionData entryType = AccountingEnumerations.journalEntryType(entryTypeId);
 
             return new JournalEntryData(id, officeId, null, null, glAccountId, null, accountType, null, entryType, amount, exchangeRate, null, null,
-                    null, null, null, null, null, null, null, null, null, null, null, null, null);
+                    null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
         }
     }
 

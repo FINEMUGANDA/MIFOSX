@@ -56,4 +56,9 @@ public interface LoanAccountDomainService {
 
     public ScheduleGeneratorDTO buildScheduleGeneratorDTO(final Loan loan);
 
+    LoanTransaction makeRepaymentFromUnidentified(Loan loan, CommandProcessingResultBuilder builderResult, String transactionId);
+
+    LoanTransaction moveOverpaymentToProfit(Loan loan, CommandProcessingResultBuilder builderResult);
+
+    LoanTransaction moveOverpaymentToLoan(Loan loan, CommandProcessingResultBuilder builderResult);
 }

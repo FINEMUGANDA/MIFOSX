@@ -170,6 +170,9 @@ public class LoanTransactionsApiResource {
         } else if (is(commandParam, "unwatch")) {
             final CommandWrapper commandRequest = builder.unwatchLoanTransaction(loanId).build();
             result = this.commandsSourceWritePlatformService.logCommandSource(commandRequest);
+        } else if (is(commandParam, "moveToProfit")) {
+            final CommandWrapper commandRequest = builder.moveToProfitLoanTransaction(loanId).build();
+            result = this.commandsSourceWritePlatformService.logCommandSource(commandRequest);
         }
 
         if (result == null) { throw new UnrecognizedQueryParamException("command", commandParam); }
@@ -192,4 +195,18 @@ public class LoanTransactionsApiResource {
         return this.toApiJsonSerializer.serialize(result);
     }
 
+    @POST
+    @Path("/unidentified/{transactionId}")
+    @Consumes({ MediaType.APPLICATION_JSON })
+    @Produces({ MediaType.APPLICATION_JSON })
+    public String fromUnidentifiedLoanTransaction(@PathParam("loanId") final Long loanId, @PathParam("transactionId") final String transactionId,
+                                        final String apiRequestBodyAsJson) {
+
+        final CommandWrapperBuilder builder = new CommandWrapperBuilder().withJson(apiRequestBodyAsJson);
+        final CommandWrapper commandRequest = builder.fromUnidentifiedLoanTransaction(loanId, transactionId).build();
+
+        final CommandProcessingResult result = this.commandsSourceWritePlatformService.logCommandSource(commandRequest);
+
+        return this.toApiJsonSerializer.serialize(result);
+    }
 }

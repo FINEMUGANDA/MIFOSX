@@ -2692,7 +2692,8 @@ public class Loan extends AbstractPersistable<Long> {
             this.loanTransactions.add(loanTransaction);
         }
 
-        if (loanTransaction.isNotRepayment() && loanTransaction.isNotWaiver() && loanTransaction.isNotRecoveryRepayment()) {
+        if (loanTransaction.isNotRepayment() && loanTransaction.isNotWaiver() && loanTransaction.isNotRecoveryRepayment() &&
+                loanTransaction.isNotFromUnidentified() && loanTransaction.isNotFromTransferOverpaid()) {
             final String errorMessage = "A transaction of type repayment or recovery repayment or waiver was expected but not received.";
             throw new InvalidLoanTransactionTypeException("transaction", "is.not.a.repayment.or.waiver.or.recovery.transaction",
                     errorMessage);
@@ -2723,14 +2724,14 @@ public class Loan extends AbstractPersistable<Long> {
             }
         }
 
-        if (loanTransaction.isRepayment()) {
-            Money totalOutstandingOnLoan = getLoanSummary().getTotalOutstanding(loanCurrency());
-            if (loanTransaction.getAmount(loanCurrency()).isGreaterThan(totalOutstandingOnLoan)) {
-                final String errorMessage = "The amount to repay cannot be greater than total amount outstanding on loan.";
-                throw new InvalidLoanStateTransitionException("repayment", "amount.exceeds.total.outstanding", errorMessage,
-                        loanTransaction.getAmount(loanCurrency()), totalOutstandingOnLoan.getAmount());
-            }
-        }
+//        if (loanTransaction.isRepayment()) {
+//            Money totalOutstandingOnLoan = getLoanSummary().getTotalOutstanding(loanCurrency());
+//            if (loanTransaction.getAmount(loanCurrency()).isGreaterThan(totalOutstandingOnLoan)) {
+//                final String errorMessage = "The amount to repay cannot be greater than total amount outstanding on loan.";
+//                throw new InvalidLoanStateTransitionException("repayment", "amount.exceeds.total.outstanding", errorMessage,
+//                        loanTransaction.getAmount(loanCurrency()), totalOutstandingOnLoan.getAmount());
+//            }
+//        }
 
         if (this.loanProduct.isMultiDisburseLoan() && adjustedTransaction == null) {
             BigDecimal totalDisbursed = getDisbursedAmount();
@@ -3074,7 +3075,8 @@ public class Loan extends AbstractPersistable<Long> {
         validateActivityNotBeforeClientOrGroupTransferDate(LoanEvent.LOAN_REPAYMENT_OR_WAIVER,
                 transactionForAdjustment.getTransactionDate());
 
-        if (transactionForAdjustment.isNotRepayment() && transactionForAdjustment.isNotWaiver()) {
+        if (transactionForAdjustment.isNotRepayment() && transactionForAdjustment.isNotWaiver() &&
+                transactionForAdjustment.isNotFromUnidentified() && transactionForAdjustment.isNotMoveToProfit()) {
             final String errorMessage = "Only transactions of type repayment or waiver can be adjusted.";
             throw new InvalidLoanTransactionTypeException("transaction", "adjustment.is.only.allowed.to.repayment.or.waiver.transaction",
                     errorMessage);
@@ -3584,9 +3586,11 @@ public class Loan extends AbstractPersistable<Long> {
     private Money getTotalPaidInRepayments() {
         Money cumulativePaid = Money.zero(loanCurrency());
 
-        for (final LoanTransaction repayment : this.loanTransactions) {
-            if (repayment.isRepayment() && !repayment.isReversed()) {
-                cumulativePaid = cumulativePaid.plus(repayment.getAmount(loanCurrency()));
+        for (final LoanTransaction loanTransaction : this.loanTransactions) {
+            if ((loanTransaction.isRepayment() || loanTransaction.isFromUnidentified() || loanTransaction.isFromTransferOverpaid()) && !loanTransaction.isReversed()) {
+                cumulativePaid = cumulativePaid.plus(loanTransaction.getAmount(loanCurrency()));
+            } else if ((loanTransaction.isMoveToProfit() || loanTransaction.isTransferOverpaid()) && !loanTransaction.isReversed()) {
+                cumulativePaid = cumulativePaid.minus(loanTransaction.getAmount(loanCurrency()));
             }
         }
 
@@ -4829,7 +4833,7 @@ public class Loan extends AbstractPersistable<Long> {
 
         List<LoanTransaction> loanTransactions = retreiveListOfTransactionsPostDisbursement();
         for (LoanTransaction loanTransaction : loanTransactions) {
-            if (loanTransaction.isAccrual()) {
+            if (loanTransaction.isAccrual() || loanTransaction.isMoveToProfit() || loanTransaction.isTransferOverpaid()) {
                 outstanding = outstanding.plus(loanTransaction.getAmount(getCurrency()));
                 loanTransaction.updateOutstandingLoanBalance(outstanding.getAmount());
             } else {

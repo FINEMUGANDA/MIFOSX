@@ -119,6 +119,9 @@ public final class LoanTransaction extends AbstractPersistable<Long> {
     @Column(name = "manually_adjusted_or_reversed", nullable = false)
     private boolean manuallyAdjustedOrReversed;
 
+    @Column(name = "related_transaction_id", length = 100, nullable = false)
+    private String relatedTransactionId;
+
     protected LoanTransaction() {
         this.loan = null;
         this.dateOf = null;
@@ -138,6 +141,12 @@ public final class LoanTransaction extends AbstractPersistable<Long> {
             final LocalDate paymentDate, final String externalId, final LocalDateTime createdDate, final AppUser appUser) {
         return new LoanTransaction(null, office, LoanTransactionType.REPAYMENT, paymentDetail, amount.getAmount(), paymentDate, externalId,
                 createdDate, appUser);
+    }
+
+    public static LoanTransaction fromUnidentified(final Office office, final Money amount, final PaymentDetail paymentDetail,
+                                            final LocalDate paymentDate, final String externalId, final LocalDateTime createdDate, final AppUser appUser, final String relatedTransactionId) {
+        return new LoanTransaction(null, office, LoanTransactionType.FROM_UNIDENTIFIED, paymentDetail, amount.getAmount(), paymentDate, externalId,
+                createdDate, appUser, relatedTransactionId);
     }
 
     public static LoanTransaction recoveryRepayment(final Office office, final Money amount, final PaymentDetail paymentDetail,
@@ -209,6 +218,24 @@ public final class LoanTransaction extends AbstractPersistable<Long> {
     public static LoanTransaction refund(final Office office, final Money amount, final PaymentDetail paymentDetail,
             final LocalDate paymentDate, final String externalId, final LocalDateTime createdDate, final AppUser appUser) {
         return new LoanTransaction(null, office, LoanTransactionType.REFUND, paymentDetail, amount.getAmount(), paymentDate, externalId,
+                createdDate, appUser);
+    }
+
+    public static LoanTransaction moveToProfit(final Office office, final Money amount, final PaymentDetail paymentDetail,
+                                         final LocalDate paymentDate, final String externalId, final LocalDateTime createdDate, final AppUser appUser) {
+        return new LoanTransaction(null, office, LoanTransactionType.MOVE_TO_PROFIT, paymentDetail, amount.getAmount(), paymentDate, externalId,
+                createdDate, appUser);
+    }
+
+    public static LoanTransaction transferOverpaid(final Office office, final Money amount, final PaymentDetail paymentDetail,
+                                               final LocalDate paymentDate, final String externalId, final LocalDateTime createdDate, final AppUser appUser) {
+        return new LoanTransaction(null, office, LoanTransactionType.TRANSFER_OVERPAID, paymentDetail, amount.getAmount(), paymentDate, externalId,
+                createdDate, appUser);
+    }
+
+    public static LoanTransaction fromTransferOverpaid(final Office office, final Money amount, final PaymentDetail paymentDetail,
+                                               final LocalDate paymentDate, final String externalId, final LocalDateTime createdDate, final AppUser appUser) {
+        return new LoanTransaction(null, office, LoanTransactionType.FROM_TRANSFER_OVERPAID, paymentDetail, amount.getAmount(), paymentDate, externalId,
                 createdDate, appUser);
     }
 
@@ -310,6 +337,22 @@ public final class LoanTransaction extends AbstractPersistable<Long> {
         this.createdDate = createdDate.toDate();
         this.appUser = appUser;
     }
+    private LoanTransaction(final Loan loan, final Office office, final LoanTransactionType type, final PaymentDetail paymentDetail,
+                            final BigDecimal amount, final LocalDate date, final String externalId, final LocalDateTime createdDate,
+                            final AppUser appUser, final String relatedTransactionId) {
+        this.loan = loan;
+        this.typeOf = type.getValue();
+        this.paymentDetail = paymentDetail;
+        this.amount = amount;
+        this.dateOf = date.toDateTimeAtStartOfDay().toDate();
+        this.externalId = externalId;
+        this.office = office;
+        this.submittedOnDate = DateUtils.getDateOfTenant();
+        this.createdDate = createdDate.toDate();
+        this.appUser = appUser;
+        this.relatedTransactionId = relatedTransactionId;
+    }
+
 
     public void reverse() {
         this.reversed = true;
@@ -440,6 +483,38 @@ public final class LoanTransaction extends AbstractPersistable<Long> {
 
     public boolean isNotRepayment() {
         return !isRepayment();
+    }
+
+    public boolean isFromUnidentified() {
+        return LoanTransactionType.FROM_UNIDENTIFIED.equals(getTypeOf()) && isNotReversed();
+    }
+
+    public boolean isNotFromUnidentified() {
+        return !isFromUnidentified();
+    }
+
+    public boolean isMoveToProfit() {
+        return LoanTransactionType.MOVE_TO_PROFIT.equals(getTypeOf()) && isNotReversed();
+    }
+
+    public boolean isNotMoveToProfit() {
+        return !isMoveToProfit();
+    }
+
+    public boolean isTransferOverpaid() {
+        return LoanTransactionType.TRANSFER_OVERPAID.equals(getTypeOf()) && isNotReversed();
+    }
+
+    public boolean isNotTransferOverpaid() {
+        return !isTransferOverpaid();
+    }
+
+    public boolean isFromTransferOverpaid() {
+        return LoanTransactionType.FROM_TRANSFER_OVERPAID.equals(getTypeOf()) && isNotReversed();
+    }
+
+    public boolean isNotFromTransferOverpaid() {
+        return !isFromTransferOverpaid();
     }
 
     public boolean isDisbursement() {
@@ -660,5 +735,9 @@ public final class LoanTransaction extends AbstractPersistable<Long> {
             isLatest = this.getCreatedDate().isBefore(loanTransaction.getCreatedDate());
         }
         return isLatest;
+    }
+
+    public String getRelatedTransactionId() {
+        return relatedTransactionId;
     }
 }

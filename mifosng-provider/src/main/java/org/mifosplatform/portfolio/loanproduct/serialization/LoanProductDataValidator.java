@@ -61,7 +61,10 @@ public final class LoanProductDataValidator {
             LOAN_PRODUCT_ACCOUNTING_PARAMS.LPI_WRITTEN_OFF.getValue(),
             LOAN_PRODUCT_ACCOUNTING_PARAMS.INTEREST_WRITTEN_OFF.getValue(),
             LOAN_PRODUCT_ACCOUNTING_PARAMS.FEES_WRITTEN_OFF.getValue(),
-            LOAN_PRODUCT_ACCOUNTING_PARAMS.PENALTY_INCOME_ACCOUNT_MAPPING.getValue(), LoanProductConstants.useBorrowerCycleParameterName,
+            LOAN_PRODUCT_ACCOUNTING_PARAMS.PENALTY_INCOME_ACCOUNT_MAPPING.getValue(),
+            LOAN_PRODUCT_ACCOUNTING_PARAMS.UNIDENTIFIED_DEPOSITS.getValue(),
+            LOAN_PRODUCT_ACCOUNTING_PARAMS.OVERPAID_PROFIT.getValue(),
+            LoanProductConstants.useBorrowerCycleParameterName,
             LoanProductConstants.principalVariationsForBorrowerCycleParameterName,
             LoanProductConstants.interestRateVariationsForBorrowerCycleParameterName,
             LoanProductConstants.numberOfRepaymentVariationsForBorrowerCycleParameterName, LoanProductConstants.shortName,
@@ -378,6 +381,11 @@ public final class LoanProductDataValidator {
 //                    LOAN_PRODUCT_ACCOUNTING_PARAMS.OVERPAYMENT.getValue(), element);
 //            baseDataValidator.reset().parameter(LOAN_PRODUCT_ACCOUNTING_PARAMS.OVERPAYMENT.getValue()).value(overpaymentAccountId)
 //                    .notNull().integerGreaterThanZero();
+            final Long unidentifiedDepositsAccountId = this.fromApiJsonHelper.extractLongNamed(LOAN_PRODUCT_ACCOUNTING_PARAMS.UNIDENTIFIED_DEPOSITS.getValue(),element);
+            baseDataValidator.reset().parameter(LOAN_PRODUCT_ACCOUNTING_PARAMS.UNIDENTIFIED_DEPOSITS.getValue()).value(unidentifiedDepositsAccountId).notNull().integerGreaterThanZero();
+
+            final Long overpaidProfitAccountId = this.fromApiJsonHelper.extractLongNamed(LOAN_PRODUCT_ACCOUNTING_PARAMS.OVERPAID_PROFIT.getValue(),element);
+            baseDataValidator.reset().parameter(LOAN_PRODUCT_ACCOUNTING_PARAMS.OVERPAID_PROFIT.getValue()).value(overpaidProfitAccountId).notNull().integerGreaterThanZero();
 
             validatePaymentChannelFundSourceMappings(baseDataValidator, element);
             validateChargeToIncomeAccountMappings(baseDataValidator, element);
@@ -821,6 +829,10 @@ public final class LoanProductDataValidator {
 
         final Long feeWriteOffAccountId = this.fromApiJsonHelper.extractLongNamed(LOAN_PRODUCT_ACCOUNTING_PARAMS.FEES_WRITTEN_OFF.getValue(), element);
         baseDataValidator.reset().parameter(LOAN_PRODUCT_ACCOUNTING_PARAMS.FEES_WRITTEN_OFF.getValue()).value(feeWriteOffAccountId).ignoreIfNull().integerGreaterThanZero();
+
+        final Long unidentifiedDepositsAccountId = this.fromApiJsonHelper.extractLongNamed(LOAN_PRODUCT_ACCOUNTING_PARAMS.UNIDENTIFIED_DEPOSITS.getValue(), element);
+        baseDataValidator.reset().parameter(LOAN_PRODUCT_ACCOUNTING_PARAMS.UNIDENTIFIED_DEPOSITS.getValue()).value(unidentifiedDepositsAccountId).ignoreIfNull()
+                .integerGreaterThanZero();
 
         validatePaymentChannelFundSourceMappings(baseDataValidator, element);
         validateChargeToIncomeAccountMappings(baseDataValidator, element);

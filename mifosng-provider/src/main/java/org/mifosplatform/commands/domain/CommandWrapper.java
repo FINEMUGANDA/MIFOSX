@@ -298,6 +298,9 @@ public class CommandWrapper {
     public boolean isGuaranteeRecovery() {
         return this.actionName.equalsIgnoreCase("RECOVERGUARANTEES");
     }
+    public boolean isMoveOverpaid() {
+        return this.actionName.equalsIgnoreCase("MOVE_OVERPAID");
+    }
 
     public boolean isGLAccountResource() {
         return this.entityName.equalsIgnoreCase("GLACCOUNT");
@@ -325,6 +328,10 @@ public class CommandWrapper {
 
     public boolean isRevertJournalEntry() {
         return this.actionName.equalsIgnoreCase("REVERSE") && this.entityName.equalsIgnoreCase("JOURNALENTRY");
+    }
+
+    public boolean isMoveJournalEntryToProfit() {
+        return this.actionName.equalsIgnoreCase("MOVETOPROFIT") && this.entityName.equalsIgnoreCase("JOURNALENTRY");
     }
 
     public boolean isUpdateRunningbalance() {
@@ -469,6 +476,14 @@ public class CommandWrapper {
 
     public boolean isLoanUnwatch() {
         return this.actionName.equalsIgnoreCase("UNWATCH") && this.entityName.equalsIgnoreCase("LOAN");
+    }
+
+    public boolean isLoanFromUnidentified() {
+        return this.actionName.equalsIgnoreCase("FROM_UNIDENTIFIED") && this.entityName.equalsIgnoreCase("LOAN");
+    }
+
+    public boolean isLoanMoveToProfit() {
+        return this.actionName.equalsIgnoreCase("MOVE_TO_PROFIT") && this.entityName.equalsIgnoreCase("LOAN");
     }
 
     public boolean isUpdateDisbursementDate() {

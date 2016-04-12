@@ -7,7 +7,10 @@ package org.mifosplatform.portfolio.loanaccount.domain;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 public interface LoanTransactionRepository extends JpaRepository<LoanTransaction, Long>, JpaSpecificationExecutor<LoanTransaction> {
-    // no added behaviour
+    @Query("FROM LoanTransaction lt WHERE lt.relatedTransactionId = :transactionId and lt.reversed = false")
+    LoanTransaction findOneByRelatedTransactionIdAndNotReversed(@Param("transactionId") String transactionId);
 }

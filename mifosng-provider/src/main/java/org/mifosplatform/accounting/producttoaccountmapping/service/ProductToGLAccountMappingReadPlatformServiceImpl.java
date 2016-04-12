@@ -175,6 +175,10 @@ public class ProductToGLAccountMappingReadPlatformServiceImpl implements Product
                     accountMappingDetails.put(LOAN_PRODUCT_ACCOUNTING_DATA_PARAMS.INTEREST_WRITTEN_OFF.getValue(), gLAccountData);
                 } else if ((glAccountForLoan.equals(ACCRUAL_ACCOUNTS_FOR_LOAN.FEES_WRITTEN_OFF))) {
                     accountMappingDetails.put(LOAN_PRODUCT_ACCOUNTING_DATA_PARAMS.FEES_WRITTEN_OFF.getValue(), gLAccountData);
+                } else if ((glAccountForLoan.equals(ACCRUAL_ACCOUNTS_FOR_LOAN.UNIDENTIFIED_DEPOSITS))) {
+                    accountMappingDetails.put(LOAN_PRODUCT_ACCOUNTING_DATA_PARAMS.UNIDENTIFIED_DEPOSITS.getValue(), gLAccountData);
+                } else if ((glAccountForLoan.equals(ACCRUAL_ACCOUNTS_FOR_LOAN.OVERPAID_PROFIT))) {
+                    accountMappingDetails.put(LOAN_PRODUCT_ACCOUNTING_DATA_PARAMS.OVERPAID_PROFIT.getValue(), gLAccountData);
                 }
             }
 

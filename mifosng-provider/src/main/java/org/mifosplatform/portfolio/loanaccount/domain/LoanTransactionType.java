@@ -38,7 +38,11 @@ public enum LoanTransactionType {
     REJECT_TRANSFER(15, "loanTransactionType.rejectTransfer"), //
     REFUND(16, "loanTransactionType.refund"), //
     CHARGE_PAYMENT(17, "loanTransactionType.chargePayment"),  //
-    REFUND_FOR_ACTIVE_LOAN(18, "loanTransactionType.refund");
+    REFUND_FOR_ACTIVE_LOAN(18, "loanTransactionType.refund"),
+    FROM_UNIDENTIFIED(19, "loanTransactionType.fromUnidentified"),
+    MOVE_TO_PROFIT(20, "loanTransactionType.moveToProfit"),
+    TRANSFER_OVERPAID(21, "loanTransactionType.transferOverpaid"),
+    FROM_TRANSFER_OVERPAID(22, "loanTransactionType.fromTransferOverpaid");
 
     private final Integer value;
     private final String code;
@@ -113,6 +117,18 @@ public enum LoanTransactionType {
             case 18:
                 loanTransactionType = LoanTransactionType.REFUND_FOR_ACTIVE_LOAN;
             break;
+            case 19:
+                loanTransactionType = LoanTransactionType.FROM_UNIDENTIFIED;
+            break;
+            case 20:
+                loanTransactionType = LoanTransactionType.MOVE_TO_PROFIT;
+            break;
+            case 21:
+                loanTransactionType = LoanTransactionType.TRANSFER_OVERPAID;
+                break;
+            case 22:
+                loanTransactionType = LoanTransactionType.FROM_TRANSFER_OVERPAID;
+                break;
             default:
                 loanTransactionType = LoanTransactionType.INVALID;
             break;
@@ -155,8 +171,5 @@ public enum LoanTransactionType {
     public boolean isChargePayment() {
         return this.value.equals(LoanTransactionType.CHARGE_PAYMENT.getValue());
     }
-    
-    public boolean isRefundForActiveLoan() {
-        return this.value.equals(LoanTransactionType.REFUND_FOR_ACTIVE_LOAN.getValue());
-    }
+
 }

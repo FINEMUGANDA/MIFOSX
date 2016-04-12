@@ -41,6 +41,8 @@ import org.mifosplatform.infrastructure.security.service.PlatformSecurityContext
 import org.mifosplatform.organisation.office.domain.*;
 import org.mifosplatform.organisation.office.exception.OfficeNotFoundException;
 import org.mifosplatform.portfolio.financialyear.domain.FinancialYearRepository;
+import org.mifosplatform.portfolio.loanaccount.domain.LoanTransaction;
+import org.mifosplatform.portfolio.loanaccount.domain.LoanTransactionRepository;
 import org.mifosplatform.portfolio.paymentdetail.domain.PaymentDetail;
 import org.mifosplatform.portfolio.paymentdetail.service.PaymentDetailWritePlatformService;
 import org.mifosplatform.useradministration.domain.AppUser;
@@ -76,19 +78,21 @@ public class JournalEntryWritePlatformServiceJpaRepositoryImpl implements Journa
     private final OrganisationCurrencyRepositoryWrapper organisationCurrencyRepository;
     private final PlatformSecurityContext context;
     private final PaymentDetailWritePlatformService paymentDetailWritePlatformService;
+    private final LoanTransactionRepository loanTransactionRepository;
     private final JdbcTemplate jdbcTemplate;
 
     @Autowired
     public JournalEntryWritePlatformServiceJpaRepositoryImpl(final GLClosureRepository glClosureRepository,
-            final JournalEntryRepository glJournalEntryRepository, final OfficeRepository officeRepository,
-            final GLAccountRepository glAccountRepository, final FinancialYearRepository financialYearRepository, final JournalEntryCommandFromApiJsonDeserializer fromApiJsonDeserializer,
-            final AccountingProcessorHelper accountingProcessorHelper, final AccountingRuleRepository accountingRuleRepository,
-            final AccountingProcessorForLoanFactory accountingProcessorForLoanFactory,
-            final AccountingProcessorForSavingsFactory accountingProcessorForSavingsFactory,
-            final GLAccountReadPlatformService glAccountReadPlatformService,
-            final OrganisationCurrencyRepository organisationCurrencyRepo,
-            final OrganisationCurrencyRepositoryWrapper organisationCurrencyRepository, final PlatformSecurityContext context,
-            final PaymentDetailWritePlatformService paymentDetailWritePlatformService, final RoutingDataSource dataSource) {
+                                                             final JournalEntryRepository glJournalEntryRepository, final OfficeRepository officeRepository,
+                                                             final GLAccountRepository glAccountRepository, final FinancialYearRepository financialYearRepository, final JournalEntryCommandFromApiJsonDeserializer fromApiJsonDeserializer,
+                                                             final AccountingProcessorHelper accountingProcessorHelper, final AccountingRuleRepository accountingRuleRepository,
+                                                             final AccountingProcessorForLoanFactory accountingProcessorForLoanFactory,
+                                                             final AccountingProcessorForSavingsFactory accountingProcessorForSavingsFactory,
+                                                             final GLAccountReadPlatformService glAccountReadPlatformService,
+                                                             final OrganisationCurrencyRepository organisationCurrencyRepo,
+                                                             final OrganisationCurrencyRepositoryWrapper organisationCurrencyRepository, final PlatformSecurityContext context,
+                                                             final PaymentDetailWritePlatformService paymentDetailWritePlatformService, final RoutingDataSource dataSource,
+                                                             final LoanTransactionRepository loanTransactionRepository) {
         this.glClosureRepository = glClosureRepository;
         this.officeRepository = officeRepository;
         this.glJournalEntryRepository = glJournalEntryRepository;
@@ -104,6 +108,7 @@ public class JournalEntryWritePlatformServiceJpaRepositoryImpl implements Journa
         this.organisationCurrencyRepository = organisationCurrencyRepository;
         this.context = context;
         this.paymentDetailWritePlatformService = paymentDetailWritePlatformService;
+        this.loanTransactionRepository = loanTransactionRepository;
         this.jdbcTemplate = new JdbcTemplate(dataSource);
     }
 
@@ -436,6 +441,10 @@ public class JournalEntryWritePlatformServiceJpaRepositoryImpl implements Journa
             validateFinancialYear(journalEntry.getTransactionDate());
         }
 
+        validateCanBeReversed(journalEntries);
+
+        boolean isProfit = false;
+
         for (final JournalEntry journalEntry : journalEntries) {
             JournalEntry reversalJournalEntry;
             if (useDefaultComment) {
@@ -446,17 +455,83 @@ public class JournalEntryWritePlatformServiceJpaRepositoryImpl implements Journa
                 reversalJournalEntry = JournalEntry.createNew(journalEntry.getOffice(), journalEntry.getPaymentDetails(),
                         journalEntry.getGlAccount(), journalEntry.getCurrencyCode(), reversalTransactionId, manualEntry,
                         journalEntry.getTransactionDate(), JournalEntryType.CREDIT, journalEntry.getAmount(), journalEntry.getExchangeRate(), reversalComment, null, null,
-                        journalEntry.getReferenceNumber(), journalEntry.getLoanTransaction(), journalEntry.getSavingsTransaction());
+                        journalEntry.getReferenceNumber(), journalEntry.getLoanTransaction(), journalEntry.getSavingsTransaction(),
+                        journalEntry.isUnidentifiedEntry(), journalEntry.isProfit());
             } else {
                 reversalJournalEntry = JournalEntry.createNew(journalEntry.getOffice(), journalEntry.getPaymentDetails(),
                         journalEntry.getGlAccount(), journalEntry.getCurrencyCode(), reversalTransactionId, manualEntry,
                         journalEntry.getTransactionDate(), JournalEntryType.DEBIT, journalEntry.getAmount(), journalEntry.getExchangeRate(), reversalComment, null, null,
-                        journalEntry.getReferenceNumber(), journalEntry.getLoanTransaction(), journalEntry.getSavingsTransaction());
+                        journalEntry.getReferenceNumber(), journalEntry.getLoanTransaction(), journalEntry.getSavingsTransaction(),
+                        journalEntry.isUnidentifiedEntry(), journalEntry.isProfit());
+            }
+            if (journalEntry.isProfit()) {
+                isProfit = true;
             }
             // save the reversal entry
             this.glJournalEntryRepository.saveAndFlush(reversalJournalEntry);
             journalEntry.setReversed(true);
             journalEntry.setReversalJournalEntry(reversalJournalEntry);
+            // save the updated journal entry
+            this.glJournalEntryRepository.saveAndFlush(journalEntry);
+        }
+        if (isProfit) {
+            final List<JournalEntry> unidentifiedProfitJournalEntries = this.glJournalEntryRepository.findJournalEntriesByProfitTransactionId(command.getTransactionId());
+            for (final JournalEntry unidentifiedProfitJournalEntry : unidentifiedProfitJournalEntries) {
+                unidentifiedProfitJournalEntry.setProfit(false);
+                unidentifiedProfitJournalEntry.setProfitTransactionId(null);
+                this.glJournalEntryRepository.saveAndFlush(unidentifiedProfitJournalEntry);
+            }
+        }
+        return new CommandProcessingResultBuilder().withTransactionId(reversalTransactionId).build();
+    }
+
+    @Transactional
+    @Override
+    public CommandProcessingResult moveJournalEntryToProfit(final JsonCommand command) {
+        // is the transaction Id valid
+        final List<JournalEntry> journalEntries = this.glJournalEntryRepository.findUnReversedManualNotProfitJournalEntriesByTransactionId(command.getTransactionId());
+
+
+        if (journalEntries.size() <= 1) { throw new JournalEntriesNotFoundException(command.getTransactionId()); }
+        final Long officeId = journalEntries.get(0).getOffice().getId();
+        final String reversalTransactionId = generateTransactionId(officeId);
+        final boolean manualEntry = true;
+        String reversalComment = command.stringValueOfParameterNamed("comments");
+        final boolean useDefaultComment = StringUtils.isBlank(reversalComment);
+        final Long profitGLAccountId = command.longValueOfParameterNamed("glAccount");
+        final GLAccount glAccount = this.glAccountRepository.findOne(profitGLAccountId);
+
+        validateCommentForReversal(reversalComment);
+
+        // check financial year
+        for (final JournalEntry journalEntry : journalEntries) {
+            validateFinancialYear(journalEntry.getTransactionDate());
+        }
+
+        validateCanBeReversed(journalEntries);
+
+        for (final JournalEntry journalEntry : journalEntries) {
+            JournalEntry profitJournalEntry;
+            if (useDefaultComment) {
+                reversalComment = "Profit entry for Journal Entry with Entry Id  :" + journalEntry.getId()
+                        + " and transaction Id " + command.getTransactionId();
+            }
+            if (journalEntry.isDebitEntry()) {
+                profitJournalEntry = JournalEntry.createNew(journalEntry.getOffice(), journalEntry.getPaymentDetails(),
+                        journalEntry.getGlAccount(), journalEntry.getCurrencyCode(), reversalTransactionId, manualEntry,
+                        journalEntry.getTransactionDate(), JournalEntryType.CREDIT, journalEntry.getAmount(), journalEntry.getExchangeRate(), reversalComment, null, null,
+                        journalEntry.getReferenceNumber(), journalEntry.getLoanTransaction(), journalEntry.getSavingsTransaction(), false, true);
+            } else {
+                profitJournalEntry = JournalEntry.createNew(journalEntry.getOffice(), journalEntry.getPaymentDetails(),
+                        glAccount, journalEntry.getCurrencyCode(), reversalTransactionId, manualEntry,
+                        journalEntry.getTransactionDate(), JournalEntryType.DEBIT, journalEntry.getAmount(), journalEntry.getExchangeRate(), reversalComment, null, null,
+                        journalEntry.getReferenceNumber(), journalEntry.getLoanTransaction(), journalEntry.getSavingsTransaction(), false, true);
+            }
+            // save the profit entry
+            this.glJournalEntryRepository.saveAndFlush(profitJournalEntry);
+            journalEntry.setProfit(true);
+            journalEntry.setProfitTransactionId(profitJournalEntry.getTransactionId());
+
             // save the updated journal entry
             this.glJournalEntryRepository.saveAndFlush(journalEntry);
         }
@@ -551,11 +626,23 @@ public class JournalEntryWritePlatformServiceJpaRepositoryImpl implements Journa
         }
     }
 
+    private void validateCanBeReversed(List<JournalEntry> journalEntries) {
+        if (journalEntries.size() > 0 && journalEntries.get(0).isUnidentifiedEntry()) {
+            LoanTransaction loanTransaction = loanTransactionRepository.findOneByRelatedTransactionIdAndNotReversed(journalEntries.get(0).getTransactionId());
+            if (loanTransaction != null) {
+                throw new JournalEntryInvalidException(GL_JOURNAL_ENTRY_INVALID_REASON.USED_IN_LOAN, null, null, null);
+            }
+        }
+    }
+
     private void saveAllDebitOrCreditEntries(final JournalEntryCommand command, final Office office, final PaymentDetail paymentDetail,
             final BigDecimal exchangeRate, final Date transactionDate,
             final SingleDebitOrCreditEntryCommand[] singleDebitOrCreditEntryCommands, final String transactionId,
             final JournalEntryType type, final String referenceNumber) {
+
         final boolean manualEntry = true;
+        final boolean unidentifiedEntry = Boolean.TRUE.equals(command.isUnidentifiedEntry());
+
         for (final SingleDebitOrCreditEntryCommand singleDebitOrCreditEntryCommand : singleDebitOrCreditEntryCommands) {
             final GLAccount glAccount = this.glAccountRepository.findOne(singleDebitOrCreditEntryCommand.getGlAccountId());
             if (glAccount == null) { throw new GLAccountNotFoundException(singleDebitOrCreditEntryCommand.getGlAccountId()); }
@@ -572,7 +659,7 @@ public class JournalEntryWritePlatformServiceJpaRepositoryImpl implements Journa
 
             final JournalEntry glJournalEntry = JournalEntry.createNew(office, paymentDetail, glAccount, glAccount.getCurrencyCode(), transactionId,
                     manualEntry, transactionDate, type, singleDebitOrCreditEntryCommand.getAmount(), exchangeRate, comments, null, null, referenceNumber,
-                    null, null);
+                    null, null, unidentifiedEntry);
             this.glJournalEntryRepository.saveAndFlush(glJournalEntry);
         }
     }

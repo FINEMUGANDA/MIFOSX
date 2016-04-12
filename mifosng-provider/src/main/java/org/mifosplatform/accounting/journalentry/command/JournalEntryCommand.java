@@ -43,13 +43,15 @@ public class JournalEntryCommand {
     private final String routingCode;
     private final Boolean opening;
 
+    private final Boolean unidentifiedEntry;
+
     private final SingleDebitOrCreditEntryCommand[] credits;
     private final SingleDebitOrCreditEntryCommand[] debits;
 
     public JournalEntryCommand(final Long officeId, final String currencyCode, final LocalDate transactionDate, final String comments,
-            final SingleDebitOrCreditEntryCommand[] credits, final SingleDebitOrCreditEntryCommand[] debits, final String referenceNumber,
-            final Long accountingRuleId, final BigDecimal amount, final Long paymentTypeId, final String accountNumber,
-            final String checkNumber, final String receiptNumber, final String bankNumber, final String routingCode, final Boolean opening) {
+               final SingleDebitOrCreditEntryCommand[] credits, final SingleDebitOrCreditEntryCommand[] debits, final String referenceNumber,
+               final Long accountingRuleId, final BigDecimal amount, final Long paymentTypeId, final String accountNumber,
+               final String checkNumber, final String receiptNumber, final String bankNumber, final String routingCode, final Boolean opening, final Boolean unidentifiedEntry) {
         this.officeId = officeId;
         this.currencyCode = currencyCode;
         this.transactionDate = transactionDate;
@@ -66,6 +68,7 @@ public class JournalEntryCommand {
         this.bankNumber = bankNumber;
         this.routingCode = routingCode;
         this.opening = opening;
+        this.unidentifiedEntry = unidentifiedEntry;
     }
 
     public void validateForCreate() {
@@ -89,6 +92,8 @@ public class JournalEntryCommand {
         baseDataValidator.reset().parameter("paymentTypeId").value(this.paymentTypeId).ignoreIfNull().longGreaterThanZero();
 
         baseDataValidator.reset().parameter(JournalEntryJsonInputParams.OPENING.getValue()).value(this.opening).ignoreIfNull();
+
+        baseDataValidator.reset().parameter(JournalEntryJsonInputParams.UNIDENTIFIED_ENTRY.getValue()).value(this.unidentifiedEntry).ignoreIfNull();
 
         logger.info("################### OPENING: accounting rule {}", this.accountingRuleId);
         logger.info("################### OPENING: validation errors {}", dataValidationErrors.isEmpty());
@@ -177,5 +182,9 @@ public class JournalEntryCommand {
 
     public Long getAccountingRuleId() {
         return this.accountingRuleId;
+    }
+
+    public Boolean isUnidentifiedEntry() {
+        return unidentifiedEntry;
     }
 }

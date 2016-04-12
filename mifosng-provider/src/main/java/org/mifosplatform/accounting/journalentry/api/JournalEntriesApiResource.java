@@ -81,7 +81,8 @@ public class JournalEntriesApiResource {
             @QueryParam("offset") final Integer offset, @QueryParam("limit") final Integer limit,
             @QueryParam("orderBy") final String orderBy, @QueryParam("sortOrder") final String sortOrder,
             @QueryParam("locale") final String locale, @QueryParam("dateFormat") final String dateFormat,
-            @QueryParam("runningBalance") final boolean runningBalance, @QueryParam("transactionDetails") final boolean transactionDetails) {
+            @QueryParam("runningBalance") final boolean runningBalance, @QueryParam("transactionDetails") final boolean transactionDetails,
+            @QueryParam("onlyUnidentifiedEntries") final boolean onlyUnidentifiedEntries) {
 
         this.context.authenticatedUser().validateHasReadPermission(this.resourceNameForPermission);
 
@@ -96,10 +97,10 @@ public class JournalEntriesApiResource {
 
         final SearchParameters searchParameters = SearchParameters.forJournalEntries(officeId, offset, limit, orderBy, sortOrder);
         JournalEntryAssociationParametersData associationParametersData = new JournalEntryAssociationParametersData(transactionDetails,
-                runningBalance);
+                runningBalance, false, onlyUnidentifiedEntries);
 
         final Page<JournalEntryData> glJournalEntries = this.journalEntryReadPlatformService.retrieveAll(searchParameters, glAccountId,
-                onlyManualEntries, fromDate, toDate, transactionId, entityType, associationParametersData);
+                onlyManualEntries, fromDate, toDate, transactionId, entityType, associationParametersData, onlyUnidentifiedEntries);
         final ApiRequestJsonSerializationSettings settings = this.apiRequestParameterHelper.process(uriInfo.getQueryParameters());
         return this.apiJsonSerializerService.serialize(settings, glJournalEntries, RESPONSE_DATA_PARAMETERS);
     }
@@ -148,6 +149,9 @@ public class JournalEntriesApiResource {
         CommandProcessingResult result = null;
         if (is(commandParam, "reverse")) {
             final CommandWrapper commandRequest = new CommandWrapperBuilder().reverseJournalEntry(transactionId).withJson(jsonRequestBody).build();
+            result = this.commandsSourceWritePlatformService.logCommandSource(commandRequest);
+        } else if (is(commandParam, "moveToProfit")) {
+            final CommandWrapper commandRequest = new CommandWrapperBuilder().moveJournalEntryToProfit(transactionId).withJson(jsonRequestBody).build();
             result = this.commandsSourceWritePlatformService.logCommandSource(commandRequest);
         } else {
             throw new UnrecognizedQueryParamException("command", commandParam);
