@@ -190,6 +190,10 @@ public class JournalEntry extends AbstractAuditableCustom<AppUser, Long> {
         return JournalEntryType.DEBIT.getValue().equals(this.type);
     }
 
+    public boolean isCreditEntry() {
+        return JournalEntryType.CREDIT.getValue().equals(this.type);
+    }
+
     public Integer getType() {
         return this.type;
     }
