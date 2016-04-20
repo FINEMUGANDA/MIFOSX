@@ -123,7 +123,7 @@ public class ScheduledJobRunnerServiceImpl implements ScheduledJobRunnerService 
         updateSqlBuilder
                 .append("m_loan.total_waived_derived = (x.interest_waived_derived + x.fee_charges_waived_derived + x.penalty_charges_waived_derived),");
         updateSqlBuilder
-                .append("m_loan.total_writtenoff_derived = (x.interest_writtenoff_derived +  x.fee_charges_writtenoff_derived + x.penalty_charges_writtenoff_derived),");
+                .append("m_loan.total_writtenoff_derived = (x.principal_writtenoff_derived + x.interest_writtenoff_derived + x.fee_charges_writtenoff_derived + x.penalty_charges_writtenoff_derived),");
         updateSqlBuilder.append("m_loan.total_outstanding_derived=");
         updateSqlBuilder.append(" (x.principal_disbursed_derived - (x.principal_repaid_derived + x.principal_writtenoff_derived)) + ");
         updateSqlBuilder
