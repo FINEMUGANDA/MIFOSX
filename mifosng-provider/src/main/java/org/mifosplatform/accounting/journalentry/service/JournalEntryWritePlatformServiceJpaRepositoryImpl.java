@@ -617,12 +617,6 @@ public class JournalEntryWritePlatformServiceJpaRepositoryImpl implements Journa
         final AppUser user = this.context.authenticatedUser();
         if(user.hasNotPermissionForAnyOf("ALL_FUNCTIONS", "ALL_FUNCTIONS_READ", "BACKDATE_JOURNALENTRY") && financialYearRepository.countActiveFinancialYearFor(date)==0) {
             throw new JournalEntryInvalidException(GL_JOURNAL_ENTRY_INVALID_REASON.OUTSIDE_FINANCIALYEAR, date, null, null);
-        } else {
-            Boolean closed = financialYearRepository.isFinancialYearClosed(date);
-
-            if(Boolean.TRUE.equals(closed) || closed==null) {
-                throw new JournalEntryInvalidException(GL_JOURNAL_ENTRY_INVALID_REASON.FINANCIALYEAR_CLOSED, date, null, null);
-            }
         }
     }
 
