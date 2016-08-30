@@ -52,7 +52,7 @@ group = 'org.mifosplatform'
 repositories {
 	jcenter()
 	maven {
-        url "http://repository.pentaho.org/service/local/repositories/proxy-public-5.4-release"
+        url "http://repository.pentaho.org/service/local/repositories/proxy-public-5.4-release/content/"
         url "http://repository.pentaho.org/artifactory/pentaho/"
         url "http://nexus.pentaho.org/content/repositories/pentaho-public-release-repos/"
     }
