@@ -10,7 +10,7 @@ buildscript {
 
   dependencies {
     classpath 'org.gradle.api.plugins:gradle-tomcat-plugin:1.2.5',
-               'nl.javadude.gradle.plugins:license-gradle-plugin:0.11.0',
+//               'nl.javadude.gradle.plugins:license-gradle-plugin:0.11.0',
                'org.zeroturnaround:gradle-jrebel-plugin:1.1.2',
                'org.springframework.boot:spring-boot-gradle-plugin:1.2.2.RELEASE', // also change springDataJpaVersion below
                'com.github.ben-manes:gradle-versions-plugin:latest.integration'
@@ -18,7 +18,7 @@ buildscript {
 }
 
 apply plugin: 'rebel'
-apply plugin: 'license'
+//apply plugin: 'license'
 apply plugin: 'war'
 apply plugin: 'spring-boot'
 apply plugin: 'eclipse'
@@ -127,11 +127,11 @@ war {
   war.finalizedBy(bootRepackage)
 }
 
-license {
-  header rootProject.file('../LICENSE.md')
-  excludes(["**/*.mustache", "**/*.sql", "**/package-info.java", "**/keystore.jks"])
-  strictCheck true
-}
+//license {
+//  header rootProject.file('../LICENSE.md')
+//  excludes(["**/*.mustache", "**/*.sql", "**/package-info.java", "**/keystore.jks"])
+//  strictCheck true
+//}
 
 tomcatRun {
   httpPort = 8080
