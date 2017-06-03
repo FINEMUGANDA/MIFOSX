@@ -204,8 +204,10 @@ task integrationTest(type:Test){
 import groovy.sql.Sql
 
 repositories {
-  mavenCentral()
-}
+	jcenter()
+	mavenCentral()
+    	maven { url "https://plugins.gradle.org/m2/" }
+  }
 configurations {
   driver
 }
