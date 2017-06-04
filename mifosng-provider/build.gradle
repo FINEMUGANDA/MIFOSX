@@ -52,9 +52,10 @@ group = 'org.mifosplatform'
 repositories {
 	jcenter()
 	maven {
+	url "http://nexus.pentaho.org/content/repositories/omni/"
         // url "http://repository.pentaho.org/artifactory/pentaho/"
         //url "http://nexus.pentaho.org/content/repositories/omni/"
-	url "http://repo.pentaho.org/content/groups/omni/pentaho-reporting-engine/pentaho-reporting-engine-classic-core/"
+	//url "http://repo.pentaho.org/content/groups/omni/pentaho-reporting-engine/pentaho-reporting-engine-classic-core/"
     }
 	// mavenLocal() // useful for local dev using MariaDB4j SNAPSHOTs (not needed for real-world non-SNAPHOT builds)
 }
