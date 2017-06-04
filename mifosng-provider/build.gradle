@@ -52,7 +52,7 @@ group = 'org.mifosplatform'
 repositories {
 	jcenter()
 	maven {
-	url "http://nexus.pentaho.org/content/repositories/omni/"
+	url "http://nexus.pentaho.org/content/repositories/omni/pentaho/pentaho-aggdesigner-core/"
         // url "http://repository.pentaho.org/artifactory/pentaho/"
         //url "http://nexus.pentaho.org/content/repositories/omni/"
 	//url "http://repo.pentaho.org/content/groups/omni/pentaho-reporting-engine/pentaho-reporting-engine-classic-core/"
