@@ -2902,7 +2902,7 @@ public class Loan extends AbstractPersistable<Long> {
 
         if (isOverPaid()) {
             // FIXME - kw - update account balance to negative amount.
-            handleLoanOverpayment(loanLifecycleStateMachine);
+            handleLoanOverpayment(transactionDate, loanLifecycleStateMachine);
         } else if (this.summary.isRepaidInFull(loanCurrency())) {
             handleLoanRepaymentInFull(transactionDate, loanLifecycleStateMachine);
         }
@@ -2931,13 +2931,13 @@ public class Loan extends AbstractPersistable<Long> {
         }
     }
 
-    private void handleLoanOverpayment(final LoanLifecycleStateMachine loanLifecycleStateMachine) {
+    private void handleLoanOverpayment(final LocalDate transactionDate, final LoanLifecycleStateMachine loanLifecycleStateMachine) {
 
         final LoanStatus statusEnum = loanLifecycleStateMachine.transition(LoanEvent.LOAN_OVERPAYMENT, LoanStatus.fromInt(this.loanStatus));
         this.loanStatus = statusEnum.getValue();
 
-        this.closedOnDate = null;
-        this.actualMaturityDate = null;
+        this.closedOnDate = transactionDate.toDate();
+        this.actualMaturityDate = transactionDate.toDate();
     }
 
     private boolean isChronologicallyLatestRepaymentOrWaiver(final LoanTransaction loanTransaction,
