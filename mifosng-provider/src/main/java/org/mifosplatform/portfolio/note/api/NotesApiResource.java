@@ -70,7 +70,7 @@ public class NotesApiResource {
     public String retrieveNotesByResource(@PathParam("resourceType") final String resourceType,
             @PathParam("resourceId") final Long resourceId, @Context final UriInfo uriInfo) {
 
-        final NoteType noteType = NoteType.fromApiUrl(resourceType_robert);
+        final NoteType noteType = NoteType.fromApiUrl(resourceType);
 
         if (noteType == null) { throw new NoteResourceNotSupportedException(resourceType); }
 
