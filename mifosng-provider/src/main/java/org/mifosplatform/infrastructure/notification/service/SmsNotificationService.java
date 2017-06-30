@@ -130,7 +130,7 @@ public class SmsNotificationService extends AbstractNotificationService {
         if (!running.get()) {
             running.set(true);
 
-            String template = "Dear %s. Please be reminded to clear off your loan of Amount %s %s as it's way overdue. Deposit on FINEM (U) Ltd,Centenary Bank,A/C: 2916200002";
+            String template = "Dear %s. Please be reminded to clear off your loan of Amount %s %s as it's way overdue. Deposit on FINEM (U) Ltd,Centenary Bank,A/C:31000009566";
 
             configure();
 
