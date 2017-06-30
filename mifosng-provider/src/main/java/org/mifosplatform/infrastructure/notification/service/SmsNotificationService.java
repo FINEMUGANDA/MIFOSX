@@ -58,7 +58,7 @@ public class SmsNotificationService extends AbstractNotificationService {
     public void notifyPaymentReminders() {
         if (!running.get()) {
             running.set(true);
-            String template = "Dear %s. Your loan repayment is due on %s. Pls pay to FINEM (U) LTD,A/C:2916200002 Centenary Bank and deliver voucher to FINEM office.Tks";
+            String template = "Dear %s. Your loan repayment is due on %s. Pls pay to FINEM (U) LTD,A/C:31000009566 Centenary Bank and deliver voucher to FINEM office.Tks";
 
             configure();
 
