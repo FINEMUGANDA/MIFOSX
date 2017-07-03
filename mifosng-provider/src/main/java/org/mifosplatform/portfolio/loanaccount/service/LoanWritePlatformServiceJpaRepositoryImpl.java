@@ -2606,6 +2606,40 @@ public class LoanWritePlatformServiceJpaRepositoryImpl implements LoanWritePlatf
                 .build();
     }
 
+    public CommandProcessingResult pauseLPI(Long loanId) {
+        final AppUser currentUser = getAppUserIfPresent();
+
+        final Loan loan = this.loanAssembler.assembleFrom(loanId);
+
+        loan.setPausedLPI(true);
+
+        saveLoanWithDataIntegrityViolationChecks(loan);
+
+        return new CommandProcessingResultBuilder() //
+                .withOfficeId(loan.getOfficeId()) //
+                .withClientId(loan.getClientId()) //
+                .withGroupId(loan.getGroupId()) //
+                .withLoanId(loanId) //
+                .build();
+    }
+
+    public CommandProcessingResult unpauseLPI(Long loanId) {
+        final AppUser currentUser = getAppUserIfPresent();
+
+        final Loan loan = this.loanAssembler.assembleFrom(loanId);
+
+        loan.setPausedLPI(false);
+
+        saveLoanWithDataIntegrityViolationChecks(loan);
+
+        return new CommandProcessingResultBuilder() //
+                .withOfficeId(loan.getOfficeId()) //
+                .withClientId(loan.getClientId()) //
+                .withGroupId(loan.getGroupId()) //
+                .withLoanId(loanId) //
+                .build();
+    }
+
     @Override
     public CommandProcessingResult fromUnidentified(JsonCommand command) {
         final Long loanId = command.getLoanId();
