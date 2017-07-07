@@ -84,6 +84,10 @@ public interface LoanWritePlatformService {
 
     CommandProcessingResult unwatch(Long loanId);
 
+    CommandProcessingResult pauseLPI(Long loanId);
+
+    CommandProcessingResult unpauseLPI(Long loanId);
+
     CommandProcessingResult fromUnidentified(JsonCommand command);
 
     CommandProcessingResult moveToProfit(JsonCommand command);

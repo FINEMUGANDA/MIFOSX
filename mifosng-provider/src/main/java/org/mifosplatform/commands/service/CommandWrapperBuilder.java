@@ -706,6 +706,24 @@ public class CommandWrapperBuilder {
         return this;
     }
 
+    public CommandWrapperBuilder pauseLPILoanTransaction(final Long loanId) {
+        this.actionName = "PAUSELPI";
+        this.entityName = "LOAN";
+        this.entityId = null;
+        this.loanId = loanId;
+        this.href = "/loans/" + loanId + "/transactions/template?command=watch";
+        return this;
+    }
+
+    public CommandWrapperBuilder unpauseLPILoanTransaction(final Long loanId) {
+        this.actionName = "UNPAUSELPI";
+        this.entityName = "LOAN";
+        this.entityId = null;
+        this.loanId = loanId;
+        this.href = "/loans/" + loanId + "/transactions/template?command=unwatch";
+        return this;
+    }
+
     public CommandWrapperBuilder fromUnidentifiedLoanTransaction(final Long loanId, final String transactionId) {
         this.actionName = "FROM_UNIDENTIFIED";
         this.entityName = "LOAN";

@@ -81,7 +81,8 @@ public class JournalEntryReadPlatformServiceImpl implements JournalEntryReadPlat
                     .append(" journalEntry.currency_code as currencyCode, curr.name as currencyName, curr.internationalized_name_code as currencyNameCode, ")
                     .append(" curr.display_symbol as currencyDisplaySymbol, curr.decimal_places as currencyDigits, curr.currency_multiplesof as inMultiplesOf, ")
                     .append(" journalEntry.profit as isProfit, journalEntry.profit_transaction_id as profitTransactionId, (ltex.id is not null) as usedInLoan, ")
-                    .append(" (reversalJournalEntry.id is not null) as isReversalEntry ");
+                    .append(" (reversalJournalEntry.id is not null) as isReversalEntry, ")
+                    .append(" lt.is_reversed as isTransactionReversed ");
             if (associationParametersData.isRunningBalanceRequired()) {
                 sb.append(" ,journalEntry.is_running_balance_calculated as runningBalanceComputed, ")
                         .append(" journalEntry.office_running_balance as officeRunningBalance, ")
@@ -101,14 +102,14 @@ public class JournalEntryReadPlatformServiceImpl implements JournalEntryReadPlat
                     .append(" left join m_appuser as creatingUser on creatingUser.id = journalEntry.createdby_id ")
                     .append(" join m_currency curr on curr.code = journalEntry.currency_code ");
             if (associationParametersData.isTransactionDetailsRequired()) {
-                sb.append(" left join m_loan_transaction as lt on journalEntry.loan_transaction_id = lt.id ")
-                        .append(" left join m_savings_account_transaction as st on journalEntry.savings_transaction_id = st.id ")
-                        .append(" left join m_payment_detail as pd on lt.payment_detail_id = pd.id or st.payment_detail_id = pd.id")
-                        .append(" left join m_code_value as cdv on cdv.id = pd.payment_type_cv_id ")
-                        .append(" left join m_note as note on lt.id = note.loan_transaction_id or st.id = note.savings_account_transaction_id ");
+                sb.append(" left join m_savings_account_transaction as st on journalEntry.savings_transaction_id = st.id ")
+                    .append(" left join m_payment_detail as pd on lt.payment_detail_id = pd.id or st.payment_detail_id = pd.id")
+                    .append(" left join m_code_value as cdv on cdv.id = pd.payment_type_cv_id ")
+                    .append(" left join m_note as note on lt.id = note.loan_transaction_id or st.id = note.savings_account_transaction_id ");
             }
             sb.append(" left join m_loan_transaction as ltex on journalEntry.transaction_id = ltex.related_transaction_id ");
             sb.append(" left join acc_gl_journal_entry as reversalJournalEntry on journalEntry.id = reversalJournalEntry.reversal_id ");
+            sb.append(" left join m_loan_transaction as lt on journalEntry.loan_transaction_id = lt.id ");
             return sb.toString();
 
         }
@@ -162,6 +163,7 @@ public class JournalEntryReadPlatformServiceImpl implements JournalEntryReadPlat
             final String profitTransactionId = rs.getString("profitTransactionId");
             final Boolean usedInLoan = rs.getBoolean("usedInLoan");
             final Boolean isReversalEntry = rs.getBoolean("isReversalEntry");
+            final Boolean isTransactionReversed = rs.getBoolean("isTransactionReversed");
 
             if (associationParametersData.isRunningBalanceRequired()) {
                 officeRunningBalance = rs.getBigDecimal("officeRunningBalance");
@@ -214,7 +216,7 @@ public class JournalEntryReadPlatformServiceImpl implements JournalEntryReadPlat
             return new JournalEntryData(id, officeId, officeName, glAccountName, glAccountId, glCode, accountType, transactionDate,
                     entryType, amount, exchangeRate, transactionId, manualEntry, entityType, entityId, createdByUserId, createdDate, createdByUserName,
                     comments, reversed, referenceNumber, officeRunningBalance, organizationRunningBalance, runningBalanceComputed,
-                    transactionDetailData, currency, unidentifiedEntry, isProfit, profitTransactionId, usedInLoan, isReversalEntry);
+                    transactionDetailData, currency, unidentifiedEntry, isProfit, profitTransactionId, usedInLoan, isReversalEntry, isTransactionReversed);
         }
     }
 
