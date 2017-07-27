@@ -72,6 +72,8 @@ public class JournalEntryData {
     private final Boolean usedInLoan;
     @SuppressWarnings("unused")
     private final Boolean isReversalEntry;
+    @SuppressWarnings("unused")
+    private final Boolean isTransactionReversed;
 
     @SuppressWarnings("unused")
     private final TransactionDetailData transactionDetails;
@@ -83,7 +85,7 @@ public class JournalEntryData {
                             final LocalDate createdDate, final String createdByUserName, final String comments, final Boolean reversed,
                             final String referenceNumber, final BigDecimal officeRunningBalance, final BigDecimal organizationRunningBalance,
                             final Boolean runningBalanceComputed, final TransactionDetailData transactionDetailData, final CurrencyData currency, final Boolean unidentifiedEntry,
-                            final Boolean isProfit, final String profitTransactionId, final Boolean usedInLoan, final Boolean isReversalEntry) {
+                            final Boolean isProfit, final String profitTransactionId, final Boolean usedInLoan, final Boolean isReversalEntry, final Boolean isTransactionReversed) {
         this.id = id;
         this.officeId = officeId;
         this.officeName = officeName;
@@ -115,6 +117,7 @@ public class JournalEntryData {
         this.profitTransactionId = profitTransactionId;
         this.usedInLoan = usedInLoan;
         this.isReversalEntry = isReversalEntry;
+        this.isTransactionReversed = isTransactionReversed;
     }
 
     public Long getId() {
