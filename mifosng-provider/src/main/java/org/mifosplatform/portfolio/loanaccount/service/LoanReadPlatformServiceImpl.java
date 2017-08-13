@@ -1501,7 +1501,7 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService {
     public Collection<OverdueLoanScheduleData> retrieveAllLoansWithOverdueMaturityDate() {
         final OverdueMaturityDateLoanScheduleMapper rm = new OverdueMaturityDateLoanScheduleMapper();
         final String sql = "select " + rm.schema() + " where "
-                    + " CURDATE() > ml.maturedon_date"
+                    + " CURDATE() > ml.expected_maturedon_date"
                     + " and mc.charge_applies_to_enum = 1"
                     + " and mc.charge_time_enum = 12"
                     + " and ml.loan_status_id IN (300, 800, 900)"
