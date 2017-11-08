@@ -55,6 +55,8 @@ public abstract class AbstractNotificationService implements NotificationService
 
     protected static final String CONFIG_NOTIFICATION_PAYMENT_REMINDER_DAYS_IN_ADVANCE = "notification-payment-reminder-days-in-advance";
 
+    protected static final String CONFIG_NOTIFICATION_LPI_PAYMENT_REMINDER_DAYS = "notification-lpi-payment-reminder-days";
+
     protected AbstractNotificationService(final RoutingDataSource dataSource, final NotificationLogRepository notificationLogRepository, final GlobalConfigurationRepository globalConfigurationRepository) {
         this.dataSource = dataSource;
         this.jdbcTemplate = new JdbcTemplate(dataSource);
@@ -74,8 +76,8 @@ public abstract class AbstractNotificationService implements NotificationService
         return jdbcTemplate.query(queryPaymentReminderClients, new Object[]{daysInAdvance}, new ColumnMapRowMapper());
     }
 
-    protected List<Map<String, Object>> getExpiredLoanPaymentReminderClients(Integer daysInAdvance) {
-        List<Map<String, Object>> expiredLoans = jdbcTemplate.query(queryExpiredLoans, new Object[]{daysInAdvance}, new ColumnMapRowMapper());
+    protected List<Map<String, Object>> getExpiredLoanPaymentReminderClients(Integer daysAfter) {
+        List<Map<String, Object>> expiredLoans = jdbcTemplate.query(queryExpiredLoans, new Object[]{daysAfter}, new ColumnMapRowMapper());
         List<Map<String, Object>> result = new LinkedList<Map<String, Object>>();
 
         for (Map<String, Object> expiredLoan : expiredLoans) {
@@ -84,7 +86,7 @@ public abstract class AbstractNotificationService implements NotificationService
             if (lastMessageDate == null) {
                 result.add(expiredLoan);
             } else {
-                LocalDate date = LocalDate.fromDateFields(maturityDate).minusDays(daysInAdvance);
+                LocalDate date = LocalDate.fromDateFields(maturityDate).plusDays(daysAfter);
                 LocalDate lastScheduledDate = null;
                 while (new LocalDate().isAfter(date)) {
                     lastScheduledDate = date;

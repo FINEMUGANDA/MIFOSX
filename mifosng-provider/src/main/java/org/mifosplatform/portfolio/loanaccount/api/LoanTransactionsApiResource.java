@@ -170,6 +170,12 @@ public class LoanTransactionsApiResource {
         } else if (is(commandParam, "unwatch")) {
             final CommandWrapper commandRequest = builder.unwatchLoanTransaction(loanId).build();
             result = this.commandsSourceWritePlatformService.logCommandSource(commandRequest);
+        } else if (is(commandParam, "pauseLPI")) {
+            final CommandWrapper commandRequest = builder.pauseLPILoanTransaction(loanId).build();
+            result = this.commandsSourceWritePlatformService.logCommandSource(commandRequest);
+        } else if (is(commandParam, "unpauseLPI")) {
+            final CommandWrapper commandRequest = builder.unpauseLPILoanTransaction(loanId).build();
+            result = this.commandsSourceWritePlatformService.logCommandSource(commandRequest);
         } else if (is(commandParam, "moveToProfit")) {
             final CommandWrapper commandRequest = builder.moveToProfitLoanTransaction(loanId).build();
             result = this.commandsSourceWritePlatformService.logCommandSource(commandRequest);
