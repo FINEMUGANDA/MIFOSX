@@ -11,6 +11,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -159,6 +160,15 @@ public class JournalEntriesApiResource {
 
         return this.apiJsonSerializerService.serialize(result);
     }
+
+	@DELETE
+	@Path("delete/{journalEntryId}")
+	@Consumes({ MediaType.APPLICATION_JSON })
+	@Produces({ MediaType.APPLICATION_JSON })
+	public String deleteJournalEntry(@PathParam("journalEntryId") final Long journalEntryId) throws Exception {
+		final CommandWrapper commandWrapper = new CommandWrapperBuilder().deleteJournalEntry(journalEntryId).build();
+		return this.apiJsonSerializerService.serialize(this.commandsSourceWritePlatformService.logCommandSource(commandWrapper));
+	}
 
     private boolean is(final String commandParam, final String commandValue) {
         return StringUtils.isNotBlank(commandParam) && commandParam.trim().equalsIgnoreCase(commandValue);

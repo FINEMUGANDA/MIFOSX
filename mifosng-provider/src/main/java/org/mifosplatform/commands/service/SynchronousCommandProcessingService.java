@@ -481,6 +481,8 @@ public class SynchronousCommandProcessingService implements CommandProcessingSer
                 handler = this.applicationContext.getBean("moveJournalEntryToProfitCommandHandler", NewCommandSourceHandler.class);
             } else if (wrapper.isUpdateRunningbalance()) {
                 handler = this.applicationContext.getBean("updateRunningBalanceCommandHandler", NewCommandSourceHandler.class);
+            } else if (wrapper.isDelete()) {
+				handler = this.applicationContext.getBean("deleteJournalEntryCommandHandler", NewCommandSourceHandler.class);
             } else {
                 throw new UnsupportedCommandException(wrapper.commandName());
             }
