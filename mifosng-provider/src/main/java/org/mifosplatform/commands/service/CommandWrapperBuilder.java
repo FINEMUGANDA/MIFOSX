@@ -1017,6 +1017,14 @@ public class CommandWrapperBuilder {
         return this;
     }
 
+	public CommandWrapperBuilder deleteJournalEntry(final Long journalEntryId) {
+		this.actionName = "DELETE";
+		this.entityName = "JOURNALENTRY";
+		this.entityId = journalEntryId;
+		this.href = "/journalentries/delete";
+		return this;
+	}
+
     public CommandWrapperBuilder reverseJournalEntry(final String transactionId) {
         this.actionName = "REVERSE";
         this.entityName = "JOURNALENTRY";

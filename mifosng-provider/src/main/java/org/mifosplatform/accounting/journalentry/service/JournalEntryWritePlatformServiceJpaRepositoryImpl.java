@@ -485,7 +485,16 @@ public class JournalEntryWritePlatformServiceJpaRepositoryImpl implements Journa
         return new CommandProcessingResultBuilder().withTransactionId(reversalTransactionId).build();
     }
 
-    @Transactional
+	@Transactional
+	@Override
+	public CommandProcessingResult deleteJournalEntry(Long journalId) {
+		JournalEntry journalEntry = this.glJournalEntryRepository.findById(journalId);
+		List<JournalEntry> journalEntries = this.glJournalEntryRepository.findManualJournalEntriesByTransactionId(journalEntry.getTransactionId());
+		this.glJournalEntryRepository.delete(journalEntries);
+		return CommandProcessingResult.empty();
+	}
+
+	@Transactional
     @Override
     public CommandProcessingResult moveJournalEntryToProfit(final JsonCommand command) {
         // is the transaction Id valid

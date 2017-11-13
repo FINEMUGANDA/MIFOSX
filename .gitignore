@@ -3,3 +3,4 @@
 /mifosng-provider/.nb-gradle/
 manifest.mf
 .nb-gradle-properties
+*.DS_Store
