@@ -5,18 +5,22 @@
  */
 package org.mifosplatform.accounting.journalentry.service;
 
-import java.util.Date;
-
+import org.mifosplatform.accounting.journalentry.data.JournalEntryAssignment;
 import org.mifosplatform.accounting.journalentry.data.JournalEntryAssociationParametersData;
 import org.mifosplatform.accounting.journalentry.data.JournalEntryData;
 import org.mifosplatform.infrastructure.core.service.Page;
 import org.mifosplatform.infrastructure.core.service.SearchParameters;
 
+import java.util.Collection;
+import java.util.Date;
+
 public interface JournalEntryReadPlatformService {
 
-    JournalEntryData retrieveGLJournalEntryById(long glJournalEntryId, JournalEntryAssociationParametersData associationParametersData);
+	JournalEntryData retrieveGLJournalEntryById(long glJournalEntryId, JournalEntryAssociationParametersData associationParametersData);
 
-    Page<JournalEntryData> retrieveAll(SearchParameters searchParameters, Long glAccountId, Boolean onlyManualEntries, Date fromDate,
-            Date toDate, String transactionId, Integer entityType, JournalEntryAssociationParametersData associationParametersData, Boolean onlyUnidentifiedEntries);
+	Page<JournalEntryData> retrieveAll(SearchParameters searchParameters, Long glAccountId, Boolean onlyManualEntries, Date fromDate,
+	                                   Date toDate, String transactionId, Integer entityType, JournalEntryAssociationParametersData associationParametersData, Boolean onlyUnidentifiedEntries);
+
+	Collection<JournalEntryAssignment> retrieveJournalEntryAssignments(Long journalEntryId);
 
 }
