@@ -355,7 +355,8 @@ public class JournalEntryReadPlatformServiceImpl implements JournalEntryReadPlat
 					.append("INNER JOIN m_loan l ON l.id = lt.loan_id ")
 					.append("INNER JOIN m_client c on c.id = l.client_id ")
 					.append("INNER JOIN r_enum_value e ON e.enum_id = l.loan_status_id ")
-					.append("WHERE j.id = ?")
+					.append("WHERE j.id = ? ")
+					.append("AND lt.is_reversed = 0")
 					.toString();
 		}
 
