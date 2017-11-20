@@ -15,6 +15,12 @@ import org.springframework.data.repository.query.Param;
 public interface JournalEntryRepository extends JpaRepository<JournalEntry, Long>, JpaSpecificationExecutor<JournalEntry>,
         JournalEntryRepositoryCustom {
 
+	@Query("FROM JournalEntry j WHERE j.id = :journalId")
+	JournalEntry findById(@Param("journalId") Long journalId);
+
+	@Query("from JournalEntry journalEntry where journalEntry.transactionId= :transactionId and journalEntry.manualEntry is true")
+	List<JournalEntry> findManualJournalEntriesByTransactionId(@Param("transactionId") String transactionId);
+
     @Query("from JournalEntry journalEntry where journalEntry.transactionId= :transactionId and journalEntry.reversed is false and journalEntry.manualEntry is true")
     List<JournalEntry> findUnReversedManualJournalEntriesByTransactionId(@Param("transactionId") String transactionId);
 

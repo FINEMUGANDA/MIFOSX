@@ -5,20 +5,22 @@
  */
 package org.mifosplatform.accounting.journalentry.service;
 
-import java.util.Map;
-
 import org.mifosplatform.infrastructure.core.api.JsonCommand;
 import org.mifosplatform.infrastructure.core.data.CommandProcessingResult;
 
+import java.util.Map;
+
 public interface JournalEntryWritePlatformService {
 
-    CommandProcessingResult createJournalEntry(JsonCommand command);
+	CommandProcessingResult createJournalEntry(JsonCommand command);
 
-    CommandProcessingResult revertJournalEntry(JsonCommand command);
+	CommandProcessingResult revertJournalEntry(JsonCommand command);
 
-    CommandProcessingResult moveJournalEntryToProfit(JsonCommand command);
+	CommandProcessingResult deleteJournalEntry(Long journalId);
 
-    void createJournalEntriesForLoan(Map<String, Object> accountingBridgeData);
+	CommandProcessingResult moveJournalEntryToProfit(JsonCommand command);
 
-    void createJournalEntriesForSavings(Map<String, Object> accountingBridgeData);
+	void createJournalEntriesForLoan(Map<String, Object> accountingBridgeData);
+
+	void createJournalEntriesForSavings(Map<String, Object> accountingBridgeData);
 }
