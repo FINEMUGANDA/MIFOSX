@@ -391,4 +391,46 @@ public class JournalEntryReadPlatformServiceImpl implements JournalEntryReadPlat
 		}
 	}
 
+	@Override
+	public Long getJournalEntriesCount(final String filter, final String search) {
+		JournalEntryCountMapper mapper = new JournalEntryCountMapper();
+		return this.jdbcTemplate.queryForObject(mapper.sql(), mapper, filter, filter, filter,
+				search, search, search, search, search, search);
+	}
+
+	private static final class JournalEntryCountMapper implements RowMapper<Long> {
+
+		public String sql() {
+			return new StringBuilder("SELECT COUNT(tt.id) AS je_count FROM (")
+					.append("SELECT y.id FROM (")
+					.append("SELECT m.id, DATE_FORMAT(m.created_date,'%d/%m/%Y') createdOn, DATE_FORMAT(m.entry_date,'%d/%m/%Y') transactionDate, ")
+					.append("c.display_name clientName, description, entry_date, ")
+					.append("SUM(case when type_enum=1 then if(lt.is_reversed, m.amount / 2, m.amount) ELSE 0 END) as 'Credit', ")
+					.append("SUM(case when type_enum=2 then if(lt.is_reversed, m.amount / 2, m.amount) ELSE 0 END) as 'Debit' ")
+					.append("FROM acc_gl_journal_entry m ")
+					.append("LEFT JOIN m_office o ON o.id=m.office_id ")
+					.append("LEFT JOIN m_loan l ON l.id=m.entity_id ")
+					.append("LEFT JOIN m_loan_transaction lt ON lt.id = m.loan_transaction_id ")
+					.append("LEFT JOIN m_client c ON c.id=l.client_id ")
+					.append("WHERE 1 ")
+					.append("AND IF(? = 'reversed', m.reversed or lt.is_reversed, 1) ")
+					.append("AND IF(? = 'unidentified_profit', m.profit, 1) ")
+					.append("AND IF(? = 'unidentified_deposits', m.unidentified_entry, 1) ")
+					.append("GROUP BY transaction_id) y ")
+					.append("WHERE 1 AND (")
+					.append("y.description LIKE ? ")
+					.append("OR y.clientName LIKE ? ")
+					.append("OR y.createdOn LIKE ? ")
+					.append("OR y.transactionDate LIKE ? ")
+					.append("OR convert(y.Credit, char) LIKE ? ")
+					.append("OR convert(y.Debit, char) LIKE ?)) tt ")
+					.toString();
+		}
+
+		@Override
+		public Long mapRow(ResultSet rs, int rowNum) throws SQLException {
+			return rs.getLong("je_count");
+		}
+	}
+
 }
