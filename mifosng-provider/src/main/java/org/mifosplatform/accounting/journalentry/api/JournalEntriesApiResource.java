@@ -180,4 +180,11 @@ public class JournalEntriesApiResource {
 	private boolean is(final String commandParam, final String commandValue) {
 		return StringUtils.isNotBlank(commandParam) && commandParam.trim().equalsIgnoreCase(commandValue);
 	}
+
+	@GET
+	@Path(("count"))
+	@Produces({MediaType.APPLICATION_JSON})
+	public String getJournalEntriesCount(@QueryParam("filter") final String filter, @QueryParam("search") final String search) {
+		return this.apiJsonSerializerService.serialize(this.journalEntryReadPlatformService.getJournalEntriesCount(filter, search));
+	}
 }

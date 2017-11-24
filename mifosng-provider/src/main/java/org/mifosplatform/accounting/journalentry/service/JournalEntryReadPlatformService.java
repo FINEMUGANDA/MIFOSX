@@ -23,4 +23,6 @@ public interface JournalEntryReadPlatformService {
 
 	Collection<JournalEntryAssignment> retrieveJournalEntryAssignments(Long journalEntryId);
 
+	Long getJournalEntriesCount(final String filter, final String search);
+
 }
