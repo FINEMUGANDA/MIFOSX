@@ -528,12 +528,12 @@ public class JournalEntryWritePlatformServiceJpaRepositoryImpl implements Journa
             if (journalEntry.isCreditEntry()) {
                 profitJournalEntry = JournalEntry.createNew(journalEntry.getOffice(), journalEntry.getPaymentDetails(),
                         journalEntry.getGlAccount(), journalEntry.getCurrencyCode(), reversalTransactionId, manualEntry,
-                        journalEntry.getTransactionDate(), JournalEntryType.DEBIT, journalEntry.getAmount(), journalEntry.getExchangeRate(), reversalComment, null, null,
+                        new Date(), JournalEntryType.DEBIT, journalEntry.getAmount(), journalEntry.getExchangeRate(), reversalComment, null, null,
                         journalEntry.getReferenceNumber(), journalEntry.getLoanTransaction(), journalEntry.getSavingsTransaction(), false, true);
             } else {
                 profitJournalEntry = JournalEntry.createNew(journalEntry.getOffice(), journalEntry.getPaymentDetails(),
                         glAccount, journalEntry.getCurrencyCode(), reversalTransactionId, manualEntry,
-                        journalEntry.getTransactionDate(), JournalEntryType.CREDIT, journalEntry.getAmount(), journalEntry.getExchangeRate(), reversalComment, null, null,
+		                new Date(), JournalEntryType.CREDIT, journalEntry.getAmount(), journalEntry.getExchangeRate(), reversalComment, null, null,
                         journalEntry.getReferenceNumber(), journalEntry.getLoanTransaction(), journalEntry.getSavingsTransaction(), false, true);
             }
             // save the profit entry
