@@ -413,6 +413,10 @@ public class SynchronousCommandProcessingService implements CommandProcessingSer
                 handler = this.applicationContext.getBean("watchLoanCommandHandler", NewCommandSourceHandler.class);
             } else if (wrapper.isLoanUnwatch()) {
                 handler = this.applicationContext.getBean("unwatchLoanCommandHandler", NewCommandSourceHandler.class);
+            } else if (wrapper.isLoanPauseLPI()) {
+                handler = this.applicationContext.getBean("pauseLPILoanCommandHandler", NewCommandSourceHandler.class);
+            } else if (wrapper.isLoanUnpauseLPI()) {
+                handler = this.applicationContext.getBean("unpauseLPILoanCommandHandler", NewCommandSourceHandler.class);
             } else if (wrapper.isLoanFromUnidentified()) {
                 handler = this.applicationContext.getBean("fromUnidentifiedLoanCommandHandler", NewCommandSourceHandler.class);
             } else if (wrapper.isLoanMoveToProfit()) {
@@ -477,6 +481,8 @@ public class SynchronousCommandProcessingService implements CommandProcessingSer
                 handler = this.applicationContext.getBean("moveJournalEntryToProfitCommandHandler", NewCommandSourceHandler.class);
             } else if (wrapper.isUpdateRunningbalance()) {
                 handler = this.applicationContext.getBean("updateRunningBalanceCommandHandler", NewCommandSourceHandler.class);
+            } else if (wrapper.isDelete()) {
+				handler = this.applicationContext.getBean("deleteJournalEntryCommandHandler", NewCommandSourceHandler.class);
             } else {
                 throw new UnsupportedCommandException(wrapper.commandName());
             }

@@ -58,7 +58,7 @@ public class SmsNotificationService extends AbstractNotificationService {
     public void notifyPaymentReminders() {
         if (!running.get()) {
             running.set(true);
-            String template = "Dear %s. Your loan repayment is due on %s. Pls pay to FINEM (U) LTD,A/C:2916200002 Centenary Bank and deliver voucher to FINEM office.Tks";
+            String template = "Dear %s. Your loan repayment is due on %s. Pls pay to FINEM (U) LTD,A/C:3100009566 Centenary Bank and deliver voucher to FINEM office.Tks";
 
             configure();
 
@@ -130,18 +130,18 @@ public class SmsNotificationService extends AbstractNotificationService {
         if (!running.get()) {
             running.set(true);
 
-            String template = "Dear %s. Please be reminded to clear off your loan of Amount %s %s as it's way overdue. Deposit on FINEM (U) Ltd,Centenary Bank,A/C: 2916200002";
+            String template = "Dear %s, Please be reminded that your loan is overdue. We expect deposit of %s %s plus potential recovery cost on Finem (U) Ltd. Centenary Bank A/C: 3100009566";
 
             configure();
 
-            GlobalConfigurationProperty daysInAdvance = getGlobalConfiguration(CONFIG_NOTIFICATION_PAYMENT_REMINDER_DAYS_IN_ADVANCE);
+            GlobalConfigurationProperty daysAfter = getGlobalConfiguration(CONFIG_NOTIFICATION_LPI_PAYMENT_REMINDER_DAYS);
 
             DateTime now = new DateTime();
-            DateTime dueDate = now.plusDays(daysInAdvance.getValue().intValue());
+            DateTime dueDate = now.plusDays(daysAfter.getValue().intValue());
 
-            List<Map<String, Object>> clients = getExpiredLoanPaymentReminderClients(daysInAdvance.getValue().intValue());
+            List<Map<String, Object>> clients = getExpiredLoanPaymentReminderClients(daysAfter.getValue().intValue());
 
-            logger.info("=============== SMS JOB - clients:{} - date:{} - id:{} - days:{}", clients, dueDate, daysInAdvance.getId(), daysInAdvance.getValue());
+            logger.info("=============== SMS JOB - clients:{} - date:{} - id:{} - days:{}", clients, dueDate, daysAfter.getId(), daysAfter.getValue());
 //            Map<String, Object> client = clients.get(0);
             for (Map<String, Object> client : clients) {
                 boolean sent = false;
@@ -167,7 +167,7 @@ public class SmsNotificationService extends AbstractNotificationService {
                 message.append(String.format(template, client.get("firstname"), client.get("currencyDisplaySymbol"), amountStr));
 
                 try {
-                    logger.info("=============== SMS DESTINATION: {} - {} - {} - {}", mobileNo, dueDate, daysInAdvance.getId(), daysInAdvance.getValue());
+                    logger.info("=============== SMS DESTINATION: {} - {} - {} - {}", mobileNo, dueDate, daysAfter.getId(), daysAfter.getValue());
                     result = send(mobileNo, message.toString());
                     sent = true;
                 } catch (Exception e) {

@@ -478,6 +478,14 @@ public class CommandWrapper {
         return this.actionName.equalsIgnoreCase("UNWATCH") && this.entityName.equalsIgnoreCase("LOAN");
     }
 
+    public boolean isLoanPauseLPI() {
+        return this.actionName.equalsIgnoreCase("PAUSELPI") && this.entityName.equalsIgnoreCase("LOAN");
+    }
+
+    public boolean isLoanUnpauseLPI() {
+        return this.actionName.equalsIgnoreCase("UNPAUSELPI") && this.entityName.equalsIgnoreCase("LOAN");
+    }
+
     public boolean isLoanFromUnidentified() {
         return this.actionName.equalsIgnoreCase("FROM_UNIDENTIFIED") && this.entityName.equalsIgnoreCase("LOAN");
     }

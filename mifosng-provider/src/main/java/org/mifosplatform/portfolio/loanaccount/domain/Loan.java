@@ -356,6 +356,9 @@ public class Loan extends AbstractPersistable<Long> {
     @Column(name = "watchlist", nullable = true)
     private Boolean watchlist;
 
+    @Column(name = "paused_lpi", nullable = true)
+    private Boolean pausedLPI;
+
     public static Loan newIndividualLoanApplication(final String accountNo, final Client client, final Integer loanType,
             final LoanProduct loanProduct, final Fund fund, final Staff officer, final CodeValue loanPurpose,
             final LoanTransactionProcessingStrategy transactionProcessingStrategy,
@@ -367,7 +370,7 @@ public class Loan extends AbstractPersistable<Long> {
         final Boolean syncDisbursementWithMeeting = null;
         return new Loan(accountNo, client, group, loanType, fund, officer, loanPurpose, transactionProcessingStrategy, loanProduct,
                 loanRepaymentScheduleDetail, status, loanCharges, collateral, syncDisbursementWithMeeting, fixedEmiAmount,
-                disbursementDetails, maxOutstandingLoanBalance, createStandingInstructionAtDisbursement, false);
+                disbursementDetails, maxOutstandingLoanBalance, createStandingInstructionAtDisbursement, false, false);
     }
 
     public static Loan newGroupLoanApplication(final String accountNo, final Group group, final Integer loanType,
@@ -381,7 +384,7 @@ public class Loan extends AbstractPersistable<Long> {
         final Client client = null;
         return new Loan(accountNo, client, group, loanType, fund, officer, loanPurpose, transactionProcessingStrategy, loanProduct,
                 loanRepaymentScheduleDetail, status, loanCharges, collateral, syncDisbursementWithMeeting, fixedEmiAmount,
-                disbursementDetails, maxOutstandingLoanBalance, createStandingInstructionAtDisbursement, false);
+                disbursementDetails, maxOutstandingLoanBalance, createStandingInstructionAtDisbursement, false, false);
     }
 
     public static Loan newIndividualLoanApplicationFromGroup(final String accountNo, final Client client, final Group group,
@@ -394,7 +397,7 @@ public class Loan extends AbstractPersistable<Long> {
         final LoanStatus status = null;
         return new Loan(accountNo, client, group, loanType, fund, officer, loanPurpose, transactionProcessingStrategy, loanProduct,
                 loanRepaymentScheduleDetail, status, loanCharges, collateral, syncDisbursementWithMeeting, fixedEmiAmount,
-                disbursementDetails, maxOutstandingLoanBalance, createStandingInstructionAtDisbursement, false);
+                disbursementDetails, maxOutstandingLoanBalance, createStandingInstructionAtDisbursement, false, false);
     }
 
     protected Loan() {
@@ -406,7 +409,7 @@ public class Loan extends AbstractPersistable<Long> {
             final LoanProduct loanProduct, final LoanProductRelatedDetail loanRepaymentScheduleDetail, final LoanStatus loanStatus,
             final Set<LoanCharge> loanCharges, final Set<LoanCollateral> collateral, final Boolean syncDisbursementWithMeeting,
             final BigDecimal fixedEmiAmount, final Set<LoanDisbursementDetails> disbursementDetails,
-            final BigDecimal maxOutstandingLoanBalance, final Boolean createStandingInstructionAtDisbursement, final Boolean watchlist) {
+            final BigDecimal maxOutstandingLoanBalance, final Boolean createStandingInstructionAtDisbursement, final Boolean watchlist, final Boolean pausedLPI) {
 
         this.loanRepaymentScheduleDetail = loanRepaymentScheduleDetail;
         this.loanRepaymentScheduleDetail.validateRepaymentPeriodWithGraceSettings();
@@ -462,7 +465,7 @@ public class Loan extends AbstractPersistable<Long> {
         this.proposedPrincipal = this.loanRepaymentScheduleDetail.getPrincipal().getAmount();
 
         this.watchlist = watchlist;
-
+        this.pausedLPI = pausedLPI;
     }
 
     private LoanSummary updateSummaryWithTotalFeeChargesDueAtDisbursement(final BigDecimal feeChargesDueAtDisbursement) {
@@ -2902,7 +2905,7 @@ public class Loan extends AbstractPersistable<Long> {
 
         if (isOverPaid()) {
             // FIXME - kw - update account balance to negative amount.
-            handleLoanOverpayment(loanLifecycleStateMachine);
+            handleLoanOverpayment(transactionDate, loanLifecycleStateMachine);
         } else if (this.summary.isRepaidInFull(loanCurrency())) {
             handleLoanRepaymentInFull(transactionDate, loanLifecycleStateMachine);
         }
@@ -2931,13 +2934,13 @@ public class Loan extends AbstractPersistable<Long> {
         }
     }
 
-    private void handleLoanOverpayment(final LoanLifecycleStateMachine loanLifecycleStateMachine) {
+    private void handleLoanOverpayment(final LocalDate transactionDate, final LoanLifecycleStateMachine loanLifecycleStateMachine) {
 
         final LoanStatus statusEnum = loanLifecycleStateMachine.transition(LoanEvent.LOAN_OVERPAYMENT, LoanStatus.fromInt(this.loanStatus));
         this.loanStatus = statusEnum.getValue();
 
-        this.closedOnDate = null;
-        this.actualMaturityDate = null;
+        this.closedOnDate = transactionDate.toDate();
+        this.actualMaturityDate = transactionDate.toDate();
     }
 
     private boolean isChronologicallyLatestRepaymentOrWaiver(final LoanTransaction loanTransaction,
@@ -5222,5 +5225,13 @@ public class Loan extends AbstractPersistable<Long> {
 
     public void setWatchlist(Boolean watchlist) {
         this.watchlist = watchlist;
+    }
+
+    public Boolean isPausedLPI() {
+        return pausedLPI;
+    }
+
+    public void setPausedLPI(Boolean pausedLPI) {
+        this.pausedLPI = pausedLPI;
     }
 }

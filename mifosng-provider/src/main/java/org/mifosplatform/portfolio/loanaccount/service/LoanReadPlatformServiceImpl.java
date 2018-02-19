@@ -569,6 +569,7 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService {
                     + " l.total_overpaid_derived as totalOverpaid,"
                     + " l.fixed_emi_amount as fixedEmiAmount,"
                     + " l.watchlist as watchlist,"
+                    + " l.paused_lpi as pausedLPI,"
                     + " l.max_outstanding_loan_balance as outstandingLoanBalance,"
                     + " la.principal_overdue_derived as principalOverdue,"
                     + " la.interest_overdue_derived as interestOverdue,"
@@ -848,6 +849,7 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService {
             }
 
             final Boolean watchlist = rs.getBoolean("watchlist");
+            final Boolean pausedLPI = rs.getBoolean("pausedLPI");
 
             return LoanAccountData.basicLoanDetails(id, accountNo, status, externalId, clientId, clientName, clientOfficeId, groupData,
                     loanType, loanProductId, loanProductName, loanProductDescription, fundId, fundName, loanPurposeId, loanPurposeName,
@@ -859,7 +861,7 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService {
                     graceOnInterestCharged, interestChargedFromDate, timeline, loanSummary, feeChargesDueAtDisbursementCharged,
                     syncDisbursementWithMeeting, loanCounter, loanProductCounter, multiDisburseLoan, fixedEmiAmount,
                     outstandingLoanBalance, inArrears, daysInArrears, graceOnArrearsAgeing, isNPA, daysInMonthType, daysInYearType,
-                    isInterestRecalculationEnabled, interestRecalculationData, createStandingInstructionAtDisbursement, watchlist);
+                    isInterestRecalculationEnabled, interestRecalculationData, createStandingInstructionAtDisbursement, watchlist, pausedLPI);
         }
     }
 
@@ -1499,10 +1501,11 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService {
     public Collection<OverdueLoanScheduleData> retrieveAllLoansWithOverdueMaturityDate() {
         final OverdueMaturityDateLoanScheduleMapper rm = new OverdueMaturityDateLoanScheduleMapper();
         final String sql = "select " + rm.schema() + " where "
-                    + " CURDATE() > ml.maturedon_date"
+                    + " CURDATE() > ml.expected_maturedon_date"
                     + " and mc.charge_applies_to_enum = 1"
                     + " and mc.charge_time_enum = 12"
                     + " and ml.loan_status_id IN (300, 800, 900)"
+                    + " and ifnull(ml.paused_lpi, 0) = 0"
                     + " group by ls.loan_id";
         return this.jdbcTemplate.query(sql, rm);
     }
