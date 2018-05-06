@@ -902,7 +902,7 @@ public final class Client extends AbstractPersistable<Long> {
         this.reactivatedBy = currentUser;
         this.updatedBy = currentUser;
         this.updatedOnDate = reactivateDate;
-        this.status = ClientStatus.PENDING.getValue();
+        this.status = ClientStatus.ACTIVE.getValue();
 
     }
 }
