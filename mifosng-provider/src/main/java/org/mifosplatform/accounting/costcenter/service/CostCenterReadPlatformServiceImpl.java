@@ -7,16 +7,13 @@ package org.mifosplatform.accounting.costcenter.service;
 
 import org.mifosplatform.accounting.costcenter.data.CostCenterData;
 import org.mifosplatform.accounting.glaccount.data.GLAccountData;
-import org.mifosplatform.accounting.glaccount.domain.GLAccount;
-import org.mifosplatform.accounting.glaccount.domain.GLAccountRepositoryWrapper;
 import org.mifosplatform.accounting.glaccount.service.GLAccountReadPlatformService;
-import org.mifosplatform.infrastructure.core.service.RoutingDataSource;
+import org.mifosplatform.infrastructure.codes.data.CodeValueData;
+import org.mifosplatform.infrastructure.codes.service.CodeValueReadPlatformService;
 import org.mifosplatform.organisation.staff.data.StaffData;
-import org.mifosplatform.organisation.staff.domain.Staff;
-import org.mifosplatform.organisation.staff.domain.StaffRepositoryWrapper;
+import org.mifosplatform.organisation.staff.exception.StaffNotFoundException;
 import org.mifosplatform.organisation.staff.service.StaffReadPlatformService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.Collection;
@@ -26,54 +23,52 @@ import java.util.List;
 @Service
 public class CostCenterReadPlatformServiceImpl implements CostCenterReadPlatformService {
 
-    private final JdbcTemplate jdbcTemplate;
-    private final StaffRepositoryWrapper staffRepositoryWrapper;
-    private final GLAccountRepositoryWrapper glAccountRepositoryWrapper;
-    private final StaffReadPlatformService staffReadPlatformService;
-    private final GLAccountReadPlatformService glAccountReadPlatformService;
+	private final StaffReadPlatformService staffReadPlatformService;
+	private final GLAccountReadPlatformService glAccountReadPlatformService;
+	private final CodeValueReadPlatformService codeValueReadPlatformService;
 
-    @Autowired
-    public CostCenterReadPlatformServiceImpl(final RoutingDataSource dataSource,
-                                             final StaffRepositoryWrapper staffRepositoryWrapper,
-                                             final GLAccountRepositoryWrapper glAccountRepositoryWrapper,
-                                             final StaffReadPlatformService staffReadPlatformService,
-                                             final GLAccountReadPlatformService glAccountReadPlatformService) {
-        this.staffRepositoryWrapper = staffRepositoryWrapper;
-        this.glAccountRepositoryWrapper = glAccountRepositoryWrapper;
-        this.staffReadPlatformService = staffReadPlatformService;
-        this.glAccountReadPlatformService = glAccountReadPlatformService;
-        this.jdbcTemplate = new JdbcTemplate(dataSource);
-    }
+	@Autowired
+	public CostCenterReadPlatformServiceImpl(
+			final StaffReadPlatformService staffReadPlatformService,
+			final GLAccountReadPlatformService glAccountReadPlatformService,
+			final CodeValueReadPlatformService codeValueReadPlatformService) {
+		this.staffReadPlatformService = staffReadPlatformService;
+		this.glAccountReadPlatformService = glAccountReadPlatformService;
+		this.codeValueReadPlatformService = codeValueReadPlatformService;
+	}
 
 
-    @Override
-    public CostCenterData retrieveNewCostCenterDetails() {
-        return CostCenterData.sensibleDefaultsForNewCostCenterCreation();
-    }
+	@Override
+	public CostCenterData retrieveNewCostCenterDetails() {
+		return CostCenterData.sensibleDefaultsForNewCostCenterCreation();
+	}
 
-    @Override
-    public CostCenterData retrieveCostCenterDetails(Long staffId) {
-        StaffData staffData = this.staffReadPlatformService.retrieveStaff(staffId);
-        List<GLAccountData> glAccountDataCollection = this.glAccountReadPlatformService.retrieveAllRelatedToStaff(staffId);
-//        Staff staff = this.staffRepositoryWrapper.findOneWithNotFoundDetection(staffId);
+	@Override
+	public CostCenterData retrieveCostCenterDetails(Long staffId, String costCenterType) {
+		StaffData staffData = null;
+		CodeValueData nonStaffData = null;
+		List<GLAccountData> glAccountDataCollection;
+		if (costCenterType.equals("staff")) {
+			staffData = this.staffReadPlatformService.retrieveStaff(staffId);
+			glAccountDataCollection = this.glAccountReadPlatformService.retrieveAllRelatedToStaff(staffId);
+		} else {
+			nonStaffData = this.codeValueReadPlatformService.retrieveCodeValue(staffId);
+			glAccountDataCollection = this.glAccountReadPlatformService.retrieveAllRelatedToNonStaff(staffId);
+		}
+		return new CostCenterData(staffData, nonStaffData, glAccountDataCollection);
+	}
 
-//        List<GLAccountData> glAccountDataCollection = new LinkedList<>();
-//
-//        for (GLAccount glAccount : staff.getGlAccounts()) {
-//            glAccountDataCollection.add(glAccount.toData());
-//        }
-
-//        return new CostCenterData(staff.toData(), glAccountDataCollection);
-        return new CostCenterData(staffData, glAccountDataCollection);
-    }
-
-    @Override
-    public List<CostCenterData> retrieveAllCostCenters() {
-        Collection<StaffData> staffs = this.staffReadPlatformService.retrieveAllStaffWithAssignedGlAccounts();
-        List<CostCenterData> result = new LinkedList<>();
-        for (StaffData staffData : staffs) {
-            result.add(new CostCenterData(staffData, null));
-        }
-        return result;
-    }
+	@Override
+	public List<CostCenterData> retrieveAllCostCenters() {
+		List<CostCenterData> result = new LinkedList<>();
+		Collection<StaffData> staffs = this.staffReadPlatformService.retrieveAllStaffWithAssignedGlAccounts();
+		for (StaffData staffData : staffs) {
+			result.add(new CostCenterData(staffData, null, null));
+		}
+		Collection<CodeValueData> nonStaffs = this.codeValueReadPlatformService.retrieveAllNonStaffWithAssignedGlAccounts();
+		for (CodeValueData nonStaff : nonStaffs) {
+			result.add(new CostCenterData(null, nonStaff, null));
+		}
+		return result;
+	}
 }

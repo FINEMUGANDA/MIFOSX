@@ -67,9 +67,6 @@ public class GLAccount extends AbstractPersistable<Long> {
     @Column(name = "affects_loan", nullable = false)
     private boolean affectsLoan;
 
-//    @OneToMany(mappedBy="glAccount")
-//    private List<CostCenter> assignedStaffs;
-
     @ManyToMany(mappedBy = "glAccounts")
     private List<Staff> staffs;
 

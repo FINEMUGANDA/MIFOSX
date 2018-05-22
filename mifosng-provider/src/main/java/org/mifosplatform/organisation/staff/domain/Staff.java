@@ -93,9 +93,6 @@ public class Staff extends AbstractPersistable<Long> {
     @JoinColumn(name = "organisational_role_parent_staff_id", nullable = true)
     private Staff organisationalRoleParentStaff;
 
-//    @OneToMany(mappedBy="staff")
-//    private List<CostCenter> assignedGlAccounts;
-
     @ManyToMany
     @JoinTable(
             name = "m_cost_center",

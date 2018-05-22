@@ -261,6 +261,14 @@ public class GLAccountReadPlatformServiceImpl implements GLAccountReadPlatformSe
         return this.jdbcTemplate.query(sql, mapper, new Object[] { staffId });
     }
 
+	@Override
+	public List<GLAccountData> retrieveAllRelatedToNonStaff(final Long nonStaffId) {
+		JournalEntryAssociationParametersData journalEntryAssociationParametersData = new JournalEntryAssociationParametersData(false, false, true);
+		final GLAccountMapper mapper = new GLAccountMapper(journalEntryAssociationParametersData);
+		final String sql = "select " + mapper.schema() + " where mcc.non_staff_id = ? ";
+		return this.jdbcTemplate.query(sql, mapper, new Object[] { nonStaffId });
+	}
+
     private static final class GLAccountDataLookUpMapper implements RowMapper<GLAccountDataForLookup> {
 
         public String schema() {

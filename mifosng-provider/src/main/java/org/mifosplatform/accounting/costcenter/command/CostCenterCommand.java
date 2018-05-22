@@ -23,11 +23,13 @@ public class CostCenterCommand {
 
     @SuppressWarnings("unused")
     private final Long staffId;
+	private final String costCenterType;
     private final List<Long> glAccounts;
 
-    public CostCenterCommand(Long staffId, List<Long> glAccounts) {
+    public CostCenterCommand(Long staffId, String costCenterType, List<Long> glAccounts) {
         this.staffId = staffId;
         this.glAccounts = glAccounts;
+		this.costCenterType = costCenterType;
     }
 
     public void validateForCreate() {
@@ -41,6 +43,8 @@ public class CostCenterCommand {
 
         baseDataValidator.reset().parameter(CostCenterJsonInputParams.GL_ACCOUNTS.getValue()).value(this.glAccounts.toArray()).notNull().arrayNotEmpty();
 
+		baseDataValidator.reset().parameter(CostCenterJsonInputParams.COST_CENTER_TYPE.getValue()).value(this.costCenterType).notNull();
+
         if (!dataValidationErrors.isEmpty()) {
             throw new PlatformApiDataValidationException("validation.msg.validation.errors.exist", "Validation errors exist.", dataValidationErrors);
         }
@@ -52,6 +56,8 @@ public class CostCenterCommand {
         final DataValidatorBuilder baseDataValidator = new DataValidatorBuilder(dataValidationErrors).resource("CostCenter");
 
         baseDataValidator.reset().parameter(CostCenterJsonInputParams.STAFF_ID.getValue()).value(this.staffId).notNull().longGreaterThanZero();
+
+		baseDataValidator.reset().parameter(CostCenterJsonInputParams.COST_CENTER_TYPE.getValue()).value(this.costCenterType).notNull();
 
         baseDataValidator.reset().parameter(CostCenterJsonInputParams.GL_ACCOUNTS.getValue()).value(this.glAccounts.toArray()).notNull().arrayNotEmpty();
 
@@ -67,4 +73,8 @@ public class CostCenterCommand {
     public List<Long> getGlAccounts() {
         return glAccounts;
     }
+
+	public String getCostCenterType() {
+		return costCenterType;
+	}
 }
