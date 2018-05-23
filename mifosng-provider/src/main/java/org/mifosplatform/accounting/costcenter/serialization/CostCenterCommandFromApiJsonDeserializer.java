@@ -29,38 +29,38 @@ import java.util.Set;
 @Component
 public final class CostCenterCommandFromApiJsonDeserializer extends AbstractFromApiJsonDeserializer<CostCenterCommand> {
 
-    private final FromJsonHelper fromApiJsonHelper;
+	private final FromJsonHelper fromApiJsonHelper;
 
-    @Autowired
-    public CostCenterCommandFromApiJsonDeserializer(final FromJsonHelper fromApiJsonfromApiJsonHelper) {
-        this.fromApiJsonHelper = fromApiJsonfromApiJsonHelper;
-    }
+	@Autowired
+	public CostCenterCommandFromApiJsonDeserializer(final FromJsonHelper fromApiJsonfromApiJsonHelper) {
+		this.fromApiJsonHelper = fromApiJsonfromApiJsonHelper;
+	}
 
-    @Override
-    public CostCenterCommand commandFromApiJson(final String json) {
-        if (StringUtils.isBlank(json)) {
-            throw new InvalidJsonException();
-        }
+	@Override
+	public CostCenterCommand commandFromApiJson(final String json) {
+		if (StringUtils.isBlank(json)) {
+			throw new InvalidJsonException();
+		}
 
-        final Type typeOfMap = new TypeToken<Map<String, Object>>() {
-        }.getType();
-        final Set<String> supportedParameters = CostCenterJsonInputParams.getAllValues();
-        this.fromApiJsonHelper.checkForUnsupportedParameters(typeOfMap, json, supportedParameters);
+		final Type typeOfMap = new TypeToken<Map<String, Object>>() {
+		}.getType();
+		final Set<String> supportedParameters = CostCenterJsonInputParams.getAllValues();
+		this.fromApiJsonHelper.checkForUnsupportedParameters(typeOfMap, json, supportedParameters);
 
-        final JsonElement element = this.fromApiJsonHelper.parse(json);
+		final JsonElement element = this.fromApiJsonHelper.parse(json);
 
-        final Long staffId = this.fromApiJsonHelper.extractLongNamed(CostCenterJsonInputParams.STAFF_ID.getValue(), element);
-//        final Long[] glAccounts = this.fromApiJsonHelper.extractArrayNamed(CostCenterJsonInputParams.GL_ACCOUNTS.getValue(), element);
+		final Long staffId = this.fromApiJsonHelper.extractLongNamed(CostCenterJsonInputParams.STAFF_ID.getValue(), element);
+		final String costCenterType = this.fromApiJsonHelper.extractStringNamed(CostCenterJsonInputParams.COST_CENTER_TYPE.getValue(), element);
 
-        final String[] glAccountIds = this.fromApiJsonHelper.extractArrayNamed(CostCenterJsonInputParams.GL_ACCOUNTS.getValue(), element);
+		final String[] glAccountIds = this.fromApiJsonHelper.extractArrayNamed(CostCenterJsonInputParams.GL_ACCOUNTS.getValue(), element);
 
-        List<Long> glAccounts = new ArrayList<>();
-        if (glAccountIds != null) {
-            for (final String glAccountId : glAccountIds) {
-                glAccounts.add(Long.valueOf(glAccountId));
-            }
-        }
+		List<Long> glAccounts = new ArrayList<>();
+		if (glAccountIds != null) {
+			for (final String glAccountId : glAccountIds) {
+				glAccounts.add(Long.valueOf(glAccountId));
+			}
+		}
 
-        return new CostCenterCommand(staffId, glAccounts);
-    }
+		return new CostCenterCommand(staffId, costCenterType, glAccounts);
+	}
 }

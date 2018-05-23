@@ -18,7 +18,7 @@ public interface CostCenterReadPlatformService {
 
     CostCenterData retrieveNewCostCenterDetails();
 
-    CostCenterData retrieveCostCenterDetails(Long staffId);
+    CostCenterData retrieveCostCenterDetails(Long staffId, String costCenterType);
 
     List<CostCenterData> retrieveAllCostCenters();
 }

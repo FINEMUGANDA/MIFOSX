@@ -88,4 +88,15 @@ public class CodeValueReadPlatformServiceImpl implements CodeValueReadPlatformSe
         }
 
     }
+
+	@Override
+	public Collection<CodeValueData> retrieveAllNonStaffWithAssignedGlAccounts() {
+		this.context.authenticatedUser();
+
+		final CodeValueDataMapper rm = new CodeValueDataMapper();
+		final String sql = "select " + rm.schema() + "where c.code_name like 'Non Staff' " +
+				"and (select count(mcc.non_staff_id) from m_cost_center mcc where mcc.non_staff_id = cv.id) > 0 order by position";
+
+		return this.jdbcTemplate.query(sql, rm);
+	}
 }
