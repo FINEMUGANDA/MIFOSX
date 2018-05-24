@@ -28,6 +28,6 @@ public class DeleteCostCenterCommandHandler implements NewCommandSourceHandler {
     @Transactional
     @Override
     public CommandProcessingResult processCommand(final JsonCommand command) {
-        return this.writePlatformService.deleteCostCenter(command.entityId());
+        return this.writePlatformService.deleteCostCenter(command.entityId(), command);
     }
 }

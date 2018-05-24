@@ -52,12 +52,14 @@ public class CostCenterApiResource {
     private final PortfolioCommandSourceWritePlatformService commandsSourceWritePlatformService;
     private final StaffReadPlatformService staffReadPlatformService;
     private final CostCenterReadPlatformService costCenterReadPlatformService;
+	private final CodeValueReadPlatformService codeValueReadPlatformService;
 
     @Autowired
     public CostCenterApiResource(final PlatformSecurityContext context, final GLAccountReadPlatformService glAccountReadPlatformService,
                                  final DefaultToApiJsonSerializer<CostCenterData> toApiJsonSerializer, final ApiRequestParameterHelper apiRequestParameterHelper,
                                  final PortfolioCommandSourceWritePlatformService commandsSourceWritePlatformService,
                                  final StaffReadPlatformService staffReadPlatformService,
+								 final CodeValueReadPlatformService codeValueReadPlatformService,
                                  final CostCenterReadPlatformService costCenterReadPlatformService) {
         this.context = context;
         this.apiRequestParameterHelper = apiRequestParameterHelper;
@@ -65,6 +67,7 @@ public class CostCenterApiResource {
         this.apiJsonSerializerService = toApiJsonSerializer;
         this.glAccountReadPlatformService = glAccountReadPlatformService;
         this.staffReadPlatformService = staffReadPlatformService;
+		this.codeValueReadPlatformService = codeValueReadPlatformService;
         this.costCenterReadPlatformService = costCenterReadPlatformService;
     }
 
@@ -97,16 +100,16 @@ public class CostCenterApiResource {
     }
 
     @GET
-    @Path("{staffId}")
+    @Path("{staffId}/{costCenterType}")
     @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
-    public String retreiveAccount(@PathParam("staffId") final Long staffId, @Context final UriInfo uriInfo) {
+    public String retrieveAccount(@PathParam("staffId") final Long staffId, @PathParam("costCenterType") final String costCenterType, @Context final UriInfo uriInfo) {
 
         this.context.authenticatedUser().validateHasReadPermission(this.resourceNameForPermission);
 
         final ApiRequestJsonSerializationSettings settings = this.apiRequestParameterHelper.process(uriInfo.getQueryParameters());
 
-        CostCenterData costCenterData = this.costCenterReadPlatformService.retrieveCostCenterDetails(staffId);
+        CostCenterData costCenterData = this.costCenterReadPlatformService.retrieveCostCenterDetails(staffId, costCenterType);
 
         if (settings.isTemplate()) {
             costCenterData = handleTemplate(costCenterData);
@@ -141,12 +144,12 @@ public class CostCenterApiResource {
     }
 
     @DELETE
-    @Path("{staffId}")
+    @Path("{staffId}/{costCenterType}")
     @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
-    public String deleteGLAccount(@PathParam("staffId") final Long staffId) {
-
-        final CommandWrapper commandRequest = new CommandWrapperBuilder().deleteCostCenter(staffId).build();
+    public String deleteGLAccount(@PathParam("staffId") final Long staffId, @PathParam("costCenterType") final String costCenterType) {
+		String jsonRequestBody = "{\"costCenterType\":\"" + costCenterType + "\"}";
+        final CommandWrapper commandRequest = new CommandWrapperBuilder().deleteCostCenter(staffId).withJson(jsonRequestBody).build();
 
         final CommandProcessingResult result = this.commandsSourceWritePlatformService.logCommandSource(commandRequest);
 
@@ -158,15 +161,8 @@ public class CostCenterApiResource {
         JournalEntryAssociationParametersData associationParametersData = new JournalEntryAssociationParametersData();
         final List<GLAccountData> glAccountOptions = this.glAccountReadPlatformService.retrieveAllGLAccounts(null, null, null, null, false, associationParametersData);
         final List<StaffData> staffOptions = (List<StaffData>) this.staffReadPlatformService.retrieveAllStaff(null, null, false, "active");
+		final Collection<CodeValueData> nonStaffOptions = this.codeValueReadPlatformService.retrieveCodeValuesByCode("Non Staff");
 
-        return new CostCenterData(costCenterData, glAccountOptions, staffOptions);
-    }
-
-    private List<GLAccountData> defaultIfEmpty(final List<GLAccountData> list) {
-        List<GLAccountData> returnList = null;
-        if (list != null && !list.isEmpty()) {
-            returnList = list;
-        }
-        return returnList;
+        return new CostCenterData(costCenterData, glAccountOptions, staffOptions, nonStaffOptions);
     }
 }

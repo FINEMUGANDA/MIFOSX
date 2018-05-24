@@ -12,7 +12,7 @@ import java.util.Set;
  * Enum of all parameters passed in while creating/updating a GL Account
  ***/
 public enum CostCenterJsonInputParams {
-    STAFF_ID("staffId"), GL_ACCOUNTS("glAccounts");
+    STAFF_ID("staffId"), GL_ACCOUNTS("glAccounts"), COST_CENTER_TYPE("costCenterType");
 
     private final String value;
 
