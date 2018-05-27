@@ -743,6 +743,15 @@ public class CommandWrapperBuilder {
         return this;
     }
 
+	public CommandWrapperBuilder refundToClientLoanTransaction(final Long loanId) {
+		this.actionName = "REFUND_TO_CLIENT";
+		this.entityName = "LOAN";
+		this.entityId = null;
+		this.loanId = loanId;
+		this.href = "/loans/" + loanId + "/transactions/template?command=refundToClient";
+		return this;
+	}
+
     public CommandWrapperBuilder closeLoanAsRescheduledTransaction(final Long loanId) {
         this.actionName = "CLOSEASRESCHEDULED";
         this.entityName = "LOAN";

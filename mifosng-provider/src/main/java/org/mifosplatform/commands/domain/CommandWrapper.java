@@ -494,6 +494,10 @@ public class CommandWrapper {
         return this.actionName.equalsIgnoreCase("MOVE_TO_PROFIT") && this.entityName.equalsIgnoreCase("LOAN");
     }
 
+	public boolean isLoanRefundToClient() {
+		return this.actionName.equalsIgnoreCase("REFUND_TO_CLIENT") && this.entityName.equalsIgnoreCase("LOAN");
+	}
+
     public boolean isUpdateDisbursementDate() {
         return this.actionName.equalsIgnoreCase("UPDATE") && this.entityName.equalsIgnoreCase("DISBURSEMENTDETAIL");
     }

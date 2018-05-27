@@ -42,7 +42,8 @@ public enum LoanTransactionType {
     FROM_UNIDENTIFIED(19, "loanTransactionType.fromUnidentified"),
     MOVE_TO_PROFIT(20, "loanTransactionType.moveToProfit"),
     TRANSFER_OVERPAID(21, "loanTransactionType.transferOverpaid"),
-    FROM_TRANSFER_OVERPAID(22, "loanTransactionType.fromTransferOverpaid");
+    FROM_TRANSFER_OVERPAID(22, "loanTransactionType.fromTransferOverpaid"),
+	REFUND_TO_CLIENT(23, "loanTransactionType.refundToClient");
 
     private final Integer value;
     private final String code;
@@ -129,6 +130,9 @@ public enum LoanTransactionType {
             case 22:
                 loanTransactionType = LoanTransactionType.FROM_TRANSFER_OVERPAID;
                 break;
+			case 23:
+				loanTransactionType = LoanTransactionType.REFUND_TO_CLIENT;
+				break;
             default:
                 loanTransactionType = LoanTransactionType.INVALID;
             break;

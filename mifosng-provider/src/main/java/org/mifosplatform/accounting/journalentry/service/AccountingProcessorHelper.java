@@ -630,7 +630,9 @@ public class AccountingProcessorHelper {
                 result = "Loan Repayment from Unidentified" + loanInfo;
             } else if (loanTransaction.isMoveToProfit()) {
                 result = "Overpaid moved to Profit" + loanInfo;
-            } else if (loanTransaction.isTransferOverpaid()) {
+            } else if (loanTransaction.isRefundToClient()) {
+				result = "Overpaid refunded to client" + loanInfo;
+			} else if (loanTransaction.isTransferOverpaid()) {
                 result = "Transfer Overpaid amount" + loanInfo;
             } else if (loanTransaction.isFromTransferOverpaid()) {
                 result = "Loan repayment from Overpaid" + loanInfo;
@@ -658,7 +660,7 @@ public class AccountingProcessorHelper {
     }
 
     private GLAccount getLinkedGLAccountForLoanProduct(final Long loanProductId, final int accountMappingTypeId, final Long paymentTypeId) {
-        GLAccount glAccount = null;
+        GLAccount glAccount;
         if (isOrganizationAccount(accountMappingTypeId)) {
             FinancialActivityAccount financialActivityAccount = this.financialActivityAccountRepository
                     .findByFinancialActivityTypeWithNotFoundDetection(accountMappingTypeId);

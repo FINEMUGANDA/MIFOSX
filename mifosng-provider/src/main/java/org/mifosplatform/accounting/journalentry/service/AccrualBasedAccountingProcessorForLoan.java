@@ -73,7 +73,9 @@ public class AccrualBasedAccountingProcessorForLoan implements AccountingProcess
 
             else if (loanTransactionDTO.getTransactionType().isMoveToProfit()) {
                 createJournalEntriesForMoveToProfit(loanDTO, loanTransactionDTO, office);
-            }
+            } else if (loanTransactionDTO.getTransactionType().isRefundToClient()) {
+				createJournalEntriesForRefundToClient(loanDTO, loanTransactionDTO, office);
+			}
             else if (loanTransactionDTO.getTransactionType().isTransferOverpaid()) {
                 createJournalEntriesForTransferOverpaid(loanDTO, loanTransactionDTO, office);
             }
@@ -475,6 +477,24 @@ public class AccrualBasedAccountingProcessorForLoan implements AccountingProcess
                 ACCRUAL_ACCOUNTS_FOR_LOAN.OVERPAYMENT.getValue(), ACCRUAL_ACCOUNTS_FOR_LOAN.OVERPAID_PROFIT.getValue(), loanProductId,
                 paymentTypeId, loanId, transactionId, transactionDate, refundAmount, isReversal);
     }
+
+	private void createJournalEntriesForRefundToClient(final LoanDTO loanDTO, final LoanTransactionDTO loanTransactionDTO, final Office office) {
+		// loan properties
+		final Long loanProductId = loanDTO.getLoanProductId();
+		final Long loanId = loanDTO.getLoanId();
+		final String currencyCode = loanDTO.getCurrencyCode();
+
+		// transaction properties
+		final String transactionId = loanTransactionDTO.getTransactionId();
+		final Date transactionDate = loanTransactionDTO.getTransactionDate();
+		final BigDecimal refundAmount = loanTransactionDTO.getAmount();
+		final boolean isReversal = loanTransactionDTO.isReversed();
+		final Long paymentTypeId = loanTransactionDTO.getPaymentTypeId();
+
+		this.helper.createAccrualBasedJournalEntriesAndReversalsForLoan(office, currencyCode,
+				ACCRUAL_ACCOUNTS_FOR_LOAN.OVERPAYMENT.getValue(), ACCRUAL_ACCOUNTS_FOR_LOAN.FUND_SOURCE.getValue(), loanProductId,
+				paymentTypeId, loanId, transactionId, transactionDate, refundAmount, isReversal);
+	}
 
     private void createJournalEntriesForTransferOverpaid(final LoanDTO loanDTO, final LoanTransactionDTO loanTransactionDTO, final Office office) {
         // loan properties

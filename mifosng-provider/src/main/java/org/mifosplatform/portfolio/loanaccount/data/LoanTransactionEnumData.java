@@ -35,6 +35,7 @@ public class LoanTransactionEnumData {
     private final boolean moveToProfit;
     private final boolean transferOverpaid;
     private final boolean fromTransferOverpaid;
+	private final boolean refundToClient;
 
     public LoanTransactionEnumData(final Long id, final String code, final String value) {
         this.id = id;
@@ -60,6 +61,7 @@ public class LoanTransactionEnumData {
         this.moveToProfit = Long.valueOf(20).equals(this.id);
         this.transferOverpaid = Long.valueOf(21).equals(this.id);
         this.fromTransferOverpaid = Long.valueOf(22).equals(this.id);
+		this.refundToClient = Long.valueOf(23).equals(this.id);
     }
 
     public Long id() {
@@ -160,4 +162,8 @@ public class LoanTransactionEnumData {
     public boolean isFromTransferOverpaid() {
         return fromTransferOverpaid;
     }
+
+	public boolean isRefundToClient() {
+		return refundToClient;
+	}
 }

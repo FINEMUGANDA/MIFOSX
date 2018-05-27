@@ -296,97 +296,101 @@ public class LoanEnumerations {
     public static LoanTransactionEnumData transactionType(final LoanTransactionType type) {
         LoanTransactionEnumData optionData = null;
         switch (type) {
-            case INVALID:
-                optionData = new LoanTransactionEnumData(LoanTransactionType.INVALID.getValue().longValue(),
-                        LoanTransactionType.INVALID.getCode(), "Invalid");
-            break;
-            case DISBURSEMENT:
-                optionData = new LoanTransactionEnumData(LoanTransactionType.DISBURSEMENT.getValue().longValue(),
-                        LoanTransactionType.DISBURSEMENT.getCode(), "Disbursement");
-            break;
-            case REPAYMENT:
-                optionData = new LoanTransactionEnumData(LoanTransactionType.REPAYMENT.getValue().longValue(),
-                        LoanTransactionType.REPAYMENT.getCode(), "Repayment");
-            break;
-            case REPAYMENT_AT_DISBURSEMENT:
-                optionData = new LoanTransactionEnumData(LoanTransactionType.REPAYMENT_AT_DISBURSEMENT.getValue().longValue(),
-                        LoanTransactionType.REPAYMENT_AT_DISBURSEMENT.getCode(), "Repayment (at time of disbursement)");
-            break;
-            case CONTRA:
-                optionData = new LoanTransactionEnumData(LoanTransactionType.CONTRA.getValue().longValue(),
-                        LoanTransactionType.CONTRA.getCode(), "Reversal");
-            break;
-            case WAIVE_INTEREST:
-                optionData = new LoanTransactionEnumData(LoanTransactionType.WAIVE_INTEREST.getValue().longValue(),
-                        LoanTransactionType.WAIVE_INTEREST.getCode(), "Waive interest");
-            break;
-            case MARKED_FOR_RESCHEDULING:
-                optionData = new LoanTransactionEnumData(LoanTransactionType.MARKED_FOR_RESCHEDULING.getValue().longValue(),
-                        LoanTransactionType.MARKED_FOR_RESCHEDULING.getCode(), "Close (as rescheduled)");
-            break;
-            case WRITEOFF:
-                optionData = new LoanTransactionEnumData(LoanTransactionType.WRITEOFF.getValue().longValue(),
-                        LoanTransactionType.WRITEOFF.getCode(), "Close (as written-off)");
-            break;
-            case RECOVERY_REPAYMENT:
-                optionData = new LoanTransactionEnumData(LoanTransactionType.RECOVERY_REPAYMENT.getValue().longValue(),
-                        LoanTransactionType.RECOVERY_REPAYMENT.getCode(), "Repayment (after write-off)");
-            break;
-            case WAIVE_CHARGES:
-                optionData = new LoanTransactionEnumData(LoanTransactionType.WAIVE_CHARGES.getValue().longValue(),
-                        LoanTransactionType.WAIVE_CHARGES.getCode(), "Waive loan charges");
-            break;
-            case ACCRUAL:
-                optionData = new LoanTransactionEnumData(LoanTransactionType.ACCRUAL.getValue().longValue(),
-                        LoanTransactionType.ACCRUAL.getCode(), "Accrual");
-            break;
-            case APPROVE_TRANSFER:
-                optionData = new LoanTransactionEnumData(LoanTransactionType.APPROVE_TRANSFER.getValue().longValue(),
-                        LoanTransactionType.APPROVE_TRANSFER.getCode(), "Transfer approved");
-            break;
-            case INITIATE_TRANSFER:
-                optionData = new LoanTransactionEnumData(LoanTransactionType.INITIATE_TRANSFER.getValue().longValue(),
-                        LoanTransactionType.INITIATE_TRANSFER.getCode(), "Transfer initiated");
-            break;
-            case WITHDRAW_TRANSFER:
-                optionData = new LoanTransactionEnumData(LoanTransactionType.WITHDRAW_TRANSFER.getValue().longValue(),
-                        LoanTransactionType.WITHDRAW_TRANSFER.getCode(), "Transfer Withdrawn");
-            break;
-            case REJECT_TRANSFER:
-                optionData = new LoanTransactionEnumData(LoanTransactionType.REJECT_TRANSFER.getValue().longValue(),
-                        LoanTransactionType.REJECT_TRANSFER.getCode(), "Transfer Rejected");
-            break;
-            case REFUND:
-                optionData = new LoanTransactionEnumData(LoanTransactionType.REFUND.getValue().longValue(),
-                        LoanTransactionType.REFUND.getCode(), "Transfer Refund");
-            break;
-            case CHARGE_PAYMENT:
-                optionData = new LoanTransactionEnumData(LoanTransactionType.CHARGE_PAYMENT.getValue().longValue(),
-                        LoanTransactionType.CHARGE_PAYMENT.getCode(), "Charge Payment");
-            break;
-            case REFUND_FOR_ACTIVE_LOAN:
-                optionData = new LoanTransactionEnumData(LoanTransactionType.REFUND_FOR_ACTIVE_LOAN.getValue().longValue(),
-                        LoanTransactionType.REFUND_FOR_ACTIVE_LOAN.getCode(), "Refund");
-            break;
-            case FROM_UNIDENTIFIED:
-                optionData = new LoanTransactionEnumData(LoanTransactionType.FROM_UNIDENTIFIED.getValue().longValue(),
-                        LoanTransactionType.FROM_UNIDENTIFIED.getCode(), "From Unidentified");
-            break;
-            case MOVE_TO_PROFIT:
-                optionData = new LoanTransactionEnumData(LoanTransactionType.MOVE_TO_PROFIT.getValue().longValue(),
-                        LoanTransactionType.MOVE_TO_PROFIT.getCode(), "Move To Profit");
-            break;
-            case TRANSFER_OVERPAID:
-                optionData = new LoanTransactionEnumData(LoanTransactionType.TRANSFER_OVERPAID.getValue().longValue(),
-                        LoanTransactionType.TRANSFER_OVERPAID.getCode(), "Transfer Overpaid");
-            break;
-            case FROM_TRANSFER_OVERPAID:
-                optionData = new LoanTransactionEnumData(LoanTransactionType.FROM_TRANSFER_OVERPAID.getValue().longValue(),
-                        LoanTransactionType.FROM_TRANSFER_OVERPAID.getCode(), "From Overpaid Transfer");
-            break;
-            default:
-            break;
-        }
+			case INVALID:
+				optionData = new LoanTransactionEnumData(LoanTransactionType.INVALID.getValue().longValue(),
+						LoanTransactionType.INVALID.getCode(), "Invalid");
+				break;
+			case DISBURSEMENT:
+				optionData = new LoanTransactionEnumData(LoanTransactionType.DISBURSEMENT.getValue().longValue(),
+						LoanTransactionType.DISBURSEMENT.getCode(), "Disbursement");
+				break;
+			case REPAYMENT:
+				optionData = new LoanTransactionEnumData(LoanTransactionType.REPAYMENT.getValue().longValue(),
+						LoanTransactionType.REPAYMENT.getCode(), "Repayment");
+				break;
+			case REPAYMENT_AT_DISBURSEMENT:
+				optionData = new LoanTransactionEnumData(LoanTransactionType.REPAYMENT_AT_DISBURSEMENT.getValue().longValue(),
+						LoanTransactionType.REPAYMENT_AT_DISBURSEMENT.getCode(), "Repayment (at time of disbursement)");
+				break;
+			case CONTRA:
+				optionData = new LoanTransactionEnumData(LoanTransactionType.CONTRA.getValue().longValue(),
+						LoanTransactionType.CONTRA.getCode(), "Reversal");
+				break;
+			case WAIVE_INTEREST:
+				optionData = new LoanTransactionEnumData(LoanTransactionType.WAIVE_INTEREST.getValue().longValue(),
+						LoanTransactionType.WAIVE_INTEREST.getCode(), "Waive interest");
+				break;
+			case MARKED_FOR_RESCHEDULING:
+				optionData = new LoanTransactionEnumData(LoanTransactionType.MARKED_FOR_RESCHEDULING.getValue().longValue(),
+						LoanTransactionType.MARKED_FOR_RESCHEDULING.getCode(), "Close (as rescheduled)");
+				break;
+			case WRITEOFF:
+				optionData = new LoanTransactionEnumData(LoanTransactionType.WRITEOFF.getValue().longValue(),
+						LoanTransactionType.WRITEOFF.getCode(), "Close (as written-off)");
+				break;
+			case RECOVERY_REPAYMENT:
+				optionData = new LoanTransactionEnumData(LoanTransactionType.RECOVERY_REPAYMENT.getValue().longValue(),
+						LoanTransactionType.RECOVERY_REPAYMENT.getCode(), "Repayment (after write-off)");
+				break;
+			case WAIVE_CHARGES:
+				optionData = new LoanTransactionEnumData(LoanTransactionType.WAIVE_CHARGES.getValue().longValue(),
+						LoanTransactionType.WAIVE_CHARGES.getCode(), "Waive loan charges");
+				break;
+			case ACCRUAL:
+				optionData = new LoanTransactionEnumData(LoanTransactionType.ACCRUAL.getValue().longValue(),
+						LoanTransactionType.ACCRUAL.getCode(), "Accrual");
+				break;
+			case APPROVE_TRANSFER:
+				optionData = new LoanTransactionEnumData(LoanTransactionType.APPROVE_TRANSFER.getValue().longValue(),
+						LoanTransactionType.APPROVE_TRANSFER.getCode(), "Transfer approved");
+				break;
+			case INITIATE_TRANSFER:
+				optionData = new LoanTransactionEnumData(LoanTransactionType.INITIATE_TRANSFER.getValue().longValue(),
+						LoanTransactionType.INITIATE_TRANSFER.getCode(), "Transfer initiated");
+				break;
+			case WITHDRAW_TRANSFER:
+				optionData = new LoanTransactionEnumData(LoanTransactionType.WITHDRAW_TRANSFER.getValue().longValue(),
+						LoanTransactionType.WITHDRAW_TRANSFER.getCode(), "Transfer Withdrawn");
+				break;
+			case REJECT_TRANSFER:
+				optionData = new LoanTransactionEnumData(LoanTransactionType.REJECT_TRANSFER.getValue().longValue(),
+						LoanTransactionType.REJECT_TRANSFER.getCode(), "Transfer Rejected");
+				break;
+			case REFUND:
+				optionData = new LoanTransactionEnumData(LoanTransactionType.REFUND.getValue().longValue(),
+						LoanTransactionType.REFUND.getCode(), "Transfer Refund");
+				break;
+			case CHARGE_PAYMENT:
+				optionData = new LoanTransactionEnumData(LoanTransactionType.CHARGE_PAYMENT.getValue().longValue(),
+						LoanTransactionType.CHARGE_PAYMENT.getCode(), "Charge Payment");
+				break;
+			case REFUND_FOR_ACTIVE_LOAN:
+				optionData = new LoanTransactionEnumData(LoanTransactionType.REFUND_FOR_ACTIVE_LOAN.getValue().longValue(),
+						LoanTransactionType.REFUND_FOR_ACTIVE_LOAN.getCode(), "Refund");
+				break;
+			case FROM_UNIDENTIFIED:
+				optionData = new LoanTransactionEnumData(LoanTransactionType.FROM_UNIDENTIFIED.getValue().longValue(),
+						LoanTransactionType.FROM_UNIDENTIFIED.getCode(), "From Unidentified");
+				break;
+			case MOVE_TO_PROFIT:
+				optionData = new LoanTransactionEnumData(LoanTransactionType.MOVE_TO_PROFIT.getValue().longValue(),
+						LoanTransactionType.MOVE_TO_PROFIT.getCode(), "Move To Profit");
+				break;
+			case TRANSFER_OVERPAID:
+				optionData = new LoanTransactionEnumData(LoanTransactionType.TRANSFER_OVERPAID.getValue().longValue(),
+						LoanTransactionType.TRANSFER_OVERPAID.getCode(), "Transfer Overpaid");
+				break;
+			case FROM_TRANSFER_OVERPAID:
+				optionData = new LoanTransactionEnumData(LoanTransactionType.FROM_TRANSFER_OVERPAID.getValue().longValue(),
+						LoanTransactionType.FROM_TRANSFER_OVERPAID.getCode(), "From Overpaid Transfer");
+				break;
+			case REFUND_TO_CLIENT:
+				optionData = new LoanTransactionEnumData(LoanTransactionType.REFUND_TO_CLIENT.getValue().longValue(),
+						LoanTransactionType.REFUND_TO_CLIENT.getCode(), "Refund To Client");
+				break;
+			default:
+				break;
+		}
         return optionData;
     }
 
