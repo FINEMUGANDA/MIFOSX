@@ -14,4 +14,7 @@ public interface CostCenterRepository extends JpaRepository<CostCenter, Long>, J
 
 	@Query("from CostCenter costCenter where costCenter.nonStaff.id= :nonStaffId")
 	List<CostCenter> findByNonStaffId(@Param("nonStaffId") Long nonStaffId);
+
+	@Query("from CostCenter costCenter where costCenter.glAccount.id IN (:glAccountIds)")
+	List<CostCenter> findByGLAccountIds(@Param("glAccountIds") List<Long> glAccountIds);
 }

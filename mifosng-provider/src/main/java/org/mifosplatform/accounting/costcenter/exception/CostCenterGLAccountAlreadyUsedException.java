@@ -14,6 +14,6 @@ import org.mifosplatform.infrastructure.core.exception.AbstractPlatformDomainRul
 public class CostCenterGLAccountAlreadyUsedException extends AbstractPlatformDomainRuleException {
 
     public CostCenterGLAccountAlreadyUsedException(final String glAccountCode) {
-        super("error.msg.costcenter.glaccount.already.assinged", "The following GL Account with code '" + glAccountCode + "' already assigned to another cost center.");
+        super("error.msg.costcenter.glaccount.already.assinged", "The following GL Account with code '" + glAccountCode + "' is already assigned to another cost center.");
     }
 }

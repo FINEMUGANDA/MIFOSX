@@ -62,21 +62,14 @@ public class CostCenterWritePlatformServiceJpaRepositoryImpl implements CostCent
 	public CommandProcessingResult createCostCenter(final JsonCommand command) {
 		try {
 			final CostCenterCommand costCenterCommand = this.fromApiJsonDeserializer.commandFromApiJson(command.json());
-			costCenterCommand.validateForCreate();
+			List<CostCenter> existingCostCenters = this.costCenterRepository.findByGLAccountIds(costCenterCommand.getGlAccounts());
+
+			costCenterCommand.validateForCreate(existingCostCenters);
 
 			if (costCenterCommand.getCostCenterType().equals("staff")) {
 				Staff staff = this.staffRepository.findOne(costCenterCommand.getStaffId());
 				List<GLAccount> glAccounts = new LinkedList<>();
-				for (Long glAccountId : costCenterCommand.getGlAccounts()) {
-					GLAccount glAccount = this.glAccountRepository.findOne(glAccountId);
-					if (!glAccount.isAffectsLoan()) {
-						List<Staff> glAccountStaffs = glAccount.getStaffs();
-						if (glAccountStaffs != null && glAccountStaffs.size() > 0 && !glAccountStaffs.contains(staff)) {
-							throw new CostCenterGLAccountAlreadyUsedException(glAccount.getGlCode());
-						}
-					}
-					glAccounts.add(glAccount);
-				}
+				costCenterCommand.getGlAccounts().forEach(gl -> glAccounts.add(this.glAccountRepository.findOne(gl)));
 				staff.setGlAccounts(glAccounts);
 				this.staffRepository.saveAndFlush(staff);
 			} else {
@@ -107,27 +100,19 @@ public class CostCenterWritePlatformServiceJpaRepositoryImpl implements CostCent
 	public CommandProcessingResult updateCostCenter(final Long staffId, final JsonCommand command) {
 		try {
 			final CostCenterCommand costCenterCommand = this.fromApiJsonDeserializer.commandFromApiJson(command.json());
-			costCenterCommand.validateForUpdate();
+			List<CostCenter> existingCostCenters = this.costCenterRepository.findByGLAccountIds(costCenterCommand.getGlAccounts());
+
+			costCenterCommand.validateForUpdate(existingCostCenters);
 
 			if (costCenterCommand.getCostCenterType().equals("staff")) {
 				Staff oldStaff = this.staffRepository.findOne(staffId);
 				Staff staff = this.staffRepository.findOne(costCenterCommand.getStaffId());
 
-				List<GLAccount> glAccounts = new ArrayList<>();
-
-				for (Long glAccountId : costCenterCommand.getGlAccounts()) {
-					GLAccount glAccount = this.glAccountRepository.findOne(glAccountId);
-					if (!glAccount.isAffectsLoan()) {
-						List<Staff> glAccountStaffs = glAccount.getStaffs();
-						if (glAccountStaffs != null && glAccountStaffs.size() > 0 && !glAccountStaffs.contains(staff) && !glAccountStaffs.contains(oldStaff)) {
-							throw new CostCenterGLAccountAlreadyUsedException(glAccount.getGlCode());
-						}
-					}
-					glAccounts.add(glAccount);
-				}
+				List<GLAccount> glAccounts = new LinkedList<>();
+				costCenterCommand.getGlAccounts().forEach(gl -> glAccounts.add(this.glAccountRepository.findOne(gl)));
 				staff.setGlAccounts(glAccounts);
 				if (staffId != costCenterCommand.getStaffId()) {
-					oldStaff.setGlAccounts(new LinkedList<GLAccount>());
+					oldStaff.setGlAccounts(new LinkedList<>());
 					this.staffRepository.saveAndFlush(oldStaff);
 				}
 
