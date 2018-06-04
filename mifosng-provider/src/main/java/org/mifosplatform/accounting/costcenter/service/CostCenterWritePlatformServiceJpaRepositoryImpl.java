@@ -100,7 +100,11 @@ public class CostCenterWritePlatformServiceJpaRepositoryImpl implements CostCent
 	public CommandProcessingResult updateCostCenter(final Long staffId, final JsonCommand command) {
 		try {
 			final CostCenterCommand costCenterCommand = this.fromApiJsonDeserializer.commandFromApiJson(command.json());
-			List<CostCenter> existingCostCenters = this.costCenterRepository.findByGLAccountIds(costCenterCommand.getGlAccounts());
+			List<Long> glAccountIds = costCenterCommand.getGlAccounts();
+			if (glAccountIds.isEmpty()) {
+				return this.deleteCostCenter(staffId, command);
+			}
+			List<CostCenter> existingCostCenters = this.costCenterRepository.findByGLAccountIds(glAccountIds);
 
 			costCenterCommand.validateForUpdate(existingCostCenters);
 
@@ -118,7 +122,6 @@ public class CostCenterWritePlatformServiceJpaRepositoryImpl implements CostCent
 
 				this.staffRepository.saveAndFlush(staff);
 			} else {
-				List<Long> glAccountIds = costCenterCommand.getGlAccounts();
 				List<CostCenter> costCenters = this.costCenterRepository.findByNonStaffId(costCenterCommand.getStaffId());
 				List<Long> persistedGlAccountIds = costCenters.stream().map(CostCenter::getGLAccountId).collect(Collectors.toList());
 				for (CostCenter costCenter : costCenters) {
