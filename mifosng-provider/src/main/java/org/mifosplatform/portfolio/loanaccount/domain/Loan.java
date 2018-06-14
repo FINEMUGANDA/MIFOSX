@@ -2580,10 +2580,12 @@ public class Loan extends AbstractPersistable<Long> {
             final List<Long> existingReversedTransactionIds, boolean isRecoveryRepayment, final ScheduleGeneratorDTO scheduleGeneratorDTO,
             final AppUser currentUser) {
 
-        LoanEvent event = null;
+        LoanEvent event;
         if (isRecoveryRepayment) {
             event = LoanEvent.LOAN_RECOVERY_PAYMENT;
-        } else {
+        } else if (this.status().isClosed() || this.status().isOverpaid()) {
+			event = LoanEvent.LOAN_POST_CLOSURE_PAYMENT;
+		} else {
             event = LoanEvent.LOAN_REPAYMENT_OR_WAIVER;
         }
 
