@@ -380,15 +380,21 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService {
         logger.info("##################### DEBUG  9: {}", paymentOptions);
         final BigDecimal outstandingLoanBalance = null;
         final BigDecimal unrecognizedIncomePortion = null;
+		LoanTransactionData result;
+		if (loanRepaymentScheduleInstallment != null) {
+			result = new LoanTransactionData(null, null, null, transactionType, null, currencyData, earliestUnpaidInstallmentDate,
+					loanRepaymentScheduleInstallment.getTotalOutstanding(currency).getAmount(), loanRepaymentScheduleInstallment
+					.getPrincipalOutstanding(currency).getAmount(), loanRepaymentScheduleInstallment.getInterestOutstanding(currency)
+					.getAmount(), loanRepaymentScheduleInstallment.getFeeChargesOutstanding(currency).getAmount(),
+					loanRepaymentScheduleInstallment.getPenaltyChargesOutstanding(currency).getAmount(), null, unrecognizedIncomePortion,
+					paymentOptions, null, null, null, outstandingLoanBalance, false);
+		} else {
+			BigDecimal zero = BigDecimal.ZERO;
+			result = new LoanTransactionData(null, null, null, transactionType, null, currencyData, earliestUnpaidInstallmentDate,
+					zero, zero, zero, zero, zero, null, unrecognizedIncomePortion, paymentOptions, null, null, null, outstandingLoanBalance, false);
+		}
 
-        LoanTransactionData result = new LoanTransactionData(null, null, null, transactionType, null, currencyData, earliestUnpaidInstallmentDate,
-                loanRepaymentScheduleInstallment.getTotalOutstanding(currency).getAmount(), loanRepaymentScheduleInstallment
-                .getPrincipalOutstanding(currency).getAmount(), loanRepaymentScheduleInstallment.getInterestOutstanding(currency)
-                .getAmount(), loanRepaymentScheduleInstallment.getFeeChargesOutstanding(currency).getAmount(),
-                loanRepaymentScheduleInstallment.getPenaltyChargesOutstanding(currency).getAmount(), null, unrecognizedIncomePortion,
-                paymentOptions, null, null, null, outstandingLoanBalance, false);
-        logger.info("##################### DEBUG 10: {}", result);
-
+		logger.info("##################### DEBUG 10: {}", result);
         return result;
     }
 

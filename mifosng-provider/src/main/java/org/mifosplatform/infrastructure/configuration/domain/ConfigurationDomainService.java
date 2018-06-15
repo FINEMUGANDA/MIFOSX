@@ -45,4 +45,6 @@ public interface ConfigurationDomainService {
 
     boolean isMeetingMandatoryForJLGLoans();
 
+	boolean allowPostClosureRepayments();
+
 }

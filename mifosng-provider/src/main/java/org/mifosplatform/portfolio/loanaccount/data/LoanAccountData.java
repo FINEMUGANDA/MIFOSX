@@ -186,6 +186,8 @@ public class LoanAccountData {
 
     private final Boolean pausedLPI;
 
+	private boolean postClosureRepaymentsEnabled;
+
     /**
      * Used to produce a {@link LoanAccountData} with only collateral options
      * for now.
@@ -1359,4 +1361,11 @@ public class LoanAccountData {
         return LoanStatus.fromInt(this.status.id().intValue()).isActive();
     }
 
+	public boolean isPostClosureRepaymentsEnabled() {
+		return postClosureRepaymentsEnabled;
+	}
+
+	public void setPostClosureRepaymentsEnabled(boolean postClosureRepaymentsEnabled) {
+		this.postClosureRepaymentsEnabled = postClosureRepaymentsEnabled;
+	}
 }

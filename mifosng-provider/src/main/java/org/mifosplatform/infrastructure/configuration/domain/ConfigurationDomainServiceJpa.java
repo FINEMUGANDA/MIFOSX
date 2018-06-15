@@ -47,15 +47,12 @@ public class ConfigurationDomainServiceJpa implements ConfigurationDomainService
 
     @Override
     public boolean isAmazonS3Enabled() {
-        return this.globalConfigurationRepository.findOneByNameWithNotFoundDetection("amazon-S3").isEnabled();
+		return this.isPropertyEnabled("amazon-S3");
     }
 
     @Override
     public boolean isRescheduleFutureRepaymentsEnabled() {
-        final String rescheduleRepaymentsConfigurationProperty = "reschedule-future-repayments";
-        final GlobalConfigurationProperty property = this.globalConfigurationRepository
-                .findOneByNameWithNotFoundDetection(rescheduleRepaymentsConfigurationProperty);
-        return property.isEnabled();
+		return this.isPropertyEnabled("reschedule-future-repayments");
     }
 
     /*
@@ -66,32 +63,22 @@ public class ConfigurationDomainServiceJpa implements ConfigurationDomainService
      */
     @Override
     public boolean isRescheduleRepaymentsOnHolidaysEnabled() {
-        final String holidaysConfigurationProperty = "reschedule-repayments-on-holidays";
-        final GlobalConfigurationProperty property = this.globalConfigurationRepository
-                .findOneByNameWithNotFoundDetection(holidaysConfigurationProperty);
-        return property.isEnabled();
+		return this.isPropertyEnabled("reschedule-repayments-on-holidays");
     }
 
     @Override
     public boolean allowTransactionsOnHolidayEnabled() {
-        final String allowTransactionsOnHolidayProperty = "allow-transactions-on-holiday";
-        final GlobalConfigurationProperty property = this.globalConfigurationRepository
-                .findOneByNameWithNotFoundDetection(allowTransactionsOnHolidayProperty);
-        return property.isEnabled();
+		return this.isPropertyEnabled("allow-transactions-on-holiday");
     }
 
     @Override
     public boolean allowTransactionsOnNonWorkingDayEnabled() {
-        final String propertyName = "allow-transactions-on-non_workingday";
-        final GlobalConfigurationProperty property = this.globalConfigurationRepository.findOneByNameWithNotFoundDetection(propertyName);
-        return property.isEnabled();
+		return this.isPropertyEnabled("allow-transactions-on-non_workingday");
     }
 
     @Override
     public boolean isConstraintApproachEnabledForDatatables() {
-        final String propertyName = "constraint_approach_for_datatables";
-        final GlobalConfigurationProperty property = this.globalConfigurationRepository.findOneByNameWithNotFoundDetection(propertyName);
-        return property.isEnabled();
+		return this.isPropertyEnabled("constraint_approach_for_datatables");
     }
 
     @Override
@@ -109,68 +96,76 @@ public class ConfigurationDomainServiceJpa implements ConfigurationDomainService
 
     @Override
     public Long retrievePenaltyWaitPeriod() {
-        final String propertyName = "penalty-wait-period";
-        final GlobalConfigurationProperty property = this.globalConfigurationRepository.findOneByNameWithNotFoundDetection(propertyName);
-        return property.getValue();
+		return this.getPropertyValue("penalty-wait-period");
     }
 
     @Override
     public Long retrieveGraceOnPenaltyPostingPeriod() {
-        final String propertyName = "grace-on-penalty-posting";
-        final GlobalConfigurationProperty property = this.globalConfigurationRepository.findOneByNameWithNotFoundDetection(propertyName);
-        return property.getValue();
+		return this.getPropertyValue("grace-on-penalty-posting");
     }
 
     @Override
     public boolean isPasswordForcedResetEnable() {
-        final String propertyName = "force-password-reset-days";
-        final GlobalConfigurationProperty property = this.globalConfigurationRepository.findOneByNameWithNotFoundDetection(propertyName);
-        return property.isEnabled();
+		return this.isPropertyEnabled("force-password-reset-days");
     }
 
     @Override
     public Long retrievePasswordLiveTime() {
-        final String propertyName = "force-password-reset-days";
-        final GlobalConfigurationProperty property = this.globalConfigurationRepository.findOneByNameWithNotFoundDetection(propertyName);
-        return property.getValue();
+		return this.getPropertyValue("force-password-reset-days");
     }
 
     @Override
     public boolean isSavingsInterestPostingAtCurrentPeriodEnd() {
-        final String propertyName = "savings-interest-posting-current-period-end";
-        final GlobalConfigurationProperty property = this.globalConfigurationRepository.findOneByNameWithNotFoundDetection(propertyName);
-        return property.isEnabled();
+		return this.isPropertyEnabled("savings-interest-posting-current-period-end");
     }
 
     @Override
     public Integer retrieveFinancialYearBeginningMonth() {
-        final String propertyName = "financial-year-beginning-month";
-        final GlobalConfigurationProperty property = this.globalConfigurationRepository.findOneByNameWithNotFoundDetection(propertyName);
-        if (property.isEnabled()) return property.getValue().intValue();
-        return 1;
+		return this.getPropertyValueOrElse("financial-year-beginning-month", 1);
     }
 
     @Override
     public Integer retrieveMinAllowedClientsInGroup() {
-        final String propertyName = "min-clients-in-group";
-        final GlobalConfigurationProperty property = this.globalConfigurationRepository.findOneByNameWithNotFoundDetection(propertyName);
-        if (property.isEnabled()) { return property.getValue().intValue(); }
-        return null;
+		return this.getPropertyValueOrElse("min-clients-in-group", null);
     }
 
     @Override
     public Integer retrieveMaxAllowedClientsInGroup() {
-        final String propertyName = "max-clients-in-group";
-        final GlobalConfigurationProperty property = this.globalConfigurationRepository.findOneByNameWithNotFoundDetection(propertyName);
-        if (property.isEnabled()) { return property.getValue().intValue(); }
-        return null;
+		return this.getPropertyValueOrElse("max-clients-in-group", null);
     }
 
     @Override
     public boolean isMeetingMandatoryForJLGLoans() {
-        final String propertyName = "meetings-mandatory-for-jlg-loans";
-        final GlobalConfigurationProperty property = this.globalConfigurationRepository.findOneByNameWithNotFoundDetection(propertyName);
-        return property.isEnabled();
+		return this.isPropertyEnabled("meetings-mandatory-for-jlg-loans");
     }
+
+	@Override
+	public boolean allowPostClosureRepayments() {
+		return this.isPropertyEnabled("allow-post-closure-repayments");
+	}
+
+	private boolean isPropertyEnabled(String propertyName) {
+		final GlobalConfigurationProperty property = this.globalConfigurationRepository.findOneByNameWithNotFoundDetection(propertyName);
+		return property.isEnabled();
+	}
+
+	private Long getPropertyValue(String propertyName) {
+		final GlobalConfigurationProperty property = this.globalConfigurationRepository.findOneByNameWithNotFoundDetection(propertyName);
+		return property.getValue();
+	}
+
+	/**
+	 * Gets the value of the property if enabled, otherwise returns default value
+	 * @param propertyName
+	 * @param defaultValue
+	 * @return
+	 */
+	private Integer getPropertyValueOrElse(String propertyName, Integer defaultValue) {
+		final GlobalConfigurationProperty property = this.globalConfigurationRepository.findOneByNameWithNotFoundDetection(propertyName);
+		if (property.isEnabled()) {
+			return property.getValue().intValue();
+		}
+		return defaultValue;
+	}
 
 }

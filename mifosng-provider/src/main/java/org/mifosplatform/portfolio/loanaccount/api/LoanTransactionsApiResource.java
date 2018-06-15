@@ -179,7 +179,10 @@ public class LoanTransactionsApiResource {
         } else if (is(commandParam, "moveToProfit")) {
             final CommandWrapper commandRequest = builder.moveToProfitLoanTransaction(loanId).build();
             result = this.commandsSourceWritePlatformService.logCommandSource(commandRequest);
-        }
+        } else if (is(commandParam, "refundToClient")) {
+			final CommandWrapper commandRequest = builder.refundToClientLoanTransaction(loanId).build();
+			result = this.commandsSourceWritePlatformService.logCommandSource(commandRequest);
+		}
 
         if (result == null) { throw new UnrecognizedQueryParamException("command", commandParam); }
 

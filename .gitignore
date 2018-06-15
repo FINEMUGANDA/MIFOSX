@@ -4,3 +4,4 @@
 manifest.mf
 .nb-gradle-properties
 *.DS_Store
+.idea/

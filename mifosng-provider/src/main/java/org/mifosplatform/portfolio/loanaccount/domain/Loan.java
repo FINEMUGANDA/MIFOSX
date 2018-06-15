@@ -2580,10 +2580,12 @@ public class Loan extends AbstractPersistable<Long> {
             final List<Long> existingReversedTransactionIds, boolean isRecoveryRepayment, final ScheduleGeneratorDTO scheduleGeneratorDTO,
             final AppUser currentUser) {
 
-        LoanEvent event = null;
+        LoanEvent event;
         if (isRecoveryRepayment) {
             event = LoanEvent.LOAN_RECOVERY_PAYMENT;
-        } else {
+        } else if (this.status().isClosed() || this.status().isOverpaid()) {
+			event = LoanEvent.LOAN_POST_CLOSURE_PAYMENT;
+		} else {
             event = LoanEvent.LOAN_REPAYMENT_OR_WAIVER;
         }
 
@@ -3079,7 +3081,8 @@ public class Loan extends AbstractPersistable<Long> {
                 transactionForAdjustment.getTransactionDate());
 
         if (transactionForAdjustment.isNotRepayment() && transactionForAdjustment.isNotWaiver() &&
-                transactionForAdjustment.isNotFromUnidentified() && transactionForAdjustment.isNotMoveToProfit()) {
+                transactionForAdjustment.isNotFromUnidentified() && transactionForAdjustment.isNotMoveToProfit()
+				&& transactionForAdjustment.isNotRefundToClient()) {
             final String errorMessage = "Only transactions of type repayment or waiver can be adjusted.";
             throw new InvalidLoanTransactionTypeException("transaction", "adjustment.is.only.allowed.to.repayment.or.waiver.transaction",
                     errorMessage);
@@ -3592,7 +3595,7 @@ public class Loan extends AbstractPersistable<Long> {
         for (final LoanTransaction loanTransaction : this.loanTransactions) {
             if ((loanTransaction.isRepayment() || loanTransaction.isFromUnidentified() || loanTransaction.isFromTransferOverpaid()) && !loanTransaction.isReversed()) {
                 cumulativePaid = cumulativePaid.plus(loanTransaction.getAmount(loanCurrency()));
-            } else if ((loanTransaction.isMoveToProfit() || loanTransaction.isTransferOverpaid()) && !loanTransaction.isReversed()) {
+            } else if ((loanTransaction.isMoveToProfit() || loanTransaction.isRefundToClient() || loanTransaction.isTransferOverpaid()) && !loanTransaction.isReversed()) {
                 cumulativePaid = cumulativePaid.minus(loanTransaction.getAmount(loanCurrency()));
             }
         }
@@ -4836,7 +4839,7 @@ public class Loan extends AbstractPersistable<Long> {
 
         List<LoanTransaction> loanTransactions = retreiveListOfTransactionsPostDisbursement();
         for (LoanTransaction loanTransaction : loanTransactions) {
-            if (loanTransaction.isAccrual() || loanTransaction.isMoveToProfit() || loanTransaction.isTransferOverpaid()) {
+            if (loanTransaction.isAccrual() || loanTransaction.isMoveToProfit() || loanTransaction.isRefundToClient() || loanTransaction.isTransferOverpaid()) {
                 outstanding = outstanding.plus(loanTransaction.getAmount(getCurrency()));
                 loanTransaction.updateOutstandingLoanBalance(outstanding.getAmount());
             } else {

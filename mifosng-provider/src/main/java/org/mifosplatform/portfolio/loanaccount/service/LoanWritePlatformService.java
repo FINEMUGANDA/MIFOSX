@@ -92,6 +92,8 @@ public interface LoanWritePlatformService {
 
     CommandProcessingResult moveToProfit(JsonCommand command);
 
+	CommandProcessingResult refundToClient(JsonCommand command);
+
     CommandProcessingResult moveOverpaid(JsonCommand command);
 
     CommandProcessingResult updateDisbursementDateForTranche(Long loanId, Long disbursementId, JsonCommand command);

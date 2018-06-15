@@ -207,60 +207,61 @@ public class ClientsApiResource {
     public String activate(@PathParam("clientId") final Long clientId, @QueryParam("command") final String commandParam,
             final String apiRequestBodyAsJson) {
 
-        final CommandWrapperBuilder builder = new CommandWrapperBuilder().withJson(apiRequestBodyAsJson);
+		final CommandWrapperBuilder builder = new CommandWrapperBuilder().withJson(apiRequestBodyAsJson);
 
-        CommandProcessingResult result = null;
-        CommandWrapper commandRequest = null;
-        if (is(commandParam, "activate")) {
-            commandRequest = builder.activateClient(clientId).build();
-            result = this.commandsSourceWritePlatformService.logCommandSource(commandRequest);
-        } else if (is(commandParam, "assignStaff")) {
-            commandRequest = builder.assignClientStaff(clientId).build();
-            result = this.commandsSourceWritePlatformService.logCommandSource(commandRequest);
-            return this.toApiJsonSerializer.serialize(result);
-        } else if (is(commandParam, "unassignStaff")) {
-            commandRequest = builder.unassignClientStaff(clientId).build();
-            result = this.commandsSourceWritePlatformService.logCommandSource(commandRequest);
-            return this.toApiJsonSerializer.serialize(result);
-        } else if (is(commandParam, "close")) {
-            commandRequest = builder.closeClient(clientId).build();
-            result = this.commandsSourceWritePlatformService.logCommandSource(commandRequest);
-        } else if (is(commandParam, "proposeTransfer")) {
-            commandRequest = builder.proposeClientTransfer(clientId).build();
-            result = this.commandsSourceWritePlatformService.logCommandSource(commandRequest);
-        } else if (is(commandParam, "proposeAndAcceptTransfer")) {
-            commandRequest = builder.proposeAndAcceptClientTransfer(clientId).build();
-            result = this.commandsSourceWritePlatformService.logCommandSource(commandRequest);
-        } else if (is(commandParam, "withdrawTransfer")) {
-            commandRequest = builder.withdrawClientTransferRequest(clientId).build();
-            result = this.commandsSourceWritePlatformService.logCommandSource(commandRequest);
-        } else if (is(commandParam, "acceptTransfer")) {
-            commandRequest = builder.acceptClientTransfer(clientId).build();
-            result = this.commandsSourceWritePlatformService.logCommandSource(commandRequest);
-        } else if (is(commandParam, "rejectTransfer")) {
-            commandRequest = builder.rejectClientTransfer(clientId).build();
-            result = this.commandsSourceWritePlatformService.logCommandSource(commandRequest);
-        } else if (is(commandParam, "updateSavingsAccount")) {
-            commandRequest = builder.updateClientSavingsAccount(clientId).build();
-            result = this.commandsSourceWritePlatformService.logCommandSource(commandRequest);
-        }else if (is(commandParam,"reject")){
-        	commandRequest = builder.rejectClient(clientId).build();
-            result = this.commandsSourceWritePlatformService.logCommandSource(commandRequest);
-       }else if (is(commandParam,"withdraw")){
-       	commandRequest = builder.withdrawClient(clientId).build();
-        result = this.commandsSourceWritePlatformService.logCommandSource(commandRequest);
-       }else if (is(commandParam,"reactivate")){
-           commandRequest = builder.reActivateClient(clientId).build();
-           result = this.commandsSourceWritePlatformService.logCommandSource(commandRequest);
-          }
-        
+		CommandProcessingResult result = null;
+		CommandWrapper commandRequest = null;
+		if (is(commandParam, "activate")) {
+			commandRequest = builder.activateClient(clientId).build();
+			result = this.commandsSourceWritePlatformService.logCommandSource(commandRequest);
+		} else if (is(commandParam, "assignStaff")) {
+			commandRequest = builder.assignClientStaff(clientId).build();
+			result = this.commandsSourceWritePlatformService.logCommandSource(commandRequest);
+			return this.toApiJsonSerializer.serialize(result);
+		} else if (is(commandParam, "unassignStaff")) {
+			commandRequest = builder.unassignClientStaff(clientId).build();
+			result = this.commandsSourceWritePlatformService.logCommandSource(commandRequest);
+			return this.toApiJsonSerializer.serialize(result);
+		} else if (is(commandParam, "close")) {
+			commandRequest = builder.closeClient(clientId).build();
+			result = this.commandsSourceWritePlatformService.logCommandSource(commandRequest);
+		} else if (is(commandParam, "proposeTransfer")) {
+			commandRequest = builder.proposeClientTransfer(clientId).build();
+			result = this.commandsSourceWritePlatformService.logCommandSource(commandRequest);
+		} else if (is(commandParam, "proposeAndAcceptTransfer")) {
+			commandRequest = builder.proposeAndAcceptClientTransfer(clientId).build();
+			result = this.commandsSourceWritePlatformService.logCommandSource(commandRequest);
+		} else if (is(commandParam, "withdrawTransfer")) {
+			commandRequest = builder.withdrawClientTransferRequest(clientId).build();
+			result = this.commandsSourceWritePlatformService.logCommandSource(commandRequest);
+		} else if (is(commandParam, "acceptTransfer")) {
+			commandRequest = builder.acceptClientTransfer(clientId).build();
+			result = this.commandsSourceWritePlatformService.logCommandSource(commandRequest);
+		} else if (is(commandParam, "rejectTransfer")) {
+			commandRequest = builder.rejectClientTransfer(clientId).build();
+			result = this.commandsSourceWritePlatformService.logCommandSource(commandRequest);
+		} else if (is(commandParam, "updateSavingsAccount")) {
+			commandRequest = builder.updateClientSavingsAccount(clientId).build();
+			result = this.commandsSourceWritePlatformService.logCommandSource(commandRequest);
+		} else if (is(commandParam, "reject")) {
+			commandRequest = builder.rejectClient(clientId).build();
+			result = this.commandsSourceWritePlatformService.logCommandSource(commandRequest);
+		} else if (is(commandParam, "withdraw")) {
+			commandRequest = builder.withdrawClient(clientId).build();
+			result = this.commandsSourceWritePlatformService.logCommandSource(commandRequest);
+		} else if (is(commandParam, "reactivate")) {
+			commandRequest = builder.reActivateClient(clientId).build();
+			result = this.commandsSourceWritePlatformService.logCommandSource(commandRequest);
+		}
 
-        if (result == null) { throw new UnrecognizedQueryParamException("command", commandParam, new Object[] { "activate",
-                "unassignStaff", "assignStaff", "close", "proposeTransfer", "withdrawTransfer", "acceptTransfer", "rejectTransfer",
-                "updateSavingsAccount","reject" ,"withdraw","reactivate"}); }
+		if (result == null) {
+			throw new UnrecognizedQueryParamException("command", commandParam, new Object[]{"activate",
+					"unassignStaff", "assignStaff", "close", "proposeTransfer", "withdrawTransfer", "acceptTransfer", "rejectTransfer",
+					"updateSavingsAccount", "reject", "withdraw", "reactivate"});
+		}
 
-        return this.toApiJsonSerializer.serialize(result);
-    }
+		return this.toApiJsonSerializer.serialize(result);
+	}
 
     private boolean is(final String commandParam, final String commandValue) {
         return StringUtils.isNotBlank(commandParam) && commandParam.trim().equalsIgnoreCase(commandValue);
