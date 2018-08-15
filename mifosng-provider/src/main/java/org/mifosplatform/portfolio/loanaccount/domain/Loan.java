@@ -2665,7 +2665,11 @@ public class Loan extends AbstractPersistable<Long> {
             this.loanTransactions.add(loanTransaction);
         }
         updateLoanSummaryDerivedFields();
+		Date closedOnDate = this.closedOnDate;
+		Date actualMaturityDate = this.actualMaturityDate;
         doPostLoanTransactionChecks(loanTransaction.getTransactionDate(), loanLifecycleStateMachine);
+		this.closedOnDate = closedOnDate;
+		this.actualMaturityDate = actualMaturityDate;
     }
 
     private ChangedTransactionDetail handleRepaymentOrRecoveryOrWaiverTransaction(final LoanTransaction loanTransaction,
