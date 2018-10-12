@@ -227,6 +227,12 @@ public final class LoanTransaction extends AbstractPersistable<Long> {
                 createdDate, appUser);
     }
 
+	public static LoanTransaction refundToClient(final Office office, final Money amount, final PaymentDetail paymentDetail,
+											   final LocalDate paymentDate, final String externalId, final LocalDateTime createdDate, final AppUser appUser) {
+		return new LoanTransaction(null, office, LoanTransactionType.REFUND_TO_CLIENT, paymentDetail, amount.getAmount(), paymentDate, externalId,
+				createdDate, appUser);
+	}
+
     public static LoanTransaction transferOverpaid(final Office office, final Money amount, final PaymentDetail paymentDetail,
                                                final LocalDate paymentDate, final String externalId, final LocalDateTime createdDate, final AppUser appUser) {
         return new LoanTransaction(null, office, LoanTransactionType.TRANSFER_OVERPAID, paymentDetail, amount.getAmount(), paymentDate, externalId,
@@ -501,6 +507,10 @@ public final class LoanTransaction extends AbstractPersistable<Long> {
         return !isMoveToProfit();
     }
 
+	public boolean isNotRefundToClient() {
+		return !isRefundToClient();
+	}
+
     public boolean isTransferOverpaid() {
         return LoanTransactionType.TRANSFER_OVERPAID.equals(getTypeOf()) && isNotReversed();
     }
@@ -678,6 +688,10 @@ public final class LoanTransaction extends AbstractPersistable<Long> {
     public boolean isRefund() {
         return LoanTransactionType.REFUND.equals(getTypeOf()) && isNotReversed();
     }
+
+	public boolean isRefundToClient() {
+		return LoanTransactionType.REFUND_TO_CLIENT.equals(getTypeOf()) && isNotReversed();
+	}
 
     public void updateExternalId(final String externalId) {
         this.externalId = externalId;

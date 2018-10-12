@@ -14,6 +14,6 @@ public interface CostCenterWritePlatformService {
 
     CommandProcessingResult updateCostCenter(Long staffId, JsonCommand command);
 
-    CommandProcessingResult deleteCostCenter(Long staffId);
+    CommandProcessingResult deleteCostCenter(Long staffId, JsonCommand command);
 
 }

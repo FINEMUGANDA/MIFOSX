@@ -58,7 +58,7 @@ public interface LoanAccountDomainService {
 
     LoanTransaction makeRepaymentFromUnidentified(Loan loan, CommandProcessingResultBuilder builderResult, String transactionId);
 
-    LoanTransaction moveOverpaymentToProfit(Loan loan, CommandProcessingResultBuilder builderResult);
+    LoanTransaction moveOverpaymentToProfitOrRefundClient(Loan loan, CommandProcessingResultBuilder builderResult, boolean isRefund);
 
     LoanTransaction moveOverpaymentToLoan(Loan loan, CommandProcessingResultBuilder builderResult);
 }

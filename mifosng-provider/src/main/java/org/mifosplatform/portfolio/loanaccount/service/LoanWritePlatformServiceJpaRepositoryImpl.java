@@ -2664,7 +2664,7 @@ public class LoanWritePlatformServiceJpaRepositoryImpl implements LoanWritePlatf
 
         final Loan loan = this.loanAssembler.assembleFrom(loanId);
         final CommandProcessingResultBuilder commandProcessingResultBuilder = new CommandProcessingResultBuilder();
-        this.loanAccountDomainService.moveOverpaymentToProfit(loan, commandProcessingResultBuilder);
+        this.loanAccountDomainService.moveOverpaymentToProfitOrRefundClient(loan, commandProcessingResultBuilder, false);
 
         return new CommandProcessingResultBuilder() //
                 .withOfficeId(loan.getOfficeId()) //
@@ -2673,6 +2673,22 @@ public class LoanWritePlatformServiceJpaRepositoryImpl implements LoanWritePlatf
                 .withLoanId(loanId) //
                 .build();
     }
+
+	@Override
+	public CommandProcessingResult refundToClient(JsonCommand command) {
+		final Long loanId = command.getLoanId();
+
+		final Loan loan = this.loanAssembler.assembleFrom(loanId);
+		final CommandProcessingResultBuilder commandProcessingResultBuilder = new CommandProcessingResultBuilder();
+		this.loanAccountDomainService.moveOverpaymentToProfitOrRefundClient(loan, commandProcessingResultBuilder, true);
+
+		return new CommandProcessingResultBuilder() //
+				.withOfficeId(loan.getOfficeId()) //
+				.withClientId(loan.getClientId()) //
+				.withGroupId(loan.getGroupId()) //
+				.withLoanId(loanId) //
+				.build();
+	}
 
     @Override
     public CommandProcessingResult moveOverpaid(JsonCommand command) {
