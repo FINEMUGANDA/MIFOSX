@@ -42,6 +42,7 @@ public class GmailPlatformEmailService implements PlatformEmailService {
         email.setHostName("smtp.gmail.com");
 		email.setSmtpPort(credentials.getSmtpPort());
         try {
+			email.setStartTLSRequired(true);
 			email.setStartTLSEnabled(credentials.isStartTls());
             email.setFrom(credentials.getAuthUsername(), credentials.getAuthUsername());
 

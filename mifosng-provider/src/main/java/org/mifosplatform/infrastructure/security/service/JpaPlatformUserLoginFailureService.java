@@ -85,16 +85,12 @@ public class JpaPlatformUserLoginFailureService implements PlatformUserLoginFail
                 final Email email = new SimpleEmail();
                 EmailCredentialsData credentials = getCredentials();
                 email.setAuthenticator(new DefaultAuthenticator(credentials.getAuthUsername(), credentials.getAuthPassword()));
-				logger.debug("User name: " + credentials.getAuthUsername());
-				logger.debug("Password: " + credentials.getAuthPassword());
-                email.setDebug(true);
+                email.setDebug(credentials.isDebug());
                 email.setHostName(credentials.getHost());
 				email.setSmtpPort(credentials.getSmtpPort());
 				email.setStartTLSRequired(true);
 				email.setStartTLSEnabled(credentials.isStartTls());
-                //email.getMailSession().getProperties().put("mail.smtp.starttls.enable", credentials.isStartTls());
 				email.getMailSession().getProperties().put("mail.smtp.auth", true);
-				//email.setSSLOnConnect(true);
                 email.setFrom(credentials.getAuthUsername(), credentials.getSenderName());
                 email.setSubject(subject);
                 email.setMsg(message.toString());
