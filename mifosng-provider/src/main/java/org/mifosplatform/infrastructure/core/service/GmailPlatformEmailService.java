@@ -40,8 +40,9 @@ public class GmailPlatformEmailService implements PlatformEmailService {
         email.setAuthenticator(new DefaultAuthenticator(credentials.getAuthUsername(), credentials.getAuthPassword()));
         email.setDebug(false); // true if you want to debug
         email.setHostName("smtp.gmail.com");
+		email.setSmtpPort(credentials.getSmtpPort());
         try {
-            email.getMailSession().getProperties().put("mail.smtp.starttls.enable", "true");
+			email.setStartTLSEnabled(credentials.isStartTls());
             email.setFrom(credentials.getAuthUsername(), credentials.getAuthUsername());
 
             final StringBuilder subjectBuilder = new StringBuilder().append("FINEM U Ltd.: ").append(emailDetail.getContactName())
