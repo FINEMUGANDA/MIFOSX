@@ -1121,6 +1121,28 @@ public class LoanWritePlatformServiceJpaRepositoryImpl implements LoanWritePlatf
                 .build();
     }
 
+	@Transactional
+	@Override
+	public CommandProcessingResult recoverWrittenOffBalance(final Long loanId, final JsonCommand command) {
+		final AppUser currentUser = getAppUserIfPresent();
+
+		final Loan loan = this.loanRepository.findOne(loanId);
+		loan.setLoanStatus(LoanStatus.CLOSED_WRITTEN_OFF_BALANCE_RECOVERED.getValue());
+		this.loanRepository.save(loan);
+		return new CommandProcessingResultBuilder().build();
+	}
+
+	@Transactional
+	@Override
+	public CommandProcessingResult undoRecoverWrittenOffBalance(final Long loanId, final JsonCommand command) {
+		final AppUser currentUser = getAppUserIfPresent();
+
+		final Loan loan = this.loanRepository.findOne(loanId);
+		loan.setLoanStatus(LoanStatus.CLOSED_WRITTEN_OFF.getValue());
+		this.loanRepository.save(loan);
+		return new CommandProcessingResultBuilder().build();
+	}
+
     @Transactional
     @Override
     public CommandProcessingResult closeLoan(final Long loanId, final JsonCommand command) {

@@ -403,7 +403,11 @@ public class SynchronousCommandProcessingService implements CommandProcessingSer
                 handler = this.applicationContext.getBean("loanApplicationDeletionCommandHandler", NewCommandSourceHandler.class);
             } else if (wrapper.isUndoLoanWriteOff()) {
                 handler = this.applicationContext.getBean("undoWriteOffLoanCommandHandler", NewCommandSourceHandler.class);
-            } else if (wrapper.isGuaranteeRecovery()) {
+            } else if (wrapper.isRecoverWrittenOffBalance()) {
+				handler = this.applicationContext.getBean("recoverWrittenOffBalanceCommandHandler", NewCommandSourceHandler.class);
+			} else if (wrapper.isUndoRecoverWrittenOffBalance()) {
+				handler = this.applicationContext.getBean("undoRecoverWrittenOffBalanceCommandHandler", NewCommandSourceHandler.class);
+			} else if (wrapper.isGuaranteeRecovery()) {
                 handler = this.applicationContext.getBean("recoverFromGuarantorCommandHandler", NewCommandSourceHandler.class);
             } else if (wrapper.isLoanRefundByCash()) {
                 handler = this.applicationContext.getBean("loanRefundByCashCommandHandler", NewCommandSourceHandler.class);

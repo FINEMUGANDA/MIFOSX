@@ -470,6 +470,14 @@ public class CommandWrapper {
         return this.actionName.equalsIgnoreCase("UNDOWRITEOFF") && this.entityName.equalsIgnoreCase("LOAN");
     }
 
+	public boolean isRecoverWrittenOffBalance() {
+		return this.actionName.equalsIgnoreCase("RECOVER_WRITTEN_OFF_BALANCE") && this.entityName.equalsIgnoreCase("LOAN");
+	}
+
+	public boolean isUndoRecoverWrittenOffBalance() {
+		return this.actionName.equalsIgnoreCase("UNDO_RECOVER_WRITTEN_OFF_BALANCE") && this.entityName.equalsIgnoreCase("LOAN");
+	}
+
     public boolean isLoanWatch() {
         return this.actionName.equalsIgnoreCase("WATCH") && this.entityName.equalsIgnoreCase("LOAN");
     }

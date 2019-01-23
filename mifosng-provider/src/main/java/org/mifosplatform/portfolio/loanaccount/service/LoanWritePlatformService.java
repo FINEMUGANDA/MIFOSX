@@ -39,6 +39,10 @@ public interface LoanWritePlatformService {
 
     CommandProcessingResult writeOff(Long loanId, JsonCommand command);
 
+	CommandProcessingResult recoverWrittenOffBalance(final Long loanId, final JsonCommand command);
+
+	CommandProcessingResult undoRecoverWrittenOffBalance(final Long loanId, final JsonCommand command);
+
     CommandProcessingResult closeLoan(Long loanId, JsonCommand command);
 
     CommandProcessingResult closeAsRescheduled(Long loanId, JsonCommand command);
