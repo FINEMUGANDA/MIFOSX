@@ -311,7 +311,7 @@ public class LoanProductData {
         final Collection<LoanProductBorrowerCycleVariationData> interestRateVariationsForBorrowerCycle = new ArrayList<>(1);
         final Collection<LoanProductBorrowerCycleVariationData> numberOfRepaymentVariationsForBorrowerCycle = new ArrayList<>(1);
 
-        final EnumOptionData accountingType = AccountingEnumerations.accountingRuleType(AccountingRuleType.NONE);
+        final EnumOptionData accountingType = AccountingEnumerations.accountingRuleType(AccountingRuleType.ACCRUAL_UPFRONT);
         final boolean includeInBorrowerCycle = false;
         final boolean useBorrowerCycle = false;
         final LocalDate startDate = null;

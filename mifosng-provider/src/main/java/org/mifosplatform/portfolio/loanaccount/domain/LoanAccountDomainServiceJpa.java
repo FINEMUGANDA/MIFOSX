@@ -169,7 +169,7 @@ public class LoanAccountDomainServiceJpa implements LoanAccountDomainService {
 		LocalDate calculatedRepaymentsStartingFromDate = null;
 		boolean isHolidayEnabled = false;
 		LocalDate recalculateFrom = null;
-		Long overdurPenaltyWaitPeriod = null;
+		Long overduePenaltyWaitPeriod = null;
 		LocalDate recalculateDueDateChargesFrom = null;
 		if (loan.repaymentScheduleDetail().isInterestRecalculationEnabled()) {
 			restCalendarInstance = calendarInstanceRepository.findCalendarInstaneByEntityId(loan.loanInterestRecalculationDetailId(),
@@ -183,12 +183,12 @@ public class LoanAccountDomainServiceJpa implements LoanAccountDomainService {
 					calendarInstance);
 
 			isHolidayEnabled = this.configurationDomainService.isRescheduleRepaymentsOnHolidaysEnabled();
-			overdurPenaltyWaitPeriod = this.configurationDomainService.retrievePenaltyWaitPeriod();
+			overduePenaltyWaitPeriod = this.configurationDomainService.retrievePenaltyWaitPeriod();
 		}
 		HolidayDetailDTO holidayDetailDTO = new HolidayDetailDTO(isHolidayEnabled, holidays, workingDays, allowTransactionsOnHoliday,
 				allowTransactionsOnNonWorkingDay);
 		final ScheduleGeneratorDTO scheduleGeneratorDTO = new ScheduleGeneratorDTO(loanScheduleFactory, applicationCurrency,
-				calculatedRepaymentsStartingFromDate, holidayDetailDTO, restCalendarInstance, recalculateFrom, overdurPenaltyWaitPeriod,
+				calculatedRepaymentsStartingFromDate, holidayDetailDTO, restCalendarInstance, recalculateFrom, overduePenaltyWaitPeriod,
 				recalculateDueDateChargesFrom);
 
 		final ChangedTransactionDetail changedTransactionDetail = loan.makeRepayment(newRepaymentTransaction,
