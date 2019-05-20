@@ -25,8 +25,8 @@ public class LoanScheduleAccrualData {
     private final LocalDate fromDate;
     private final Long repaymentScheduleId;
     private final Long loanProductId;
-    private final BigDecimal interestIncome;
-    private final BigDecimal feeIncome;
+    private BigDecimal interestIncome;
+    private BigDecimal feeIncome;
     private final BigDecimal penaltyIncome;
     private final BigDecimal waivedInterestIncome;
     private final BigDecimal accruedInterestIncome;
@@ -95,11 +95,19 @@ public class LoanScheduleAccrualData {
         return this.interestIncome;
     }
 
-    public BigDecimal getFeeIncome() {
+	public void setInterestIncome(BigDecimal interestIncome) {
+		this.interestIncome = interestIncome;
+	}
+
+	public BigDecimal getFeeIncome() {
         return this.feeIncome;
     }
 
-    public BigDecimal getPenaltyIncome() {
+	public void setFeeIncome(BigDecimal feeIncome) {
+		this.feeIncome = feeIncome;
+	}
+
+	public BigDecimal getPenaltyIncome() {
         return this.penaltyIncome;
     }
 

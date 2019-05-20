@@ -89,6 +89,7 @@ public class LoanAccountDomainServiceJpa implements LoanAccountDomainService {
 	private final PlatformSecurityContext context;
 	private final BusinessEventNotifierService businessEventNotifierService;
 	private final JournalEntryRepository journalEntryRepository;
+	private final LoanAccrualWritePlatformService loanAccrualWritePlatformService;
 
 	@Autowired
 	public LoanAccountDomainServiceJpa(final LoanAssembler loanAccountAssembler, final LoanRepository loanRepository,
@@ -102,7 +103,7 @@ public class LoanAccountDomainServiceJpa implements LoanAccountDomainService {
 									   final CalendarInstanceRepository calendarInstanceRepository,
 									   final LoanRepaymentScheduleInstallmentRepository repaymentScheduleInstallmentRepository,
 									   final LoanAccrualWritePlatformService accrualWritePlatformService, final PlatformSecurityContext context,
-									   final BusinessEventNotifierService businessEventNotifierService, final JournalEntryRepository journalEntryRepository) {
+									   final BusinessEventNotifierService businessEventNotifierService, final JournalEntryRepository journalEntryRepository, LoanAccrualWritePlatformService loanAccrualWritePlatformService) {
 		this.loanAccountAssembler = loanAccountAssembler;
 		this.loanRepository = loanRepository;
 		this.loanTransactionRepository = loanTransactionRepository;
@@ -121,6 +122,7 @@ public class LoanAccountDomainServiceJpa implements LoanAccountDomainService {
 		this.context = context;
 		this.businessEventNotifierService = businessEventNotifierService;
 		this.journalEntryRepository = journalEntryRepository;
+		this.loanAccrualWritePlatformService = loanAccrualWritePlatformService;
 	}
 
 	@Transactional
@@ -196,6 +198,13 @@ public class LoanAccountDomainServiceJpa implements LoanAccountDomainService {
 				scheduleGeneratorDTO, currentUser);
 
 		saveLoanTransactionWithDataIntegrityViolationChecks(newRepaymentTransaction);
+
+		if (newRepaymentTransaction.getOutstandingLoanBalance() != null &&
+				BigDecimal.ZERO.compareTo(newRepaymentTransaction.getOutstandingLoanBalance()) > -1 &&
+				loan.isPeriodicAccrualAccountingEnabledOnLoanProduct()) {
+			this.loanAccrualWritePlatformService.addPeriodicAccruals(loan.getExpectedMaturityDate(), loan.getId());
+
+		}
 
 		/***
 		 * TODO Vishwas Batch save is giving me a

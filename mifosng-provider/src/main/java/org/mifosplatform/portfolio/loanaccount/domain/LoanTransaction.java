@@ -754,4 +754,8 @@ public final class LoanTransaction extends AbstractPersistable<Long> {
     public String getRelatedTransactionId() {
         return relatedTransactionId;
     }
+
+	public BigDecimal getOutstandingLoanBalance() {
+		return outstandingLoanBalance;
+	}
 }

@@ -116,9 +116,27 @@ public class LoanAccrualWritePlatformServiceImpl implements LoanAccrualWritePlat
 
     @Override
     public String addPeriodicAccruals(final LocalDate tilldate) {
-        Collection<LoanScheduleAccrualData> loanScheduleAccrualDatas = this.loanReadPlatformService.retrivePeriodicAccrualData(tilldate);
+        Collection<LoanScheduleAccrualData> loanScheduleAccrualDatas = this.loanReadPlatformService.retrievePeriodicAccrualData(tilldate);
         return addPeriodicAccruals(tilldate, loanScheduleAccrualDatas);
     }
+
+	@Override
+	public String addPeriodicAccruals(final LocalDate tilldate, final Long loanId) {
+		Collection<LoanScheduleAccrualData> loanScheduleAccrualDatas = this.loanReadPlatformService.retrievePeriodicAccrualData(tilldate, loanId);
+		Collection<LoanScheduleAccrualData> loanScheduleAccruals = new ArrayList<>();
+		if (!loanScheduleAccrualDatas.isEmpty()) {
+			Iterator<LoanScheduleAccrualData> iterator = loanScheduleAccrualDatas.iterator();
+			LoanScheduleAccrualData firstAccrual = iterator.next();
+			while (iterator.hasNext()) {
+				LoanScheduleAccrualData loanScheduleAccrual = iterator.next();
+				firstAccrual.setInterestIncome(firstAccrual.getInterestIncome().add(loanScheduleAccrual.getInterestIncome()));
+				firstAccrual.setFeeIncome(firstAccrual.getFeeIncome().add(loanScheduleAccrual.getFeeIncome()));
+			}
+			loanScheduleAccruals.add(firstAccrual);
+			return addPeriodicAccruals(tilldate, loanScheduleAccruals);
+		}
+		return addPeriodicAccruals(tilldate, loanScheduleAccrualDatas);
+	}
 
     @Override
     public String addPeriodicAccruals(final LocalDate tilldate, Collection<LoanScheduleAccrualData> loanScheduleAccrualDatas) {
