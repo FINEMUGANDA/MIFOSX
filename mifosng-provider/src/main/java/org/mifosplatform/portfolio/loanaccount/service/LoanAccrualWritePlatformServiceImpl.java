@@ -130,7 +130,9 @@ public class LoanAccrualWritePlatformServiceImpl implements LoanAccrualWritePlat
 			while (iterator.hasNext()) {
 				LoanScheduleAccrualData loanScheduleAccrual = iterator.next();
 				firstAccrual.setInterestIncome(firstAccrual.getInterestIncome().add(loanScheduleAccrual.getInterestIncome()));
-				firstAccrual.setFeeIncome(firstAccrual.getFeeIncome().add(loanScheduleAccrual.getFeeIncome()));
+				if (firstAccrual.getFeeIncome() != null && loanScheduleAccrual.getFeeIncome() != null) {
+					firstAccrual.setFeeIncome(firstAccrual.getFeeIncome().add(loanScheduleAccrual.getFeeIncome()));
+				}
 			}
 			loanScheduleAccruals.add(firstAccrual);
 			return addPeriodicAccruals(tilldate, loanScheduleAccruals);
