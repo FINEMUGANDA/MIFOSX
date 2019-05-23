@@ -121,7 +121,7 @@ public class LoanAccrualWritePlatformServiceImpl implements LoanAccrualWritePlat
     }
 
 	@Override
-	public String addPeriodicAccruals(final LocalDate tilldate, final Long loanId) {
+	public String addPeriodicAccruals(final LocalDate tilldate, final Long loanId, final LocalDate transactionDate) {
 		Collection<LoanScheduleAccrualData> loanScheduleAccrualDatas = this.loanReadPlatformService.retrievePeriodicAccrualData(tilldate, loanId);
 		Collection<LoanScheduleAccrualData> loanScheduleAccruals = new ArrayList<>();
 		if (!loanScheduleAccrualDatas.isEmpty()) {
@@ -134,6 +134,7 @@ public class LoanAccrualWritePlatformServiceImpl implements LoanAccrualWritePlat
 					firstAccrual.setFeeIncome(firstAccrual.getFeeIncome().add(loanScheduleAccrual.getFeeIncome()));
 				}
 			}
+			firstAccrual.setTransactionDate(transactionDate);
 			loanScheduleAccruals.add(firstAccrual);
 			return addPeriodicAccruals(tilldate, loanScheduleAccruals);
 		}
@@ -321,7 +322,7 @@ public class LoanAccrualWritePlatformServiceImpl implements LoanAccrualWritePlat
         }
         if (amount.compareTo(BigDecimal.ZERO) == 1) {
             addAccrualAccounting(scheduleAccrualData, amount, interestportion, totalAccInterest, feeportion, totalAccFee, penaltyportion,
-                    totalAccPenalty, scheduleAccrualData.getDueDateAsLocaldate());
+                    totalAccPenalty, scheduleAccrualData.getTransactionDate() != null ? scheduleAccrualData.getTransactionDate() : scheduleAccrualData.getDueDateAsLocaldate());
         }
     }
 

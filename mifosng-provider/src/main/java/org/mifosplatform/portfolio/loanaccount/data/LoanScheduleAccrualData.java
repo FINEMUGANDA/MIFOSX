@@ -23,6 +23,7 @@ public class LoanScheduleAccrualData {
     private final Integer installmentNumber;
     private final LocalDate dueDate;
     private final LocalDate fromDate;
+	private LocalDate transactionDate;
     private final Long repaymentScheduleId;
     private final Long loanProductId;
     private BigDecimal interestIncome;
@@ -186,4 +187,11 @@ public class LoanScheduleAccrualData {
     }
 
 
+	public LocalDate getTransactionDate() {
+		return transactionDate;
+	}
+
+	public void setTransactionDate(LocalDate transactionDate) {
+		this.transactionDate = transactionDate;
+	}
 }

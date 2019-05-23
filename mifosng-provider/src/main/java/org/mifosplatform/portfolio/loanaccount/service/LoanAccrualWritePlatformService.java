@@ -20,7 +20,7 @@ public interface LoanAccrualWritePlatformService {
 
     String addPeriodicAccruals(LocalDate tilldate);
 
-	String addPeriodicAccruals(final LocalDate tilldate, final Long loanId);
+	String addPeriodicAccruals(final LocalDate tilldate, final Long loanId, final LocalDate transactionDate);
 
     String addPeriodicAccruals(LocalDate tilldate, Collection<LoanScheduleAccrualData> loanScheduleAccrualDatas);
 

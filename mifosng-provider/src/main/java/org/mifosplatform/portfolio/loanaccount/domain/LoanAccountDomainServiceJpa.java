@@ -202,7 +202,7 @@ public class LoanAccountDomainServiceJpa implements LoanAccountDomainService {
 		if (newRepaymentTransaction.getOutstandingLoanBalance() != null &&
 				BigDecimal.ZERO.compareTo(newRepaymentTransaction.getOutstandingLoanBalance()) > -1 &&
 				loan.isPeriodicAccrualAccountingEnabledOnLoanProduct()) {
-			this.loanAccrualWritePlatformService.addPeriodicAccruals(loan.getExpectedMaturityDate(), loan.getId());
+			this.loanAccrualWritePlatformService.addPeriodicAccruals(loan.getExpectedMaturityDate(), loan.getId(), newRepaymentTransaction.getTransactionDate());
 
 		}
 

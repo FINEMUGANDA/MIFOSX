@@ -10,7 +10,15 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.Date;
+
 public interface LoanTransactionRepository extends JpaRepository<LoanTransaction, Long>, JpaSpecificationExecutor<LoanTransaction> {
     @Query("FROM LoanTransaction lt WHERE lt.relatedTransactionId = :transactionId and lt.reversed = false")
     LoanTransaction findOneByRelatedTransactionIdAndNotReversed(@Param("transactionId") String transactionId);
+
+	@Query("FROM LoanTransaction lt WHERE lt.loan.id = :loanId and lt.dateOf = :transactionDate and lt.typeOf = :typeOf and lt.id > :transactionId")
+	LoanTransaction findAccrualTransactionBasedOn(@Param("loanId") Long loanId,
+												  @Param("transactionDate") Date transactionDate,
+												  @Param("typeOf") Integer typeOf,
+												  @Param("transactionId") Long transactionId);
 }
