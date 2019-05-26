@@ -317,6 +317,8 @@ public final class LoanRepaymentScheduleInstallment extends AbstractAuditableCus
         this.penaltyChargesWrittenOff = null;
         this.totalPaidInAdvance = null;
         this.totalPaidLate = null;
+		this.interestAccrued = null;
+		this.feeAccrued = null;
 
         this.obligationsMet = false;
         this.obligationsMetOnDate = null;

@@ -2520,7 +2520,9 @@ public class Loan extends AbstractPersistable<Long> {
             this.accruedTill = null;
             reverseExistingTransactions();
             updateLoanSummaryDerivedFields();
-
+			for (final LoanRepaymentScheduleInstallment currentInstallment : this.repaymentScheduleInstallments) {
+				currentInstallment.resetDerivedComponents();
+			}
         }
 
         return actualChanges;

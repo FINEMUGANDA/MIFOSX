@@ -232,7 +232,11 @@ public class LoanAccountDomainServiceJpa implements LoanAccountDomainService {
 
 		postJournalEntries(loan, existingTransactionIds, existingReversedTransactionIds, isAccountTransfer);
 
-		recalculateAccruals(loan);
+		if (newRepaymentTransaction.getOutstandingLoanBalance() == null ||
+				BigDecimal.ZERO.compareTo(newRepaymentTransaction.getOutstandingLoanBalance()) < 0 ||
+				!loan.isPeriodicAccrualAccountingEnabledOnLoanProduct()) {
+			recalculateAccruals(loan);
+		}
 
 		this.businessEventNotifierService.notifyBusinessEventWasExecuted(BUSINESS_EVENTS.LOAN_MAKE_REPAYMENT, newRepaymentTransaction);
 

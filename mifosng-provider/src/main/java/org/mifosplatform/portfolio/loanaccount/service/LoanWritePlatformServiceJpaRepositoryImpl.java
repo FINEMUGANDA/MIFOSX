@@ -911,12 +911,13 @@ public class LoanWritePlatformServiceJpaRepositoryImpl implements LoanWritePlatf
             }
             this.noteRepository.save(note);
         }
+		boolean reversePrepayment = loan.isPeriodicAccrualAccountingEnabledOnLoanProduct() &&
+				transactionAmount.compareTo(BigDecimal.ZERO) < 1 &&
+				transactionToAdjust.getOutstandingLoanBalance().compareTo(BigDecimal.ZERO) < 1;
         this.accountTransfersWritePlatformService.reverseTransfersWithFromAccountType(loanId, PortfolioAccountType.LOAN);
 
 		//Reverse accruals transactions created on prepayment
-		if (loan.isPeriodicAccrualAccountingEnabledOnLoanProduct() &&
-				transactionAmount.compareTo(BigDecimal.ZERO) < 1 &&
-				transactionToAdjust.getOutstandingLoanBalance().compareTo(BigDecimal.ZERO) < 1) {
+		if (reversePrepayment) {
 			LoanTransaction accrualTransaction = this.loanTransactionRepository.findAccrualTransactionBasedOn(loanId,
 					transactionToAdjust.getTransactionDate().toDate(), LoanTransactionType.ACCRUAL.getValue(), transactionToAdjust.getId());
 			if (accrualTransaction != null) {

@@ -293,7 +293,7 @@ public class AccountingProcessorHelper {
             }
         }
 
-        if (totalAmount.compareTo(totalCreditedAmount) != 0) { throw new PlatformDataIntegrityException(
+        if (!isReversal && totalAmount.compareTo(totalCreditedAmount) != 0) { throw new PlatformDataIntegrityException(
                 "Meltdown in advanced accounting...sum of all charges is not equal to the fee charge for a transaction",
                 "Meltdown in advanced accounting...sum of all charges is not equal to the fee charge for a transaction",
                 totalCreditedAmount, totalAmount); }

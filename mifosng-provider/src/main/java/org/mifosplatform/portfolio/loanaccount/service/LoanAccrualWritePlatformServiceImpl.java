@@ -136,6 +136,7 @@ public class LoanAccrualWritePlatformServiceImpl implements LoanAccrualWritePlat
 			}
 			firstAccrual.setTransactionDate(transactionDate);
 			loanScheduleAccruals.add(firstAccrual);
+			firstAccrual.setPrepaymentAccrual(true);
 			return addPeriodicAccruals(tilldate, loanScheduleAccruals);
 		}
 		return addPeriodicAccruals(tilldate, loanScheduleAccrualDatas);
@@ -163,7 +164,7 @@ public class LoanAccrualWritePlatformServiceImpl implements LoanAccrualWritePlat
                     if (!loanChargeMap.containsKey(accrualData.getLoanId())) {
                         Collection<LoanChargeData> chargeData = this.loanChargeReadPlatformService
                                 .retrieveLoanChargesForAccural(accrualData.getLoanId());
-                        loanChargeMap.put(accrualData.getLoanId(), chargeData);
+						loanChargeMap.put(accrualData.getLoanId(), chargeData);
                     }
                     if (accrualData.getDueDateAsLocaldate().isAfter(tilldate)) {
                         if (accruredTill == null || lastLoanId == null || !lastLoanId.equals(accrualData.getLoanId())) {
@@ -296,7 +297,7 @@ public class LoanAccrualWritePlatformServiceImpl implements LoanAccrualWritePlat
         BigDecimal feeportion = null;
         BigDecimal totalAccFee = null;
         if (scheduleAccrualData.getDueDateFeeIncome() != null) {
-            feeportion = scheduleAccrualData.getDueDateFeeIncome();
+            feeportion = scheduleAccrualData.isPrepaymentAccrual() ? scheduleAccrualData.getFeeIncome() : scheduleAccrualData.getDueDateFeeIncome();
             totalAccFee = feeportion;
             if (scheduleAccrualData.getAccruedFeeIncome() != null) {
                 feeportion = feeportion.subtract(scheduleAccrualData.getAccruedFeeIncome());
@@ -406,22 +407,21 @@ public class LoanAccrualWritePlatformServiceImpl implements LoanAccrualWritePlat
         thisTransactionData.put("penaltyChargesPortion", penaltyportion);
         thisTransactionData.put("overPaymentPortion", null);
 
-        Map<LoanChargeData, BigDecimal> applicableCharges = loanScheduleAccrualData.getApplicableCharges();
-        if (applicableCharges != null && !applicableCharges.isEmpty()) {
-            final List<Map<String, Object>> loanChargesPaidData = new ArrayList<>();
-            for (Map.Entry<LoanChargeData, BigDecimal> entry : applicableCharges.entrySet()) {
-                LoanChargeData chargeData = entry.getKey();
-                final Map<String, Object> loanChargePaidData = new LinkedHashMap<>();
-                loanChargePaidData.put("chargeId", chargeData.getChargeId());
-                loanChargePaidData.put("isPenalty", chargeData.isPenalty());
-                loanChargePaidData.put("loanChargeId", chargeData.getId());
-                loanChargePaidData.put("amount", entry.getValue());
+		Map<LoanChargeData, BigDecimal> applicableCharges = loanScheduleAccrualData.getApplicableCharges();
+		if (applicableCharges != null && !applicableCharges.isEmpty()) {
+			final List<Map<String, Object>> loanChargesPaidData = new ArrayList<>();
+			for (Map.Entry<LoanChargeData, BigDecimal> entry : applicableCharges.entrySet()) {
+				LoanChargeData chargeData = entry.getKey();
+				final Map<String, Object> loanChargePaidData = new LinkedHashMap<>();
+				loanChargePaidData.put("chargeId", chargeData.getChargeId());
+				loanChargePaidData.put("isPenalty", chargeData.isPenalty());
+				loanChargePaidData.put("loanChargeId", chargeData.getId());
+				loanChargePaidData.put("amount", loanScheduleAccrualData.isPrepaymentAccrual() ? loanScheduleAccrualData.getFeeIncome() : entry.getValue());
 
-                loanChargesPaidData.add(loanChargePaidData);
-            }
-            thisTransactionData.put("loanChargesPaid", loanChargesPaidData);
-        }
-
+				loanChargesPaidData.add(loanChargePaidData);
+			}
+			thisTransactionData.put("loanChargesPaid", loanChargesPaidData);
+		}
         return thisTransactionData;
     }
 

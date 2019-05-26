@@ -40,6 +40,7 @@ public class LoanScheduleAccrualData {
     private BigDecimal dueDateFeeIncome;
     private BigDecimal dueDatePenaltyIncome;
     private BigDecimal accruableIncome;
+	private Boolean prepaymentAccrual = false;
 
     public LoanScheduleAccrualData(final Long loanId, final Long officeId, final Integer installmentNumber, final LocalDate accruedTill,
             final PeriodFrequencyType repaymentFrequency, final Integer repayEvery, final LocalDate dueDate, final LocalDate fromDate,
@@ -193,5 +194,13 @@ public class LoanScheduleAccrualData {
 
 	public void setTransactionDate(LocalDate transactionDate) {
 		this.transactionDate = transactionDate;
+	}
+
+	public Boolean isPrepaymentAccrual() {
+		return prepaymentAccrual;
+	}
+
+	public void setPrepaymentAccrual(Boolean prepaymentAccrual) {
+		this.prepaymentAccrual = prepaymentAccrual;
 	}
 }
