@@ -90,6 +90,7 @@ public class LoanAccountDomainServiceJpa implements LoanAccountDomainService {
 	private final BusinessEventNotifierService businessEventNotifierService;
 	private final JournalEntryRepository journalEntryRepository;
 	private final LoanAccrualWritePlatformService loanAccrualWritePlatformService;
+	private final OverpaymentTransactionMapperRepository overpaymentTransactionMapperRepository;
 
 	@Autowired
 	public LoanAccountDomainServiceJpa(final LoanAssembler loanAccountAssembler, final LoanRepository loanRepository,
@@ -103,7 +104,7 @@ public class LoanAccountDomainServiceJpa implements LoanAccountDomainService {
 									   final CalendarInstanceRepository calendarInstanceRepository,
 									   final LoanRepaymentScheduleInstallmentRepository repaymentScheduleInstallmentRepository,
 									   final LoanAccrualWritePlatformService accrualWritePlatformService, final PlatformSecurityContext context,
-									   final BusinessEventNotifierService businessEventNotifierService, final JournalEntryRepository journalEntryRepository, LoanAccrualWritePlatformService loanAccrualWritePlatformService) {
+									   final BusinessEventNotifierService businessEventNotifierService, final JournalEntryRepository journalEntryRepository, LoanAccrualWritePlatformService loanAccrualWritePlatformService, OverpaymentTransactionMapperRepository overpaymentTransactionMapperRepository) {
 		this.loanAccountAssembler = loanAccountAssembler;
 		this.loanRepository = loanRepository;
 		this.loanTransactionRepository = loanTransactionRepository;
@@ -123,6 +124,7 @@ public class LoanAccountDomainServiceJpa implements LoanAccountDomainService {
 		this.businessEventNotifierService = businessEventNotifierService;
 		this.journalEntryRepository = journalEntryRepository;
 		this.loanAccrualWritePlatformService = loanAccrualWritePlatformService;
+		this.overpaymentTransactionMapperRepository = overpaymentTransactionMapperRepository;
 	}
 
 	@Transactional
@@ -431,15 +433,24 @@ public class LoanAccountDomainServiceJpa implements LoanAccountDomainService {
 
 		BigDecimal transactionAmount = BigDecimal.ZERO;
 
+		List<LoanTransaction> overpaymentTransactions = new ArrayList<>();
+
 		for (Loan clientLoan : clientLoans) {
 			if (clientLoan.status().equals(LoanStatus.OVERPAID)) {
 				transactionAmount = transactionAmount.add(clientLoan.getTotalOverpaid());
 				this.loanAccountAssembler.setHelpers(clientLoan);
-				transferLoanOverpayment(clientLoan, currentUser);
+				overpaymentTransactions.add(transferLoanOverpayment(clientLoan, currentUser));
 			}
 		}
 
 		LoanTransaction newRepaymentTransaction = fromTransferLoanOverpayment(loan, currentUser, transactionAmount);
+
+		overpaymentTransactions.forEach(transaction -> {
+			OverpaymentTransactionMapper overpaymentTransactionMapper = new OverpaymentTransactionMapper();
+			overpaymentTransactionMapper.setOverpaymentTransaction(transaction);
+			overpaymentTransactionMapper.setRepaymentTransaction(newRepaymentTransaction);
+			this.overpaymentTransactionMapperRepository.save(overpaymentTransactionMapper);
+		});
 
 		builderResult.withEntityId(newRepaymentTransaction.getId()) //
 				.withOfficeId(loan.getOfficeId()) //
@@ -671,7 +682,7 @@ public class LoanAccountDomainServiceJpa implements LoanAccountDomainService {
 		this.journalEntryWritePlatformService.createJournalEntriesForLoan(accountingBridgeData);
 	}
 
-	private LoanLifecycleStateMachine defaultLoanLifecycleStateMachine() {
+	public LoanLifecycleStateMachine defaultLoanLifecycleStateMachine() {
 		final List<LoanStatus> allowedLoanStatuses = Arrays.asList(LoanStatus.values());
 		return new DefaultLoanLifecycleStateMachine(allowedLoanStatuses);
 	}

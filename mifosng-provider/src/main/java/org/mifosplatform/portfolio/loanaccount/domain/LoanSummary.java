@@ -195,7 +195,7 @@ public final class LoanSummary {
             final Boolean disbursed) {
 
         this.totalPrincipalDisbursed = principal.getAmount();
-        this.totalPrincipalRepaid = summaryWrapper.calculateTotalPrincipalRepaid(repaymentScheduleInstallments, currency).getAmount();
+            this.totalPrincipalRepaid = summaryWrapper.calculateTotalPrincipalRepaid(repaymentScheduleInstallments, currency).getAmount();
         this.totalPrincipalWrittenOff = summaryWrapper.calculateTotalPrincipalWrittenOff(repaymentScheduleInstallments, currency)
                 .getAmount();
 

@@ -117,11 +117,15 @@ import org.mifosplatform.portfolio.loanaccount.domain.LoanLifecycleStateMachine;
 import org.mifosplatform.portfolio.loanaccount.domain.LoanOverdueInstallmentCharge;
 import org.mifosplatform.portfolio.loanaccount.domain.LoanRepaymentScheduleInstallment;
 import org.mifosplatform.portfolio.loanaccount.domain.LoanRepaymentScheduleInstallmentRepository;
+import org.mifosplatform.portfolio.loanaccount.domain.LoanRepaymentScheduleTransactionProcessorFactory;
 import org.mifosplatform.portfolio.loanaccount.domain.LoanRepository;
 import org.mifosplatform.portfolio.loanaccount.domain.LoanStatus;
+import org.mifosplatform.portfolio.loanaccount.domain.LoanSummaryWrapper;
 import org.mifosplatform.portfolio.loanaccount.domain.LoanTransaction;
 import org.mifosplatform.portfolio.loanaccount.domain.LoanTransactionRepository;
 import org.mifosplatform.portfolio.loanaccount.domain.LoanTransactionType;
+import org.mifosplatform.portfolio.loanaccount.domain.OverpaymentTransactionMapper;
+import org.mifosplatform.portfolio.loanaccount.domain.OverpaymentTransactionMapperRepository;
 import org.mifosplatform.portfolio.loanaccount.exception.InvalidPaidInAdvanceAmountException;
 import org.mifosplatform.portfolio.loanaccount.exception.LoanDisbursalException;
 import org.mifosplatform.portfolio.loanaccount.exception.LoanOfficerAssignmentException;
@@ -199,32 +203,35 @@ public class LoanWritePlatformServiceJpaRepositoryImpl implements LoanWritePlatf
     private final AccountTransferDetailRepository accountTransferDetailRepository;
     private final BusinessEventNotifierService businessEventNotifierService;
     private final GuarantorDomainService guarantorDomainService;
+	private final OverpaymentTransactionMapperRepository overpaymentTransactionMapperRepository;
+	private final LoanSummaryWrapper loanSummaryWrapper;
+	private final LoanRepaymentScheduleTransactionProcessorFactory loanRepaymentScheduleTransactionProcessorFactory;
 
     @Autowired
     public LoanWritePlatformServiceJpaRepositoryImpl(final PlatformSecurityContext context,
-            final LoanEventApiJsonValidator loanEventApiJsonValidator,
-            final LoanUpdateCommandFromApiJsonDeserializer loanUpdateCommandFromApiJsonDeserializer, final LoanAssembler loanAssembler,
-            final LoanRepository loanRepository, final LoanAccountDomainService loanAccountDomainService,
-            final LoanTransactionRepository loanTransactionRepository, final NoteRepository noteRepository,
-            final ChargeRepositoryWrapper chargeRepository, final LoanChargeRepository loanChargeRepository,
-            final ApplicationCurrencyRepositoryWrapper applicationCurrencyRepository,
-            final JournalEntryWritePlatformService journalEntryWritePlatformService,
-            final LoanScheduleGeneratorFactory loanScheduleFactory, final CalendarInstanceRepository calendarInstanceRepository,
-            final PaymentDetailWritePlatformService paymentDetailWritePlatformService, final HolidayRepositoryWrapper holidayRepository,
-            final ConfigurationDomainService configurationDomainService, final WorkingDaysRepositoryWrapper workingDaysRepository,
-            final LoanProductReadPlatformService loanProductReadPlatformService,
-            final AccountTransfersWritePlatformService accountTransfersWritePlatformService,
-            final AccountTransfersReadPlatformService accountTransfersReadPlatformService,
-            final AccountAssociationsReadPlatformService accountAssociationsReadPlatformService,
-            final LoanChargeReadPlatformService loanChargeReadPlatformService, final LoanReadPlatformService loanReadPlatformService,
-            final FromJsonHelper fromApiJsonHelper, final AccountTransferRepository accountTransferRepository,
-            final CalendarRepository calendarRepository,
-            final LoanRepaymentScheduleInstallmentRepository repaymentScheduleInstallmentRepository,
-            final LoanScheduleHistoryWritePlatformService loanScheduleHistoryWritePlatformService,
-            final LoanApplicationCommandFromApiJsonHelper loanApplicationCommandFromApiJsonHelper,
-            final AccountAssociationsRepository accountAssociationRepository,
-            final AccountTransferDetailRepository accountTransferDetailRepository,
-            final BusinessEventNotifierService businessEventNotifierService, final GuarantorDomainService guarantorDomainService) {
+													 final LoanEventApiJsonValidator loanEventApiJsonValidator,
+													 final LoanUpdateCommandFromApiJsonDeserializer loanUpdateCommandFromApiJsonDeserializer, final LoanAssembler loanAssembler,
+													 final LoanRepository loanRepository, final LoanAccountDomainService loanAccountDomainService,
+													 final LoanTransactionRepository loanTransactionRepository, final NoteRepository noteRepository,
+													 final ChargeRepositoryWrapper chargeRepository, final LoanChargeRepository loanChargeRepository,
+													 final ApplicationCurrencyRepositoryWrapper applicationCurrencyRepository,
+													 final JournalEntryWritePlatformService journalEntryWritePlatformService,
+													 final LoanScheduleGeneratorFactory loanScheduleFactory, final CalendarInstanceRepository calendarInstanceRepository,
+													 final PaymentDetailWritePlatformService paymentDetailWritePlatformService, final HolidayRepositoryWrapper holidayRepository,
+													 final ConfigurationDomainService configurationDomainService, final WorkingDaysRepositoryWrapper workingDaysRepository,
+													 final LoanProductReadPlatformService loanProductReadPlatformService,
+													 final AccountTransfersWritePlatformService accountTransfersWritePlatformService,
+													 final AccountTransfersReadPlatformService accountTransfersReadPlatformService,
+													 final AccountAssociationsReadPlatformService accountAssociationsReadPlatformService,
+													 final LoanChargeReadPlatformService loanChargeReadPlatformService, final LoanReadPlatformService loanReadPlatformService,
+													 final FromJsonHelper fromApiJsonHelper, final AccountTransferRepository accountTransferRepository,
+													 final CalendarRepository calendarRepository,
+													 final LoanRepaymentScheduleInstallmentRepository repaymentScheduleInstallmentRepository,
+													 final LoanScheduleHistoryWritePlatformService loanScheduleHistoryWritePlatformService,
+													 final LoanApplicationCommandFromApiJsonHelper loanApplicationCommandFromApiJsonHelper,
+													 final AccountAssociationsRepository accountAssociationRepository,
+													 final AccountTransferDetailRepository accountTransferDetailRepository,
+													 final BusinessEventNotifierService businessEventNotifierService, final GuarantorDomainService guarantorDomainService, OverpaymentTransactionMapperRepository overpaymentTransactionMapperRepository, LoanSummaryWrapper loanSummaryWrapper, LoanRepaymentScheduleTransactionProcessorFactory loanRepaymentScheduleTransactionProcessorFactory) {
         this.context = context;
         this.loanEventApiJsonValidator = loanEventApiJsonValidator;
         this.loanAssembler = loanAssembler;
@@ -259,7 +266,10 @@ public class LoanWritePlatformServiceJpaRepositoryImpl implements LoanWritePlatf
         this.accountTransferDetailRepository = accountTransferDetailRepository;
         this.businessEventNotifierService = businessEventNotifierService;
         this.guarantorDomainService = guarantorDomainService;
-    }
+		this.overpaymentTransactionMapperRepository = overpaymentTransactionMapperRepository;
+		this.loanSummaryWrapper = loanSummaryWrapper;
+		this.loanRepaymentScheduleTransactionProcessorFactory = loanRepaymentScheduleTransactionProcessorFactory;
+	}
 
     private LoanLifecycleStateMachine defaultLoanLifecycleStateMachine() {
         final List<LoanStatus> allowedLoanStatuses = Arrays.asList(LoanStatus.values());
@@ -693,6 +703,25 @@ public class LoanWritePlatformServiceJpaRepositoryImpl implements LoanWritePlatf
         if (!changes.isEmpty()) {
             saveAndFlushLoanWithDataIntegrityViolationChecks(loan);
             this.accountTransfersWritePlatformService.reverseAllTransactions(loanId, PortfolioAccountType.LOAN);
+
+			//Reverse transactions from overpaid amounts
+			LoanTransaction transaction = loan.getLoanTransactions().stream().filter(x ->
+							x.getTypeOf().equals(LoanTransactionType.FROM_TRANSFER_OVERPAID)
+			).findFirst().orElse(null);
+			if (transaction != null) {
+				List<OverpaymentTransactionMapper> overpaymentTransactions = this.overpaymentTransactionMapperRepository.findOverpaymentTransactionByRepaymentTransactionId(transaction.getId());
+				overpaymentTransactions.forEach(x -> {
+					x.getOverpaymentTransaction().reverse();
+					this.loanTransactionRepository.save(x.getOverpaymentTransaction());
+					Loan overpaidLoan = x.getOverpaymentTransaction().getLoan();
+					overpaidLoan.setHelpers(defaultLoanLifecycleStateMachine(), this.loanSummaryWrapper, this.loanRepaymentScheduleTransactionProcessorFactory);
+					overpaidLoan.updateLoanSummaryDerivedFields();
+					overpaidLoan.doPostLoanTransactionChecks(overpaidLoan.getMaturityDate(), this.loanAccountDomainService.defaultLoanLifecycleStateMachine());
+					this.loanRepository.save(overpaidLoan);
+				});
+
+			}
+
             String noteText = null;
             if (command.hasParameter("note")) {
                 noteText = command.stringValueOfParameterNamed("note");

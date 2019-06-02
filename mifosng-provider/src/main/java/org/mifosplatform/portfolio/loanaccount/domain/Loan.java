@@ -1177,7 +1177,7 @@ public class Loan extends AbstractPersistable<Long> {
         this.actualMaturityDate = determineExpectedMaturityDate().toDate();
     }
 
-    private void updateLoanSummaryDerivedFields() {
+    public void updateLoanSummaryDerivedFields() {
 
         if (isNotDisbursed()) {
             this.summary.zeroFields();
@@ -2909,7 +2909,7 @@ public class Loan extends AbstractPersistable<Long> {
         return transactions;
     }
 
-    private void doPostLoanTransactionChecks(final LocalDate transactionDate, final LoanLifecycleStateMachine loanLifecycleStateMachine) {
+    public void doPostLoanTransactionChecks(final LocalDate transactionDate, final LoanLifecycleStateMachine loanLifecycleStateMachine) {
 
         if (isOverPaid()) {
             // FIXME - kw - update account balance to negative amount.
