@@ -839,7 +839,7 @@ public class Loan extends AbstractPersistable<Long> {
                 LoanRepaymentScheduleInstallment total = getTotalOutstandingOnLoan();
                 MonetaryCurrency currency = getCurrency();
 //                amount = getPrincpal().getAmount().add(getTotalInterest()).add(getTotalFee());
-                amount = total.getPrincipalOutstanding(currency).getAmount().add(total.getInterestOutstanding(currency).getAmount()).add(total.getFeeChargesOutstanding(currency).getAmount());
+                amount = total.getPrincipalOutstanding(currency).getAmount().add(total.getInterestOutstanding(currency).getAmount());
                 break;
             default:
             break;
@@ -895,7 +895,7 @@ public class Loan extends AbstractPersistable<Long> {
                 percentOf = installment.getInterestCharged(getCurrency());
             break;
             case PERCENT_OF_TOTAL_OUTSTANDING:
-                percentOf = installment.getPrincipal(getCurrency()).plus(installment.getInterestCharged(getCurrency())).plus(installment.getFeeChargesCharged(getCurrency()));
+                percentOf = installment.getPrincipalOutstanding(getCurrency()).plus(installment.getInterestOutstanding(getCurrency()));
                 break;
             default:
             break;
@@ -1570,7 +1570,7 @@ public class Loan extends AbstractPersistable<Long> {
                 amount = installment.getInterestOutstanding(getCurrency());
             break;
             case PERCENT_OF_TOTAL_OUTSTANDING:
-                amount = installment.getPrincipalOutstanding(getCurrency()).plus(installment.getInterestOutstanding(getCurrency())).plus(installment.getFeeChargesOutstanding(getCurrency()));
+                amount = installment.getPrincipalOutstanding(getCurrency()).plus(installment.getInterestOutstanding(getCurrency()));
                 break;
             default:
             break;
@@ -4801,7 +4801,7 @@ public class Loan extends AbstractPersistable<Long> {
         return installment;
     }
 
-    private LoanRepaymentScheduleInstallment getTotalOutstandingOnLoan() {
+    public LoanRepaymentScheduleInstallment getTotalOutstandingOnLoan() {
         Money feeCharges = Money.zero(loanCurrency());
         Money penaltyCharges = Money.zero(loanCurrency());
         Money totalPrincipal = Money.zero(loanCurrency());
