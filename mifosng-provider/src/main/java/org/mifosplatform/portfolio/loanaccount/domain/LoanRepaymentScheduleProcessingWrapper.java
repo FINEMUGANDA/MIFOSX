@@ -97,8 +97,8 @@ public class LoanRepaymentScheduleProcessingWrapper {
                     } else if (loanCharge.getChargeCalculation().isPercentageOfInterest()) {
                         amount = amount.add(totalInterest.getAmount());
                     } else if (loanCharge.getChargeCalculation().isPercentageOfTotalOutstanding()) {
-						amount = amount.add(period.getPrincipalOutstanding(monetaryCurrency).getAmount()).add(
-								period.getInterestOutstanding(monetaryCurrency).getAmount());
+						LoanRepaymentScheduleInstallment totalOutstanding = period.getLoan().getTotalOutstandingOnLoan();
+						amount = amount.add(totalOutstanding.getPrincipal(monetaryCurrency).getAmount()).add(totalOutstanding.getInterestCharged(monetaryCurrency).getAmount());
 					} else {
                         amount = amount.add(totalPrincipal.getAmount());
                     }
@@ -173,8 +173,8 @@ public class LoanRepaymentScheduleProcessingWrapper {
                         } else if (loanCharge.getChargeCalculation().isPercentageOfInterest()) {
                             amount = amount.add(period.getInterestCharged(currency).getAmount());
                         } else if (loanCharge.getChargeCalculation().isPercentageOfTotalOutstanding()) {
-							amount = amount.add(period.getPrincipalOutstanding(currency).getAmount()).add(
-									period.getInterestOutstanding(currency).getAmount());
+							LoanRepaymentScheduleInstallment totalOutstanding = period.getLoan().getTotalOutstandingOnLoan();
+							amount = amount.add(totalOutstanding.getPrincipal(currency).getAmount()).add(totalOutstanding.getInterestCharged(currency).getAmount());
 						} else {
                             amount = amount.add(period.getPrincipal(currency).getAmount());
                         }
@@ -200,8 +200,8 @@ public class LoanRepaymentScheduleProcessingWrapper {
                     } else if (loanCharge.getChargeCalculation().isPercentageOfInterest()) {
                         amount = amount.add(totalInterest.getAmount());
                     } else if (loanCharge.getChargeCalculation().isPercentageOfTotalOutstanding()) {
-						amount = amount.add(period.getPrincipalOutstanding(currency).getAmount()).add(
-								period.getInterestOutstanding(currency).getAmount());
+						LoanRepaymentScheduleInstallment totalOutstanding = period.getLoan().getTotalOutstandingOnLoan();
+						amount = amount.add(totalOutstanding.getPrincipal(currency).getAmount()).add(totalOutstanding.getInterestCharged(currency).getAmount());
 					} else {
                         amount = amount.add(totalPrincipal.getAmount());
                     }

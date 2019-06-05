@@ -545,7 +545,7 @@ public class Loan extends AbstractPersistable<Long> {
             chargeAmt = loanCharge.getPercentage();
             if (loanCharge.isInstalmentFee()) {
                 totalChargeAmt = calculatePerInstallmentChargeAmount(loanCharge);
-            } else if (loanCharge.isOverdueInstallmentCharge() || loanCharge.isOverdueMaturityDateCharge()) {
+            } else if (loanCharge.isOverdueInstallmentCharge() || loanCharge.isOverdueMaturityDateCharge() || loanCharge.isSpecifiedDueDate()) {
                 totalChargeAmt = loanCharge.amountOutstanding();
             }
         } else {

@@ -410,7 +410,9 @@ public class LoanCharge extends AbstractPersistable<Long> {
                     amountPercentageAppliedTo = this.loan.getTotalInterest();
                 break;
                 case PERCENT_OF_TOTAL_OUTSTANDING:
-                    amountPercentageAppliedTo = this.loan.getPrincpal().getAmount().add(this.loan.getTotalInterest());
+					MonetaryCurrency currency = this.loan.getCurrency();
+					LoanRepaymentScheduleInstallment totalOutstanding = this.loan.getTotalOutstandingOnLoan();
+                    amountPercentageAppliedTo = totalOutstanding.getPrincipal(currency).getAmount().add(totalOutstanding.getInterestCharged(currency).getAmount());
                     break;
                 default:
                 break;

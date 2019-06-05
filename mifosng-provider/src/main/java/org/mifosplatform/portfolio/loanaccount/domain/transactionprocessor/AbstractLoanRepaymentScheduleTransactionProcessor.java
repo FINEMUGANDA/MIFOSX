@@ -71,17 +71,17 @@ public abstract class AbstractLoanRepaymentScheduleTransactionProcessor implemen
             }
         }
 
-        for (final LoanRepaymentScheduleInstallment currentInstallment : installments) {
-            currentInstallment.resetDerivedComponents();
-            currentInstallment.updateDerivedFields(currency, disbursementDate);
-        }
-
         // re-process loan charges over repayment periods (picking up on waived
         // loan charges)
         if (reprocessCharges) {
             final LoanRepaymentScheduleProcessingWrapper wrapper = new LoanRepaymentScheduleProcessingWrapper();
             wrapper.reprocess(currency, disbursementDate, installments, charges, recalculateChargesFrom);
         }
+
+		for (final LoanRepaymentScheduleInstallment currentInstallment : installments) {
+			currentInstallment.resetDerivedComponents();
+			currentInstallment.updateDerivedFields(currency, disbursementDate);
+		}
 
         final ChangedTransactionDetail changedTransactionDetail = new ChangedTransactionDetail();
         final List<LoanTransaction> transactionstoBeProcessed = new ArrayList<>();
@@ -333,6 +333,9 @@ public abstract class AbstractLoanRepaymentScheduleTransactionProcessor implemen
         Money amountRemaining = feeCharges;
         while (amountRemaining.isGreaterThanZero()) {
             final LoanCharge unpaidCharge = findEarliestUnpaidChargeFromUnOrderedSet(charges);
+			if (unpaidCharge == null) {
+				break;
+			}
             Money feeAmount = feeCharges.zero();
             if (loanTransaction.isChargePayment()) {
                 feeAmount = feeCharges;
