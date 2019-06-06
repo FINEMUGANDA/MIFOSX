@@ -21,7 +21,7 @@ public class LoanScheduleAccrualData {
     private final PeriodFrequencyType repaymentFrequency;
     private final Integer repayEvery;
     private final Integer installmentNumber;
-    private final LocalDate dueDate;
+    private LocalDate dueDate;
     private final LocalDate fromDate;
 	private LocalDate transactionDate;
     private final Long repaymentScheduleId;
@@ -202,5 +202,9 @@ public class LoanScheduleAccrualData {
 
 	public void setPrepaymentAccrual(Boolean prepaymentAccrual) {
 		this.prepaymentAccrual = prepaymentAccrual;
+	}
+
+	public void setDueDate(LocalDate dueDate) {
+		this.dueDate = dueDate;
 	}
 }

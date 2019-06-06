@@ -21,4 +21,9 @@ public interface LoanTransactionRepository extends JpaRepository<LoanTransaction
 												  @Param("transactionDate") Date transactionDate,
 												  @Param("typeOf") Integer typeOf,
 												  @Param("transactionId") Long transactionId);
+
+	@Query("FROM LoanTransaction lt WHERE lt.loan.id = :loanId and lt.dateOf = :transactionDate and lt.typeOf = :typeOf  and lt.reversed = false")
+	LoanTransaction findAccrualTransactionByDate(@Param("loanId") Long loanId,
+												  @Param("transactionDate") Date transactionDate,
+												  @Param("typeOf") Integer typeOf);
 }
