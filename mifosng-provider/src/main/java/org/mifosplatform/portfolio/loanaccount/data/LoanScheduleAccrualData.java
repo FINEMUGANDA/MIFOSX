@@ -29,7 +29,7 @@ public class LoanScheduleAccrualData {
     private BigDecimal interestIncome;
     private BigDecimal feeIncome;
     private final BigDecimal penaltyIncome;
-    private final BigDecimal waivedInterestIncome;
+    private BigDecimal waivedInterestIncome;
     private final BigDecimal accruedInterestIncome;
     private final BigDecimal accruedFeeIncome;
     private final BigDecimal accruedPenaltyIncome;
@@ -176,6 +176,10 @@ public class LoanScheduleAccrualData {
     public BigDecimal getWaivedInterestIncome() {
         return this.waivedInterestIncome;
     }
+
+	public void setWaivedInterestIncome(BigDecimal waivedInterestIncome) {
+		this.waivedInterestIncome = waivedInterestIncome;
+	}
 
     
     public BigDecimal getAccruableIncome () {

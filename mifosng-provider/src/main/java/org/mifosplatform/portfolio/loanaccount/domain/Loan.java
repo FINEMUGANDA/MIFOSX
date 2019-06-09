@@ -4913,6 +4913,28 @@ public class Loan extends AbstractPersistable<Long> {
         return installment;
     }
 
+	/**
+	 * @param installmentNumber
+	 *            the installment number
+	 * @return a schedule installment with similar number to the one provided
+	 **/
+	public LoanRepaymentScheduleInstallment getRepaymentScheduleInstallment(Integer installmentNumber) {
+		LoanRepaymentScheduleInstallment installment = null;
+
+		if (installmentNumber != null) {
+			for (LoanRepaymentScheduleInstallment repaymentScheduleInstallment : this.repaymentScheduleInstallments) {
+
+				if (repaymentScheduleInstallment.getInstallmentNumber().equals(installmentNumber)) {
+					installment = repaymentScheduleInstallment;
+
+					break;
+				}
+			}
+		}
+
+		return installment;
+	}
+
     /**
      * @return loan disbursement data
      **/

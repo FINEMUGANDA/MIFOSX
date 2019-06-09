@@ -954,6 +954,13 @@ public class LoanWritePlatformServiceJpaRepositoryImpl implements LoanWritePlatf
 				accrualTransaction.manuallyAdjustedOrReversed();
 				this.loanTransactionRepository.save(accrualTransaction);
 			}
+			//Delete any loan charges added during prepayment
+			for (LoanCharge loanCharge : loan.getLoanCharges(transactionToAdjust.getTransactionDate())) {
+				if (loanCharge.isSpecifiedDueDate()) {
+					loan.removeLoanCharge(loanCharge);
+				}
+			}
+			saveAndFlushLoanWithDataIntegrityViolationChecks(loan);
 		}
         postJournalEntries(loan, existingTransactionIds, existingReversedTransactionIds);
 

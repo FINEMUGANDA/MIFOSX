@@ -32,6 +32,9 @@ import org.mifosplatform.portfolio.loanaccount.data.LoanInstallmentChargeData;
 import org.mifosplatform.portfolio.loanaccount.data.LoanScheduleAccrualData;
 import org.mifosplatform.portfolio.loanaccount.data.LoanTransactionData;
 import org.mifosplatform.portfolio.loanaccount.data.LoanTransactionEnumData;
+import org.mifosplatform.portfolio.loanaccount.domain.Loan;
+import org.mifosplatform.portfolio.loanaccount.domain.LoanRepaymentScheduleInstallment;
+import org.mifosplatform.portfolio.loanaccount.domain.LoanRepository;
 import org.mifosplatform.portfolio.loanaccount.domain.LoanTransaction;
 import org.mifosplatform.portfolio.loanaccount.domain.LoanTransactionRepository;
 import org.mifosplatform.portfolio.loanaccount.domain.LoanTransactionType;
@@ -55,14 +58,16 @@ public class LoanAccrualWritePlatformServiceImpl implements LoanAccrualWritePlat
     private final JournalEntryWritePlatformService journalEntryWritePlatformService;
     private final JpaTransactionManager transactionManager;
 	private final LoanTransactionRepository loanTransactionRepository;
+	private final LoanRepository loanRepository;
 
     @Autowired
     public LoanAccrualWritePlatformServiceImpl(final RoutingDataSource dataSource, final LoanReadPlatformService loanReadPlatformService,
 											   final JournalEntryWritePlatformService journalEntryWritePlatformService, final JpaTransactionManager transactionManager,
-											   final LoanChargeReadPlatformService loanChargeReadPlatformService, LoanTransactionRepository loanTransactionRepository) {
+											   final LoanChargeReadPlatformService loanChargeReadPlatformService, LoanTransactionRepository loanTransactionRepository, LoanRepository loanRepository) {
         this.loanReadPlatformService = loanReadPlatformService;
         this.dataSource = dataSource;
 		this.loanTransactionRepository = loanTransactionRepository;
+		this.loanRepository = loanRepository;
 		this.jdbcTemplate = new JdbcTemplate(this.dataSource);
         this.journalEntryWritePlatformService = journalEntryWritePlatformService;
         this.transactionManager = transactionManager;
@@ -129,6 +134,7 @@ public class LoanAccrualWritePlatformServiceImpl implements LoanAccrualWritePlat
 		Collection<LoanScheduleAccrualData> loanScheduleAccrualDatas = this.loanReadPlatformService.retrievePeriodicAccrualData(tilldate, loanId);
 		Collection<LoanScheduleAccrualData> loanScheduleAccruals = new ArrayList<>();
 		if (!loanScheduleAccrualDatas.isEmpty()) {
+			Loan loan = this.loanRepository.findOne(loanId);
 			Iterator<LoanScheduleAccrualData> iterator = loanScheduleAccrualDatas.iterator();
 			LoanScheduleAccrualData firstAccrual = iterator.next();
 			LoanTransaction firstAccrualTransaction = this.loanTransactionRepository.findAccrualTransactionByDate(loanId,
@@ -138,11 +144,13 @@ public class LoanAccrualWritePlatformServiceImpl implements LoanAccrualWritePlat
 				if (firstAccrual.getFeeIncome() != null) {
 					firstAccrual.setFeeIncome(null);
 				}
+			} else {
 			}
 			while (iterator.hasNext()) {
 				LoanScheduleAccrualData loanScheduleAccrual = iterator.next();
 				LoanTransaction accrualTransaction = this.loanTransactionRepository.findAccrualTransactionByDate(loanId,
 						loanScheduleAccrual.getDueDate(), LoanTransactionType.ACCRUAL.getValue());
+				LoanRepaymentScheduleInstallment installment = loan.getRepaymentScheduleInstallment(loanScheduleAccrual.getInstallmentNumber());
 				if (accrualTransaction == null) {
 					firstAccrual.setInterestIncome(firstAccrual.getInterestIncome().add(loanScheduleAccrual.getInterestIncome()));
 					if (firstAccrual.getFeeIncome() != null) {
@@ -152,6 +160,13 @@ public class LoanAccrualWritePlatformServiceImpl implements LoanAccrualWritePlat
 					} else {
 						if (loanScheduleAccrual.getFeeIncome() != null) {
 							firstAccrual.setFeeIncome(loanScheduleAccrual.getFeeIncome());
+						}
+					}
+					if (installment.getInterestWaived(loan.getCurrency()).isGreaterThanZero()) {
+						if (firstAccrual.getWaivedInterestIncome() == null) {
+							firstAccrual.setWaivedInterestIncome(installment.getInterestWaived(loan.getCurrency()).getAmount());
+						} else {
+							firstAccrual.setWaivedInterestIncome(firstAccrual.getWaivedInterestIncome().add(installment.getInterestWaived(loan.getCurrency()).getAmount()));
 						}
 					}
 					firstAccrual.setDueDate(LocalDate.fromDateFields(loanScheduleAccrual.getDueDate()));
