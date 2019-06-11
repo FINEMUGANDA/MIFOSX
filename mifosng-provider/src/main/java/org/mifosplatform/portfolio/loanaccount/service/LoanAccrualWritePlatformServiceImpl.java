@@ -137,6 +137,7 @@ public class LoanAccrualWritePlatformServiceImpl implements LoanAccrualWritePlat
 			Loan loan = this.loanRepository.findOne(loanId);
 			Iterator<LoanScheduleAccrualData> iterator = loanScheduleAccrualDatas.iterator();
 			LoanScheduleAccrualData firstAccrual = iterator.next();
+			firstAccrual.setWaivedInterestIncome(BigDecimal.ZERO);
 			LoanTransaction firstAccrualTransaction = this.loanTransactionRepository.findAccrualTransactionByDate(loanId,
 					firstAccrual.getDueDate(), LoanTransactionType.ACCRUAL.getValue());
 			if (firstAccrualTransaction != null) {
@@ -162,13 +163,13 @@ public class LoanAccrualWritePlatformServiceImpl implements LoanAccrualWritePlat
 							firstAccrual.setFeeIncome(loanScheduleAccrual.getFeeIncome());
 						}
 					}
-					if (installment.getInterestWaived(loan.getCurrency()).isGreaterThanZero()) {
-						if (firstAccrual.getWaivedInterestIncome() == null) {
-							firstAccrual.setWaivedInterestIncome(installment.getInterestWaived(loan.getCurrency()).getAmount());
-						} else {
-							firstAccrual.setWaivedInterestIncome(firstAccrual.getWaivedInterestIncome().add(installment.getInterestWaived(loan.getCurrency()).getAmount()));
-						}
-					}
+//					if (installment.getInterestWaived(loan.getCurrency()).isGreaterThanZero()) {
+//						if (firstAccrual.getWaivedInterestIncome() == null) {
+//							firstAccrual.setWaivedInterestIncome(installment.getInterestWaived(loan.getCurrency()).getAmount());
+//						} else {
+//							firstAccrual.setWaivedInterestIncome(firstAccrual.getWaivedInterestIncome().add(installment.getInterestWaived(loan.getCurrency()).getAmount()));
+//						}
+//					}
 					firstAccrual.setDueDate(LocalDate.fromDateFields(loanScheduleAccrual.getDueDate()));
 				}
 			}
