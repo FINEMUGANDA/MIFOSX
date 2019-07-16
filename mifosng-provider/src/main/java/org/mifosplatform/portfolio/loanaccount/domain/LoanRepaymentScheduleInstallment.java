@@ -214,6 +214,10 @@ public final class LoanRepaymentScheduleInstallment extends AbstractAuditableCus
         return Money.of(currency, this.interestAccrued);
     }
 
+	public void setInterestAccrued(BigDecimal interestAccrued) {
+		this.interestAccrued = interestAccrued;
+	}
+
     public Money getFeeChargesCharged(final MonetaryCurrency currency) {
         return Money.of(currency, this.feeChargesCharged);
     }
@@ -239,6 +243,10 @@ public final class LoanRepaymentScheduleInstallment extends AbstractAuditableCus
     public Money getFeeAccrued(final MonetaryCurrency currency) {
         return Money.of(currency, this.feeAccrued);
     }
+
+	public void setFeeAccrued(BigDecimal feeAccrued) {
+		this.feeAccrued = feeAccrued;
+	}
 
     public Money getPenaltyChargesCharged(final MonetaryCurrency currency) {
         return Money.of(currency, this.penaltyCharges);

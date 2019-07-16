@@ -79,7 +79,16 @@ public abstract class AbstractLoanRepaymentScheduleTransactionProcessor implemen
         }
 
 		for (final LoanRepaymentScheduleInstallment currentInstallment : installments) {
+			BigDecimal feesAccrued = currentInstallment.getFeeAccrued(currency).getAmount();
+			BigDecimal interestAccrued = currentInstallment.getInterestAccrued(currency).getAmount();
 			currentInstallment.resetDerivedComponents();
+			// restore accrued fees and interest if already posted
+			if (feesAccrued != null && feesAccrued.compareTo(BigDecimal.ZERO) > 0) {
+				currentInstallment.setFeeAccrued(feesAccrued);
+			}
+			if (interestAccrued != null && interestAccrued.compareTo(BigDecimal.ZERO) > 0) {
+				currentInstallment.setInterestAccrued(interestAccrued);
+			}
 			currentInstallment.updateDerivedFields(currency, disbursementDate);
 		}
 
