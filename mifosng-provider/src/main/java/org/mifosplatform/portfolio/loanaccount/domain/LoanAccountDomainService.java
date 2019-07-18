@@ -61,4 +61,6 @@ public interface LoanAccountDomainService {
     LoanTransaction moveOverpaymentToProfitOrRefundClient(Loan loan, CommandProcessingResultBuilder builderResult, boolean isRefund);
 
     LoanTransaction moveOverpaymentToLoan(Loan loan, CommandProcessingResultBuilder builderResult);
+
+	LoanLifecycleStateMachine defaultLoanLifecycleStateMachine();
 }

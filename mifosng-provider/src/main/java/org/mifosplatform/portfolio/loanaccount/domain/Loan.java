@@ -545,7 +545,7 @@ public class Loan extends AbstractPersistable<Long> {
             chargeAmt = loanCharge.getPercentage();
             if (loanCharge.isInstalmentFee()) {
                 totalChargeAmt = calculatePerInstallmentChargeAmount(loanCharge);
-            } else if (loanCharge.isOverdueInstallmentCharge() || loanCharge.isOverdueMaturityDateCharge()) {
+            } else if (loanCharge.isOverdueInstallmentCharge() || loanCharge.isOverdueMaturityDateCharge() || loanCharge.isSpecifiedDueDate()) {
                 totalChargeAmt = loanCharge.amountOutstanding();
             }
         } else {
@@ -839,7 +839,7 @@ public class Loan extends AbstractPersistable<Long> {
                 LoanRepaymentScheduleInstallment total = getTotalOutstandingOnLoan();
                 MonetaryCurrency currency = getCurrency();
 //                amount = getPrincpal().getAmount().add(getTotalInterest()).add(getTotalFee());
-                amount = total.getPrincipalOutstanding(currency).getAmount().add(total.getInterestOutstanding(currency).getAmount()).add(total.getFeeChargesOutstanding(currency).getAmount());
+                amount = total.getPrincipalOutstanding(currency).getAmount().add(total.getInterestOutstanding(currency).getAmount());
                 break;
             default:
             break;
@@ -895,7 +895,7 @@ public class Loan extends AbstractPersistable<Long> {
                 percentOf = installment.getInterestCharged(getCurrency());
             break;
             case PERCENT_OF_TOTAL_OUTSTANDING:
-                percentOf = installment.getPrincipal(getCurrency()).plus(installment.getInterestCharged(getCurrency())).plus(installment.getFeeChargesCharged(getCurrency()));
+                percentOf = installment.getPrincipalOutstanding(getCurrency()).plus(installment.getInterestOutstanding(getCurrency()));
                 break;
             default:
             break;
@@ -1177,7 +1177,7 @@ public class Loan extends AbstractPersistable<Long> {
         this.actualMaturityDate = determineExpectedMaturityDate().toDate();
     }
 
-    private void updateLoanSummaryDerivedFields() {
+    public void updateLoanSummaryDerivedFields() {
 
         if (isNotDisbursed()) {
             this.summary.zeroFields();
@@ -1570,7 +1570,7 @@ public class Loan extends AbstractPersistable<Long> {
                 amount = installment.getInterestOutstanding(getCurrency());
             break;
             case PERCENT_OF_TOTAL_OUTSTANDING:
-                amount = installment.getPrincipalOutstanding(getCurrency()).plus(installment.getInterestOutstanding(getCurrency())).plus(installment.getFeeChargesOutstanding(getCurrency()));
+                amount = installment.getPrincipalOutstanding(getCurrency()).plus(installment.getInterestOutstanding(getCurrency()));
                 break;
             default:
             break;
@@ -2520,7 +2520,9 @@ public class Loan extends AbstractPersistable<Long> {
             this.accruedTill = null;
             reverseExistingTransactions();
             updateLoanSummaryDerivedFields();
-
+			for (final LoanRepaymentScheduleInstallment currentInstallment : this.repaymentScheduleInstallments) {
+				currentInstallment.resetDerivedComponents();
+			}
         }
 
         return actualChanges;
@@ -2907,7 +2909,7 @@ public class Loan extends AbstractPersistable<Long> {
         return transactions;
     }
 
-    private void doPostLoanTransactionChecks(final LocalDate transactionDate, final LoanLifecycleStateMachine loanLifecycleStateMachine) {
+    public void doPostLoanTransactionChecks(final LocalDate transactionDate, final LoanLifecycleStateMachine loanLifecycleStateMachine) {
 
         if (isOverPaid()) {
             // FIXME - kw - update account balance to negative amount.
@@ -4799,7 +4801,7 @@ public class Loan extends AbstractPersistable<Long> {
         return installment;
     }
 
-    private LoanRepaymentScheduleInstallment getTotalOutstandingOnLoan() {
+    public LoanRepaymentScheduleInstallment getTotalOutstandingOnLoan() {
         Money feeCharges = Money.zero(loanCurrency());
         Money penaltyCharges = Money.zero(loanCurrency());
         Money totalPrincipal = Money.zero(loanCurrency());
@@ -4910,6 +4912,28 @@ public class Loan extends AbstractPersistable<Long> {
 
         return installment;
     }
+
+	/**
+	 * @param installmentNumber
+	 *            the installment number
+	 * @return a schedule installment with similar number to the one provided
+	 **/
+	public LoanRepaymentScheduleInstallment getRepaymentScheduleInstallment(Integer installmentNumber) {
+		LoanRepaymentScheduleInstallment installment = null;
+
+		if (installmentNumber != null) {
+			for (LoanRepaymentScheduleInstallment repaymentScheduleInstallment : this.repaymentScheduleInstallments) {
+
+				if (repaymentScheduleInstallment.getInstallmentNumber().equals(installmentNumber)) {
+					installment = repaymentScheduleInstallment;
+
+					break;
+				}
+			}
+		}
+
+		return installment;
+	}
 
     /**
      * @return loan disbursement data

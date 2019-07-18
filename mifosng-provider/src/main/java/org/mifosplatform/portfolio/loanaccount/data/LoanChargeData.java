@@ -35,7 +35,7 @@ public class LoanChargeData {
 
     private final CurrencyData currency;
 
-    private final BigDecimal amount;
+    private BigDecimal amount;
 
     private final BigDecimal amountPaid;
     private final BigDecimal amountWaived;
@@ -394,4 +394,12 @@ public class LoanChargeData {
     public BigDecimal getAmountUnrecognized() {
         return this.amountUnrecognized;
     }
+
+	public void setAmount(BigDecimal amount) {
+		this.amount = amount;
+	}
+
+	public void setAmountAccrued(BigDecimal amountAccrued) {
+		this.amountAccrued = amountAccrued;
+	}
 }

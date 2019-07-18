@@ -1507,7 +1507,7 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService {
     public Collection<OverdueLoanScheduleData> retrieveAllLoansWithOverdueMaturityDate() {
         final OverdueMaturityDateLoanScheduleMapper rm = new OverdueMaturityDateLoanScheduleMapper();
         final String sql = "select " + rm.schema() + " where "
-                    + " CURDATE() > ml.expected_maturedon_date"
+                    + " CURDATE() > ml.maturedon_date"
                     + " and mc.charge_applies_to_enum = 1"
                     + " and mc.charge_time_enum = 12"
                     + " and ml.loan_status_id IN (300, 800, 900)"
@@ -1615,7 +1615,7 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService {
     }
 
     @Override
-    public Collection<LoanScheduleAccrualData> retrivePeriodicAccrualData(final LocalDate tillDate) {
+    public Collection<LoanScheduleAccrualData> retrievePeriodicAccrualData(final LocalDate tillDate) {
 
         LoanSchedulePeriodicAccrualMapper mapper = new LoanSchedulePeriodicAccrualMapper();
         final StringBuilder sqlBuilder = new StringBuilder(400);
@@ -1634,6 +1634,29 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService {
 
         return this.namedParameterJdbcTemplate.query(sqlBuilder.toString(), paramMap, mapper);
     }
+
+	@Override
+	public Collection<LoanScheduleAccrualData> retrievePeriodicAccrualData(final LocalDate tillDate, final Long loanId) {
+
+		LoanSchedulePeriodicAccrualMapper mapper = new LoanSchedulePeriodicAccrualMapper();
+		final StringBuilder sqlBuilder = new StringBuilder(400);
+		sqlBuilder
+				.append("select ")
+				.append(mapper.schema())
+				.append(" where ((ls.fee_charges_amount <> if(ls.accrual_fee_charges_derived is null,0, ls.accrual_fee_charges_derived))")
+				.append(" or (ls.penalty_charges_amount <> if(ls.accrual_penalty_charges_derived is null,0,ls.accrual_penalty_charges_derived))")
+				.append(" or (ls.interest_amount <> if(ls.accrual_interest_derived is null,0,ls.accrual_interest_derived)))")
+				.append(" and loan.id = :loanId")
+				.append("  and loan.loan_status_id in (:active) and mpl.accounting_type=:type and loan.is_npa=0 and (ls.duedate <= :tilldate or (ls.duedate > :tilldate and ls.fromdate < :tilldate)) order by loan.id,ls.duedate");
+		Map<String, Object> paramMap = new HashMap<>(3);
+		final Collection<Integer> loanStatuses = new ArrayList<>(Arrays.asList(LoanStatus.ACTIVE_IN_GOOD_STANDING.getValue(), LoanStatus.ACTIVE_IN_BAD_STANDING.getValue()));
+		paramMap.put("loanId", loanId);
+		paramMap.put("active", loanStatuses);
+		paramMap.put("type", AccountingRuleType.ACCRUAL_PERIODIC.getValue());
+		paramMap.put("tilldate", formatter.print(tillDate));
+
+		return this.namedParameterJdbcTemplate.query(sqlBuilder.toString(), paramMap, mapper);
+	}
 
     private static final class LoanSchedulePeriodicAccrualMapper implements RowMapper<LoanScheduleAccrualData> {
 

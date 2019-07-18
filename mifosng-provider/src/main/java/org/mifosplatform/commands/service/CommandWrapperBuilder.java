@@ -706,6 +706,24 @@ public class CommandWrapperBuilder {
         return this;
     }
 
+	public CommandWrapperBuilder recoverWrittenOffBalance(final Long loanId) {
+		this.actionName = "RECOVER_WRITTEN_OFF_BALANCE";
+		this.entityName = "LOAN";
+		this.entityId = null;
+		this.loanId = loanId;
+		this.href = "/loans/" + loanId + "/transactions/template?command=recoverwrittenoffbalance";
+		return this;
+	}
+
+	public CommandWrapperBuilder undoRecoverWrittenOffBalance(final Long loanId) {
+		this.actionName = "UNDO_RECOVER_WRITTEN_OFF_BALANCE";
+		this.entityName = "LOAN";
+		this.entityId = null;
+		this.loanId = loanId;
+		this.href = "/loans/" + loanId + "/transactions/template?command=undorecoverwrittenoffbalance";
+		return this;
+	}
+
     public CommandWrapperBuilder pauseLPILoanTransaction(final Long loanId) {
         this.actionName = "PAUSELPI";
         this.entityName = "LOAN";

@@ -89,6 +89,8 @@ public class LoanAccountDomainServiceJpa implements LoanAccountDomainService {
 	private final PlatformSecurityContext context;
 	private final BusinessEventNotifierService businessEventNotifierService;
 	private final JournalEntryRepository journalEntryRepository;
+	private final LoanAccrualWritePlatformService loanAccrualWritePlatformService;
+	private final OverpaymentTransactionMapperRepository overpaymentTransactionMapperRepository;
 
 	@Autowired
 	public LoanAccountDomainServiceJpa(final LoanAssembler loanAccountAssembler, final LoanRepository loanRepository,
@@ -102,7 +104,7 @@ public class LoanAccountDomainServiceJpa implements LoanAccountDomainService {
 									   final CalendarInstanceRepository calendarInstanceRepository,
 									   final LoanRepaymentScheduleInstallmentRepository repaymentScheduleInstallmentRepository,
 									   final LoanAccrualWritePlatformService accrualWritePlatformService, final PlatformSecurityContext context,
-									   final BusinessEventNotifierService businessEventNotifierService, final JournalEntryRepository journalEntryRepository) {
+									   final BusinessEventNotifierService businessEventNotifierService, final JournalEntryRepository journalEntryRepository, LoanAccrualWritePlatformService loanAccrualWritePlatformService, OverpaymentTransactionMapperRepository overpaymentTransactionMapperRepository) {
 		this.loanAccountAssembler = loanAccountAssembler;
 		this.loanRepository = loanRepository;
 		this.loanTransactionRepository = loanTransactionRepository;
@@ -121,6 +123,8 @@ public class LoanAccountDomainServiceJpa implements LoanAccountDomainService {
 		this.context = context;
 		this.businessEventNotifierService = businessEventNotifierService;
 		this.journalEntryRepository = journalEntryRepository;
+		this.loanAccrualWritePlatformService = loanAccrualWritePlatformService;
+		this.overpaymentTransactionMapperRepository = overpaymentTransactionMapperRepository;
 	}
 
 	@Transactional
@@ -169,7 +173,7 @@ public class LoanAccountDomainServiceJpa implements LoanAccountDomainService {
 		LocalDate calculatedRepaymentsStartingFromDate = null;
 		boolean isHolidayEnabled = false;
 		LocalDate recalculateFrom = null;
-		Long overdurPenaltyWaitPeriod = null;
+		Long overduePenaltyWaitPeriod = null;
 		LocalDate recalculateDueDateChargesFrom = null;
 		if (loan.repaymentScheduleDetail().isInterestRecalculationEnabled()) {
 			restCalendarInstance = calendarInstanceRepository.findCalendarInstaneByEntityId(loan.loanInterestRecalculationDetailId(),
@@ -183,12 +187,12 @@ public class LoanAccountDomainServiceJpa implements LoanAccountDomainService {
 					calendarInstance);
 
 			isHolidayEnabled = this.configurationDomainService.isRescheduleRepaymentsOnHolidaysEnabled();
-			overdurPenaltyWaitPeriod = this.configurationDomainService.retrievePenaltyWaitPeriod();
+			overduePenaltyWaitPeriod = this.configurationDomainService.retrievePenaltyWaitPeriod();
 		}
 		HolidayDetailDTO holidayDetailDTO = new HolidayDetailDTO(isHolidayEnabled, holidays, workingDays, allowTransactionsOnHoliday,
 				allowTransactionsOnNonWorkingDay);
 		final ScheduleGeneratorDTO scheduleGeneratorDTO = new ScheduleGeneratorDTO(loanScheduleFactory, applicationCurrency,
-				calculatedRepaymentsStartingFromDate, holidayDetailDTO, restCalendarInstance, recalculateFrom, overdurPenaltyWaitPeriod,
+				calculatedRepaymentsStartingFromDate, holidayDetailDTO, restCalendarInstance, recalculateFrom, overduePenaltyWaitPeriod,
 				recalculateDueDateChargesFrom);
 
 		final ChangedTransactionDetail changedTransactionDetail = loan.makeRepayment(newRepaymentTransaction,
@@ -196,6 +200,13 @@ public class LoanAccountDomainServiceJpa implements LoanAccountDomainService {
 				scheduleGeneratorDTO, currentUser);
 
 		saveLoanTransactionWithDataIntegrityViolationChecks(newRepaymentTransaction);
+
+		if (newRepaymentTransaction.getOutstandingLoanBalance() != null &&
+				BigDecimal.ZERO.compareTo(newRepaymentTransaction.getOutstandingLoanBalance()) > -1 &&
+				loan.isPeriodicAccrualAccountingEnabledOnLoanProduct()) {
+			this.loanAccrualWritePlatformService.addPeriodicAccruals(loan.getExpectedMaturityDate(), loan.getId(), newRepaymentTransaction.getTransactionDate());
+
+		}
 
 		/***
 		 * TODO Vishwas Batch save is giving me a
@@ -223,7 +234,11 @@ public class LoanAccountDomainServiceJpa implements LoanAccountDomainService {
 
 		postJournalEntries(loan, existingTransactionIds, existingReversedTransactionIds, isAccountTransfer);
 
-		recalculateAccruals(loan);
+		if (newRepaymentTransaction.getOutstandingLoanBalance() == null ||
+				BigDecimal.ZERO.compareTo(newRepaymentTransaction.getOutstandingLoanBalance()) < 0 ||
+				!loan.isPeriodicAccrualAccountingEnabledOnLoanProduct()) {
+			recalculateAccruals(loan);
+		}
 
 		this.businessEventNotifierService.notifyBusinessEventWasExecuted(BUSINESS_EVENTS.LOAN_MAKE_REPAYMENT, newRepaymentTransaction);
 
@@ -418,15 +433,24 @@ public class LoanAccountDomainServiceJpa implements LoanAccountDomainService {
 
 		BigDecimal transactionAmount = BigDecimal.ZERO;
 
+		List<LoanTransaction> overpaymentTransactions = new ArrayList<>();
+
 		for (Loan clientLoan : clientLoans) {
 			if (clientLoan.status().equals(LoanStatus.OVERPAID)) {
 				transactionAmount = transactionAmount.add(clientLoan.getTotalOverpaid());
 				this.loanAccountAssembler.setHelpers(clientLoan);
-				transferLoanOverpayment(clientLoan, currentUser);
+				overpaymentTransactions.add(transferLoanOverpayment(clientLoan, currentUser));
 			}
 		}
 
 		LoanTransaction newRepaymentTransaction = fromTransferLoanOverpayment(loan, currentUser, transactionAmount);
+
+		overpaymentTransactions.forEach(transaction -> {
+			OverpaymentTransactionMapper overpaymentTransactionMapper = new OverpaymentTransactionMapper();
+			overpaymentTransactionMapper.setOverpaymentTransaction(transaction);
+			overpaymentTransactionMapper.setRepaymentTransaction(newRepaymentTransaction);
+			this.overpaymentTransactionMapperRepository.save(overpaymentTransactionMapper);
+		});
 
 		builderResult.withEntityId(newRepaymentTransaction.getId()) //
 				.withOfficeId(loan.getOfficeId()) //
@@ -658,7 +682,7 @@ public class LoanAccountDomainServiceJpa implements LoanAccountDomainService {
 		this.journalEntryWritePlatformService.createJournalEntriesForLoan(accountingBridgeData);
 	}
 
-	private LoanLifecycleStateMachine defaultLoanLifecycleStateMachine() {
+	public LoanLifecycleStateMachine defaultLoanLifecycleStateMachine() {
 		final List<LoanStatus> allowedLoanStatuses = Arrays.asList(LoanStatus.values());
 		return new DefaultLoanLifecycleStateMachine(allowedLoanStatuses);
 	}

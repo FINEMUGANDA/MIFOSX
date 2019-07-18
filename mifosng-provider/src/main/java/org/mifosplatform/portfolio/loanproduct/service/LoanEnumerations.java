@@ -438,6 +438,10 @@ public class LoanEnumerations {
             case CLOSED_WRITTEN_OFF:
                 optionData = new LoanStatusEnumData(LoanStatus.CLOSED_WRITTEN_OFF.getValue().longValue(),
                         LoanStatus.CLOSED_WRITTEN_OFF.getCode(), "Closed (written off)");
+				break;
+			case CLOSED_WRITTEN_OFF_BALANCE_RECOVERED:
+				optionData = new LoanStatusEnumData(LoanStatus.CLOSED_WRITTEN_OFF_BALANCE_RECOVERED.getValue().longValue(),
+						LoanStatus.CLOSED_WRITTEN_OFF_BALANCE_RECOVERED.getCode(), "Closed (written off and balance recovered)");
             break;
             case CLOSED_RESCHEDULE_OUTSTANDING_AMOUNT:
                 optionData = new LoanStatusEnumData(LoanStatus.CLOSED_RESCHEDULE_OUTSTANDING_AMOUNT.getValue().longValue(),

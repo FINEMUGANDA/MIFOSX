@@ -21,14 +21,15 @@ public class LoanScheduleAccrualData {
     private final PeriodFrequencyType repaymentFrequency;
     private final Integer repayEvery;
     private final Integer installmentNumber;
-    private final LocalDate dueDate;
+    private LocalDate dueDate;
     private final LocalDate fromDate;
+	private LocalDate transactionDate;
     private final Long repaymentScheduleId;
     private final Long loanProductId;
-    private final BigDecimal interestIncome;
-    private final BigDecimal feeIncome;
+    private BigDecimal interestIncome;
+    private BigDecimal feeIncome;
     private final BigDecimal penaltyIncome;
-    private final BigDecimal waivedInterestIncome;
+    private BigDecimal waivedInterestIncome;
     private final BigDecimal accruedInterestIncome;
     private final BigDecimal accruedFeeIncome;
     private final BigDecimal accruedPenaltyIncome;
@@ -39,6 +40,7 @@ public class LoanScheduleAccrualData {
     private BigDecimal dueDateFeeIncome;
     private BigDecimal dueDatePenaltyIncome;
     private BigDecimal accruableIncome;
+	private Boolean prepaymentAccrual = false;
 
     public LoanScheduleAccrualData(final Long loanId, final Long officeId, final Integer installmentNumber, final LocalDate accruedTill,
             final PeriodFrequencyType repaymentFrequency, final Integer repayEvery, final LocalDate dueDate, final LocalDate fromDate,
@@ -95,11 +97,19 @@ public class LoanScheduleAccrualData {
         return this.interestIncome;
     }
 
-    public BigDecimal getFeeIncome() {
+	public void setInterestIncome(BigDecimal interestIncome) {
+		this.interestIncome = interestIncome;
+	}
+
+	public BigDecimal getFeeIncome() {
         return this.feeIncome;
     }
 
-    public BigDecimal getPenaltyIncome() {
+	public void setFeeIncome(BigDecimal feeIncome) {
+		this.feeIncome = feeIncome;
+	}
+
+	public BigDecimal getPenaltyIncome() {
         return this.penaltyIncome;
     }
 
@@ -167,6 +177,10 @@ public class LoanScheduleAccrualData {
         return this.waivedInterestIncome;
     }
 
+	public void setWaivedInterestIncome(BigDecimal waivedInterestIncome) {
+		this.waivedInterestIncome = waivedInterestIncome;
+	}
+
     
     public BigDecimal getAccruableIncome () {
         return this.accruableIncome;
@@ -178,4 +192,23 @@ public class LoanScheduleAccrualData {
     }
 
 
+	public LocalDate getTransactionDate() {
+		return transactionDate;
+	}
+
+	public void setTransactionDate(LocalDate transactionDate) {
+		this.transactionDate = transactionDate;
+	}
+
+	public Boolean isPrepaymentAccrual() {
+		return prepaymentAccrual;
+	}
+
+	public void setPrepaymentAccrual(Boolean prepaymentAccrual) {
+		this.prepaymentAccrual = prepaymentAccrual;
+	}
+
+	public void setDueDate(LocalDate dueDate) {
+		this.dueDate = dueDate;
+	}
 }

@@ -26,7 +26,7 @@ public class ChargeEnumerations {
             break;
             case SPECIFIED_DUE_DATE:
                 optionData = new EnumOptionData(ChargeTimeType.SPECIFIED_DUE_DATE.getValue().longValue(),
-                        ChargeTimeType.SPECIFIED_DUE_DATE.getCode(), "Specified due date");
+                        ChargeTimeType.SPECIFIED_DUE_DATE.getCode(), "Early Termination Fee");
             break;
             case SAVINGS_ACTIVATION:
                 optionData = new EnumOptionData(ChargeTimeType.SAVINGS_ACTIVATION.getValue().longValue(),

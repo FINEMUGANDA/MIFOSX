@@ -955,7 +955,10 @@ public abstract class AbstractLoanScheduleGenerator implements LoanScheduleGener
                                     principalInterestForThisPeriod.interest().getAmount());
                         } else if (loanCharge.getChargeCalculation().isPercentageOfInterest()) {
                             amount = amount.add(principalInterestForThisPeriod.interest().getAmount());
-                        } else {
+                        } else if (loanCharge.getChargeCalculation().isPercentageOfTotalOutstanding()) {
+							amount = amount.add(principalInterestForThisPeriod.principal().getAmount()).add(
+									principalInterestForThisPeriod.interest().getAmount());
+						} else {
                             amount = amount.add(principalInterestForThisPeriod.principal().getAmount());
                         }
                         BigDecimal loanChargeAmt = amount.multiply(loanCharge.getPercentage()).divide(BigDecimal.valueOf(100));
@@ -975,7 +978,10 @@ public abstract class AbstractLoanScheduleGenerator implements LoanScheduleGener
                         amount = amount.add(principalDisbursed.getAmount()).add(totalInterestChargedForFullLoanTerm.getAmount());
                     } else if (loanCharge.getChargeCalculation().isPercentageOfInterest()) {
                         amount = amount.add(totalInterestChargedForFullLoanTerm.getAmount());
-                    } else {
+                    } else if (loanCharge.getChargeCalculation().isPercentageOfTotalOutstanding()) {
+						amount = amount.add(principalDisbursed.getAmount()).add(
+								totalInterestChargedForFullLoanTerm.getAmount());
+					} else {
                         amount = amount.add(principalDisbursed.getAmount());
                     }
                     BigDecimal loanChargeAmt = amount.multiply(loanCharge.getPercentage()).divide(BigDecimal.valueOf(100));
@@ -1002,7 +1008,7 @@ public abstract class AbstractLoanScheduleGenerator implements LoanScheduleGener
                 if (loanCharge.isInstalmentFee() && isInstallmentChargeApplicable) {
                     if (loanCharge.getChargeCalculation().isPercentageBased()) {
                         BigDecimal amount = BigDecimal.ZERO;
-                        if (loanCharge.getChargeCalculation().isPercentageOfAmountAndInterest()) {
+                        if (loanCharge.getChargeCalculation().isPercentageOfAmountAndInterest() || loanCharge.getChargeCalculation().isPercentageOfTotalOutstanding()) {
                             amount = amount.add(principalInterestForThisPeriod.principal().getAmount()).add(
                                     principalInterestForThisPeriod.interest().getAmount());
                         } else if (loanCharge.getChargeCalculation().isPercentageOfInterest()) {
@@ -1023,7 +1029,7 @@ public abstract class AbstractLoanScheduleGenerator implements LoanScheduleGener
                         && loanCharge.getChargeCalculation().isPercentageBased()
                         && !lastTransactionDate.isAfter(loanCharge.getDueLocalDate())) {
                     BigDecimal amount = BigDecimal.ZERO;
-                    if (loanCharge.getChargeCalculation().isPercentageOfAmountAndInterest()) {
+                    if (loanCharge.getChargeCalculation().isPercentageOfAmountAndInterest() || loanCharge.getChargeCalculation().isPercentageOfTotalOutstanding()) {
                         amount = amount.add(principalDisbursed.getAmount()).add(totalInterestChargedForFullLoanTerm.getAmount());
                     } else if (loanCharge.getChargeCalculation().isPercentageOfInterest()) {
                         amount = amount.add(totalInterestChargedForFullLoanTerm.getAmount());
@@ -1476,7 +1482,7 @@ public abstract class AbstractLoanScheduleGenerator implements LoanScheduleGener
                                 amount = amount.add(interestOverdue);
                             break;
                             case PERCENT_OF_TOTAL_OUTSTANDING:
-                                amount = amount.add(principalOverdue).add(interestOverdue).add(feeOverdue);
+                                amount = amount.add(principalOverdue).add(interestOverdue);
                             break;
                             default:
                             break;
