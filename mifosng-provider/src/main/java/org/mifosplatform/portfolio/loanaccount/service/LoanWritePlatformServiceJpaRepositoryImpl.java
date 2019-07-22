@@ -953,6 +953,18 @@ public class LoanWritePlatformServiceJpaRepositoryImpl implements LoanWritePlatf
 				accrualTransaction.reverse();
 				accrualTransaction.manuallyAdjustedOrReversed();
 				this.loanTransactionRepository.save(accrualTransaction);
+
+				//Reset derived accrued amounts on prepayment installment
+				BigDecimal interest = accrualTransaction.getInterestPortion(loan.getCurrency()).getAmount();
+				for (LoanRepaymentScheduleInstallment installment : loan.getRepaymentScheduleInstallments()) {
+					if (installment.getInterestAccrued(loan.getCurrency()) != null) {
+						if (interest.compareTo(installment.getInterestAccrued(loan.getCurrency()).getAmount()) == 0) {
+							installment.setInterestAccrued(null);
+							installment.setFeeAccrued(null);
+							break;
+						}
+					}
+				}
 			}
 			//Delete any loan charges added during prepayment
 			for (LoanCharge loanCharge : loan.getLoanCharges(transactionToAdjust.getTransactionDate())) {

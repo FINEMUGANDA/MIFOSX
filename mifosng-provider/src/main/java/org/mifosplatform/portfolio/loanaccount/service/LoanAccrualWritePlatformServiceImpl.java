@@ -137,7 +137,6 @@ public class LoanAccrualWritePlatformServiceImpl implements LoanAccrualWritePlat
 			Loan loan = this.loanRepository.findOne(loanId);
 			Iterator<LoanScheduleAccrualData> iterator = loanScheduleAccrualDatas.iterator();
 			LoanScheduleAccrualData firstAccrual = iterator.next();
-			firstAccrual.setWaivedInterestIncome(BigDecimal.ZERO);
 			LoanTransaction firstAccrualTransaction = this.loanTransactionRepository.findAccrualTransactionByDate(loanId,
 					firstAccrual.getDueDate(), LoanTransactionType.ACCRUAL.getValue());
 			if (firstAccrualTransaction != null) {
@@ -145,14 +144,14 @@ public class LoanAccrualWritePlatformServiceImpl implements LoanAccrualWritePlat
 				if (firstAccrual.getFeeIncome() != null) {
 					firstAccrual.setFeeIncome(null);
 				}
-			} else {
 			}
+			firstAccrual.setWaivedInterestIncome(BigDecimal.ZERO);
 			while (iterator.hasNext()) {
 				LoanScheduleAccrualData loanScheduleAccrual = iterator.next();
 				LoanTransaction accrualTransaction = this.loanTransactionRepository.findAccrualTransactionByDate(loanId,
 						loanScheduleAccrual.getDueDate(), LoanTransactionType.ACCRUAL.getValue());
-				LoanRepaymentScheduleInstallment installment = loan.getRepaymentScheduleInstallment(loanScheduleAccrual.getInstallmentNumber());
-				if (accrualTransaction == null) {
+				//LoanRepaymentScheduleInstallment installment = loan.getRepaymentScheduleInstallment(loanScheduleAccrual.getInstallmentNumber());
+				if (accrualTransaction == null || accrualTransaction.isReversed()) {
 					firstAccrual.setInterestIncome(firstAccrual.getInterestIncome().add(loanScheduleAccrual.getInterestIncome()));
 					if (firstAccrual.getFeeIncome() != null) {
 						if (loanScheduleAccrual.getFeeIncome() != null) {
