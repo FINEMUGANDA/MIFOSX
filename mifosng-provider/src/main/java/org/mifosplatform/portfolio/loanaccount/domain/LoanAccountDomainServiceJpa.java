@@ -201,8 +201,8 @@ public class LoanAccountDomainServiceJpa implements LoanAccountDomainService {
 
 		saveLoanTransactionWithDataIntegrityViolationChecks(newRepaymentTransaction);
 
-		if (newRepaymentTransaction.getOutstandingLoanBalance() != null &&
-				BigDecimal.ZERO.compareTo(newRepaymentTransaction.getOutstandingLoanBalance()) > -1 &&
+		if (loan.getSummary() != null && loan.getSummary().getTotalOutstanding() != null &&
+				BigDecimal.ZERO.compareTo(loan.getSummary().getTotalOutstanding()) > -1 &&
 				loan.isPeriodicAccrualAccountingEnabledOnLoanProduct()) {
 			this.loanAccrualWritePlatformService.addPeriodicAccruals(loan.getExpectedMaturityDate(), loan.getId(), newRepaymentTransaction.getTransactionDate());
 
