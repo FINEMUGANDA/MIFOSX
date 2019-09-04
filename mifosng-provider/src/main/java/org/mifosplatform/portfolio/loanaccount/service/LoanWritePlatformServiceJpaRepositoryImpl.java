@@ -1018,13 +1018,13 @@ public class LoanWritePlatformServiceJpaRepositoryImpl implements LoanWritePlatf
         final Money transactionAmountAsMoney = Money.of(loan.getCurrency(), transactionAmount);
         Money unrecognizedIncome = transactionAmountAsMoney.zero();
         Money interestComponent = transactionAmountAsMoney;
-        if (loan.isPeriodicAccrualAccountingEnabledOnLoanProduct()) {
-            Money receivableInterest = loan.getReceivableInterest(transactionDate);
-            if (transactionAmountAsMoney.isGreaterThan(receivableInterest)) {
-                interestComponent = receivableInterest;
-                unrecognizedIncome = transactionAmountAsMoney.minus(receivableInterest);
-            }
-        }
+//        if (loan.isPeriodicAccrualAccountingEnabledOnLoanProduct()) {
+//            Money receivableInterest = loan.getReceivableInterest(transactionDate);
+//            if (transactionAmountAsMoney.isGreaterThan(receivableInterest)) {
+//                interestComponent = receivableInterest;
+//                unrecognizedIncome = transactionAmountAsMoney.minus(receivableInterest);
+//            }
+//        }
         final LoanTransaction waiveInterestTransaction = LoanTransaction.waiver(loan.getOffice(), loan, transactionAmountAsMoney,
                 transactionDate, interestComponent, unrecognizedIncome, DateUtils.getLocalDateTimeOfTenant(), currentUser);
 
