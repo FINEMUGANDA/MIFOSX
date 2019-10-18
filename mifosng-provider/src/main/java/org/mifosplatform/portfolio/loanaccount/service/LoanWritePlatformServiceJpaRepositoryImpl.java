@@ -1500,7 +1500,7 @@ public class LoanWritePlatformServiceJpaRepositoryImpl implements LoanWritePlatf
          * Upfront Accruals
          **/
         if (loan.status().isActive()) {
-            if (loan.isNoneOrCashOrUpfrontAccrualAccountingEnabledOnLoanProduct()) {
+            if (loan.isNoneOrCashOrUpfrontAccrualAccountingEnabledOnLoanProduct() || loan.isPeriodicAccrualAccountingEnabledOnLoanProduct()) {
                 final LoanTransaction applyLoanChargeTransaction = loan.handleChargeAppliedTransaction(loanCharge, null, currentUser, null);
                 this.loanTransactionRepository.save(applyLoanChargeTransaction);
             }

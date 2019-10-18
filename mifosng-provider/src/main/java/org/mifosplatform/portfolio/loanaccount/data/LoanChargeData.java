@@ -402,4 +402,8 @@ public class LoanChargeData {
 	public void setAmountAccrued(BigDecimal amountAccrued) {
 		this.amountAccrued = amountAccrued;
 	}
+
+	public EnumOptionData getChargeTimeType() {
+		return chargeTimeType;
+	}
 }
