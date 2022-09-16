@@ -48,8 +48,6 @@ dependencies {
 
     [group: 'org.mvel', name: 'mvel2', version: '2.2.4.Final'],
 
-    [group: 'org.infobip.oneapi', name: 'oneapi-java', version: '0.0.1'],
-
     // [group: 'org.apache.tomcat', name: 'tomcat-jdbc', version: tomcatVersion],
 
 //    [group: 'pentaho-reporting-engine', name: 'pentaho-reporting-engine-classic-core', version: pentahoVersion],
@@ -84,8 +82,9 @@ dependencies {
     [group: 'net.sf.ehcache', name: 'ehcache', version: '2.9.1'],
     [group: 'com.github.spullara.mustache.java', name: 'compiler', version: '0.8.17'],
     [group: 'com.jayway.jsonpath', name: 'json-path', version: '0.9.1'], // NOTE: have to stick with this version; latest is 1.2.0, but API incompatible
+    [group: 'com.infobip', name: 'infobip-api-java-client', version: '3.2.0'],
 
-    // Although Mifos (at the time of writing) doesn't have any compile time dep. on this,
+          // Although Mifos (at the time of writing) doesn't have any compile time dep. on this,
     // it's useful to have this for the Spring Boot TestRestTemplate http://docs.spring.io/spring-boot/docs/current-SNAPSHOT/reference/htmlsingle/#boot-features-rest-templates-test-utility
     [group: 'org.apache.httpcomponents', name: 'httpclient', version: '4.4']
   )

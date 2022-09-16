@@ -28,4 +28,6 @@ public class ExternalServicesConstants {
     public static final String SMS_NOTIFY_URL = "sms_notify_url";
     public static final String SMS_DEBUG = "sms_debug";
     public static final String SMS_DEBUG_PHONE = "sms_debug_phone";
+    public static final String SMS_API_KEY = "sms_api_key";
+    public static final String SMS_BASE_URL = "sms_base_url";
 }

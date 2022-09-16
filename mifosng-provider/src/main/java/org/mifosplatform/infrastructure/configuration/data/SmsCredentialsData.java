@@ -15,6 +15,8 @@ public class SmsCredentialsData {
     private final String notifyUrl;
     private final String debugPhone;
     private final boolean debug;
+    private String apiKey;
+    private String baseUrl;
 
     public SmsCredentialsData(final String authUsername, final String authPassword, final String senderName, final String senderAddress, final Long outboundMaxPerDay, final String notifyUrl, final boolean debug, final String debugPhone) {
         this.authUsername = authUsername;
@@ -71,5 +73,21 @@ public class SmsCredentialsData {
                 ", debugPhone='" + debugPhone + '\'' +
                 ", debug=" + debug +
                 '}';
+    }
+
+    public void setApiKey(String apiKey) {
+        this.apiKey = apiKey;
+    }
+
+    public String getApiKey() {
+        return apiKey;
+    }
+
+    public void setBaseUrl(String baseUrl) {
+        this.baseUrl = baseUrl;
+    }
+
+    public String getBaseUrl() {
+        return baseUrl;
     }
 }

@@ -108,6 +108,8 @@ public class ExternalServicesReadPlatformServiceImpl implements ExternalServices
             String notifyUrl = null;
             boolean debug = false;
             String debugPhone = null;
+            String apiKey = null;
+            String baseUrl = null;
             while (rs.next()) {
                 if (rs.getString("name").equalsIgnoreCase(ExternalServicesConstants.SMS_AUTH_USERNAME)) {
                     authUsername = rs.getString("value");
@@ -125,9 +127,16 @@ public class ExternalServicesReadPlatformServiceImpl implements ExternalServices
                     debug = "true".equals(rs.getString("value"));
                 } else if (rs.getString("name").equalsIgnoreCase(ExternalServicesConstants.SMS_DEBUG_PHONE)) {
                     debugPhone = rs.getString("value");
+                } else if (rs.getString("name").equalsIgnoreCase(ExternalServicesConstants.SMS_API_KEY)) {
+                    apiKey = rs.getString("value");
+                } else if (rs.getString("name").equalsIgnoreCase(ExternalServicesConstants.SMS_BASE_URL)) {
+                    baseUrl = rs.getString("value");
                 }
             }
-            return new SmsCredentialsData(authUsername, authPassword, senderName, senderAddress, outboundMaxPerDay, notifyUrl, debug, debugPhone);
+            SmsCredentialsData smsCredentialsData = new SmsCredentialsData(authUsername, authPassword, senderName, senderAddress, outboundMaxPerDay, notifyUrl, debug, debugPhone);
+            smsCredentialsData.setApiKey(apiKey);
+            smsCredentialsData.setBaseUrl(baseUrl);
+            return smsCredentialsData;
         }
     }
 
